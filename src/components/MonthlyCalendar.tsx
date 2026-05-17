@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Card, Group, Stack, Text, Title, ActionIcon, Badge, Button } from "@mantine/core";
+import { Card, Group, Stack, Text, Title, ActionIcon, Button } from "@mantine/core";
 import {
   IconChevronLeft,
   IconChevronRight,
@@ -113,16 +113,9 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
                 }}
               >
                 <Group justify="space-between" mb={4}>
-                  <Group gap={4}>
-                    <Text size="xs" c="dimmed">
-                      {formatDate(d.end_date)}
-                    </Text>
-                    {matured && (
-                      <Badge size="xs" color="gray" variant="light">
-                        已期滿
-                      </Badge>
-                    )}
-                  </Group>
+                  <Text size="xs" c="dimmed">
+                    {formatDate(d.end_date)}
+                  </Text>
                   <Text size="sm" fw={500}>
                     {d.bank_name}
                   </Text>
