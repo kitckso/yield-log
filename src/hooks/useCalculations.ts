@@ -65,5 +65,5 @@ export function formatCurrency(amount: number): string {
 }
 
 export function formatDate(dateStr: string): string {
-  return dayjs(dateStr).format("DD-MM-YYYY");
+  return dayjs(dateStr).format("YYYY年MM月DD日");
 }

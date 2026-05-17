@@ -316,14 +316,14 @@ export default function DepositForm() {
             label="起息日期"
             value={startDate}
             onChange={setStartDate}
-            valueFormat="DD-MM-YYYY"
+            valueFormat="YYYY年MM月DD日"
             required
           />
           <DateInput
             label="到期日期"
             value={endDate}
             onChange={handleEndDateChange}
-            valueFormat="DD-MM-YYYY"
+            valueFormat="YYYY年MM月DD日"
             required
           />
         </Group>
