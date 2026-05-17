@@ -36,15 +36,47 @@ export default function DepositList() {
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [bankFilter, setBankFilter] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<string>("start_desc");
+
+  const sortOptions = [
+    { value: "start_desc", label: "開戶日 (新→舊)" },
+    { value: "start_asc", label: "開戶日 (舊→新)" },
+    { value: "end_asc", label: "到期日 (近→遠)" },
+    { value: "end_desc", label: "到期日 (遠→近)" },
+    { value: "amount_desc", label: "金額 (大→小)" },
+    { value: "amount_asc", label: "金額 (小→大)" },
+    { value: "rate_desc", label: "利率 (高→低)" },
+    { value: "rate_asc", label: "利率 (低→高)" },
+  ];
 
   const filteredDeposits = useMemo(() => {
-    return deposits.filter((d) => {
+    const filtered = deposits.filter((d) => {
       if (statusFilter === "active" && isMatured(d.end_date)) return false;
       if (statusFilter === "matured" && !isMatured(d.end_date)) return false;
       if (bankFilter && d.bank_id !== bankFilter) return false;
       return true;
     });
-  }, [deposits, statusFilter, bankFilter]);
+    return filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "start_asc":
+          return a.start_date.localeCompare(b.start_date);
+        case "end_asc":
+          return a.end_date.localeCompare(b.end_date);
+        case "end_desc":
+          return b.end_date.localeCompare(a.end_date);
+        case "amount_desc":
+          return b.amount - a.amount;
+        case "amount_asc":
+          return a.amount - b.amount;
+        case "rate_desc":
+          return b.interest_rate - a.interest_rate;
+        case "rate_asc":
+          return a.interest_rate - b.interest_rate;
+        default:
+          return b.start_date.localeCompare(a.start_date);
+      }
+    });
+  }, [deposits, statusFilter, bankFilter, sortBy]);
 
   return (
     <div style={{ position: "relative" }}>
@@ -124,14 +156,22 @@ export default function DepositList() {
                   ]}
                   fullWidth
                 />
-                <Select
-                  size="xs"
-                  placeholder="全部銀行"
-                  clearable
-                  data={banks.map((b) => ({ label: b.name, value: b.id }))}
-                  value={bankFilter}
-                  onChange={setBankFilter}
-                />
+                <Group grow>
+                  <Select
+                    size="xs"
+                    placeholder="全部銀行"
+                    clearable
+                    data={banks.map((b) => ({ label: b.name, value: b.id }))}
+                    value={bankFilter}
+                    onChange={setBankFilter}
+                  />
+                  <Select
+                    size="xs"
+                    data={sortOptions}
+                    value={sortBy}
+                    onChange={(v) => v && setSortBy(v)}
+                  />
+                </Group>
               </Stack>
 
               <Text fw={600}>存款列表</Text>
