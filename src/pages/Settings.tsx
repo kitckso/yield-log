@@ -5,6 +5,7 @@ import { version } from "../../package.json";
 import { useDepositsStore } from "../store/deposits";
 import { useBanksStore } from "../store/banks";
 import { useAuthStore } from "../store/auth";
+import { supabase } from "../lib/supabase";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -29,6 +30,11 @@ export default function Settings() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (!confirm("警告：匯入將先清除所有現有資料，並以檔案內容取代。是否繼續？")) {
+      if (fileRef.current) fileRef.current.value = "";
+      return;
+    }
+
     setImporting(true);
     try {
       const text = await file.text();
@@ -39,21 +45,28 @@ export default function Settings() {
         return;
       }
 
+      const userId = user!.id;
+
+      await supabase.from("fixed_deposits").delete().eq("user_id", userId);
+      await supabase.from("banks").delete().eq("user_id", userId);
+
       if (data.banks?.length) {
-        const { banks, addBank } = useBanksStore.getState();
-        const existingNames = new Set(banks.map((b) => b.name));
-        for (const bank of data.banks) {
-          if (!existingNames.has(bank.name)) {
-            await addBank(bank.name);
-          }
-        }
+        const { error } = await supabase.from("banks").upsert(
+          data.banks.map((b: { id: string; name: string }) => ({
+            id: b.id,
+            user_id: userId,
+            name: b.name,
+          })),
+          { onConflict: "id" },
+        );
+        if (error) throw error;
       }
 
       if (data.deposits?.length) {
-        const { addDeposit } = useDepositsStore.getState();
-        for (const d of data.deposits) {
-          await addDeposit({
-            user_id: user!.id,
+        const { error } = await supabase.from("fixed_deposits").upsert(
+          data.deposits.map((d: Record<string, unknown>) => ({
+            id: d.id,
+            user_id: userId,
             bank_id: d.bank_id,
             amount: d.amount,
             period_value: d.period_value,
@@ -62,9 +75,14 @@ export default function Settings() {
             interest: d.interest,
             start_date: d.start_date,
             end_date: d.end_date,
-          });
-        }
+          })),
+          { onConflict: "id" },
+        );
+        if (error) throw error;
       }
+
+      await useBanksStore.getState().fetchBanks(true);
+      await useDepositsStore.getState().fetchDeposits(true);
 
       alert("匯入完成");
       void navigate("/deposits");
