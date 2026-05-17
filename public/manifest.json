@@ -1,0 +1,22 @@
+{
+  "name": "YieldLog",
+  "short_name": "YieldLog",
+  "description": "定期存款記錄工具",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9f9ff",
+  "theme_color": "#00346f",
+  "icons": [
+    {
+      "src": "/yieldlog-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
