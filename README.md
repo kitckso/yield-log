@@ -50,6 +50,12 @@ cp .env.example .env
 2. 將 `supabase/schema.sql` 全部貼上並執行
 3. 前往 **Authentication → Settings** → 關閉 **Confirm email**
 
+### 測試帳戶
+
+| 帳戶              | 密碼  |
+| ----------------- | ----- |
+| guest@example.com | guest |
+
 ### 啟動
 
 ```bash

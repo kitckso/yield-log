@@ -1,6 +1,11 @@
-import { useMemo } from "react";
-import { Card, Group, Stack, Text, Title, SimpleGrid, ActionIcon, Badge } from "@mantine/core";
-import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import { useMemo, useState } from "react";
+import { Card, Group, Stack, Text, Title, ActionIcon, Badge, Button } from "@mantine/core";
+import {
+  IconChevronLeft,
+  IconChevronRight,
+  IconChevronDown,
+  IconChevronUp,
+} from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { formatCurrency, formatDate, isMatured } from "../hooks/useCalculations";
 import type { DepositWithBank } from "../types";
@@ -19,9 +24,11 @@ interface MonthGroup {
   totalInterest: number;
 }
 
-const currentMonth = dayjs().month();
-
 export default function MonthlyCalendar({ deposits, year, onYearChange }: MonthlyCalendarProps) {
+  const [showPast, setShowPast] = useState(false);
+  const currentMonth = dayjs().month();
+  const isCurrentYear = year === dayjs().year();
+
   const months = useMemo(() => {
     const groups: MonthGroup[] = [];
 
@@ -80,9 +87,11 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
         </Group>
       </Card>
 
-      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
+      <Stack gap="sm">
         {months.map((m) => {
-          const isCurrent = year === dayjs().year() && m.month === currentMonth;
+          const isCurrent = isCurrentYear && m.month === currentMonth;
+          const isPast = isCurrentYear && m.month < currentMonth;
+          if (isPast && !showPast) return null;
           return (
             <Card
               key={m.month}
@@ -166,7 +175,30 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
             </Card>
           );
         })}
-      </SimpleGrid>
+
+        {isCurrentYear && !showPast && (
+          <Button
+            variant="subtle"
+            size="sm"
+            fullWidth
+            leftSection={<IconChevronDown size={16} />}
+            onClick={() => setShowPast(true)}
+          >
+            顯示已過月份
+          </Button>
+        )}
+        {isCurrentYear && showPast && (
+          <Button
+            variant="subtle"
+            size="sm"
+            fullWidth
+            leftSection={<IconChevronUp size={16} />}
+            onClick={() => setShowPast(false)}
+          >
+            隱藏已過月份
+          </Button>
+        )}
+      </Stack>
     </Stack>
   );
 }
