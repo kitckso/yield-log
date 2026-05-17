@@ -28,13 +28,18 @@ export default function Dashboard() {
     void fetchDeposits();
   }, [fetchDeposits]);
 
-  const totalAmount = deposits.reduce((sum, d) => sum + d.amount, 0);
-  const totalInterest = deposits.reduce((sum, d) => sum + d.interest, 0);
+  const activeDeposits = deposits.filter((d) => !isMatured(d.end_date));
+  const maturedDeposits = deposits.filter((d) => isMatured(d.end_date));
+
+  const activeAmount = activeDeposits.reduce((sum, d) => sum + d.amount, 0);
+  const pendingInterest = activeDeposits.reduce((sum, d) => sum + d.interest, 0);
+  const totalReceivedInterest = deposits.reduce((sum, d) => sum + d.interest, 0);
   const averageRate =
     deposits.length > 0
       ? deposits.reduce((sum, d) => sum + d.interest_rate, 0) / deposits.length
       : 0;
-  const maturedCount = deposits.filter((d) => isMatured(d.end_date)).length;
+  const activeCount = activeDeposits.length;
+  const maturedCount = maturedDeposits.length;
 
   const handleDelete = async (id: string) => {
     if (confirm("確定刪除這筆存款記錄？")) {
@@ -101,10 +106,12 @@ export default function Dashboard() {
           ) : (
             <>
               <SummaryCard
-                totalAmount={totalAmount}
-                totalInterest={totalInterest}
+                activeAmount={activeAmount}
+                pendingInterest={pendingInterest}
+                totalReceivedInterest={totalReceivedInterest}
                 averageRate={averageRate}
                 maturedCount={maturedCount}
+                activeCount={activeCount}
               />
 
               {!isDepositsPage && <Text fw={600}>存款列表</Text>}
