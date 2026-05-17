@@ -38,7 +38,7 @@ export default function DepositForm() {
 
   const [bankId, setBankId] = useState<string | null>(null);
   const [amount, setAmount] = useState<number | string>("");
-  const [periodValue, setPeriodValue] = useState<number | string>(12);
+  const [periodValue, setPeriodValue] = useState<number | string>(3);
   const [periodUnit, setPeriodUnit] = useState<string | null>("months");
   const [interestRate, setInterestRate] = useState<number | string>("");
   const [interest, setInterest] = useState<number | string>(0);
@@ -50,6 +50,12 @@ export default function DepositForm() {
   useEffect(() => {
     void fetchBanks();
   }, [fetchBanks]);
+
+  useEffect(() => {
+    if (!isEditing && banks.length > 0 && !bankId) {
+      setBankId(banks[0].id);
+    }
+  }, [banks, isEditing, bankId]);
 
   useEffect(() => {
     if (isEditing && id) {
