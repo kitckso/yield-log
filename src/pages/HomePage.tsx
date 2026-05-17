@@ -402,10 +402,10 @@ export default function HomePage() {
                       <Text size="xs" style={{ flex: 1 }}>
                         銀行
                       </Text>
-                      <Text size="xs" w={60} ta="right">
+                      <Text size="xs" w={90} ta="right">
                         進行中
                       </Text>
-                      <Text size="xs" w={60} ta="right">
+                      <Text size="xs" w={90} ta="right">
                         已期滿
                       </Text>
                     </Group>
@@ -422,24 +422,20 @@ export default function HomePage() {
                         <Text size="sm" fw={500} style={{ flex: 1 }}>
                           {b.bankName}
                         </Text>
-                        <Stack gap={0} align="end" w={60}>
+                        <Stack gap={0} align="end" w={90}>
                           <Text size="xs" fw={b.activeCount > 0 ? 600 : 400}>
                             {b.activeCount}筆
                           </Text>
                           <Text size="xs" c="dimmed">
-                            {b.activeAmount >= 10000
-                              ? `$${(b.activeAmount / 10000).toFixed(1)}萬`
-                              : `$${b.activeAmount.toLocaleString("en-HK")}`}
+                            {formatCurrency(b.activeAmount)}
                           </Text>
                         </Stack>
-                        <Stack gap={0} align="end" w={60}>
+                        <Stack gap={0} align="end" w={90}>
                           <Text size="xs" fw={b.maturedCount > 0 ? 600 : 400}>
                             {b.maturedCount}筆
                           </Text>
                           <Text size="xs" c="dimmed">
-                            {b.maturedAmount >= 10000
-                              ? `$${(b.maturedAmount / 10000).toFixed(1)}萬`
-                              : `$${b.maturedAmount.toLocaleString("en-HK")}`}
+                            {formatCurrency(b.maturedAmount)}
                           </Text>
                         </Stack>
                       </Group>
