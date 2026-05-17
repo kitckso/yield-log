@@ -70,6 +70,15 @@ export default function DepositCard({ deposit, onClick }: DepositCardProps) {
           </Text>
         </Group>
       </Group>
+
+      <Group justify="space-between" pt={4}>
+        <Text size="xs" c="dimmed">
+          起 {formatDate(deposit.start_date)}
+        </Text>
+        <Text size="xs" c="dimmed">
+          結 {formatDate(deposit.end_date)}
+        </Text>
+      </Group>
     </Card>
   );
 }
