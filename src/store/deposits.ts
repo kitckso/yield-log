@@ -2,10 +2,13 @@ import { create } from "zustand";
 import { supabase } from "../lib/supabase";
 import type { DepositWithBank } from "../types";
 
+const STALE_TIME = 5 * 60 * 1000;
+
 interface DepositsState {
   deposits: DepositWithBank[];
   loading: boolean;
-  fetchDeposits: () => Promise<void>;
+  lastFetched: number;
+  fetchDeposits: (force?: boolean) => Promise<void>;
   addDeposit: (deposit: Omit<DepositWithBank, "id" | "created_at" | "bank_name">) => Promise<void>;
   updateDeposit: (
     id: string,
@@ -17,8 +20,13 @@ interface DepositsState {
 export const useDepositsStore = create<DepositsState>((set, get) => ({
   deposits: [],
   loading: false,
+  lastFetched: 0,
 
-  fetchDeposits: async () => {
+  fetchDeposits: async (force) => {
+    const { deposits, lastFetched } = get();
+    if (!force && deposits.length > 0 && Date.now() - lastFetched < STALE_TIME) {
+      return;
+    }
     set({ loading: true });
     const { data, error } = await supabase
       .from("fixed_deposits")
@@ -29,7 +37,7 @@ export const useDepositsStore = create<DepositsState>((set, get) => ({
         ...(d as Omit<DepositWithBank, "bank_name">),
         bank_name: (d.banks as unknown as { name: string })?.name ?? "",
       }));
-      set({ deposits: withBankNames });
+      set({ deposits: withBankNames, lastFetched: Date.now() });
     }
     set({ loading: false });
   },

@@ -2,10 +2,13 @@ import { create } from "zustand";
 import { supabase } from "../lib/supabase";
 import type { Bank } from "../types";
 
+const STALE_TIME = 5 * 60 * 1000;
+
 interface BanksState {
   banks: Bank[];
   loading: boolean;
-  fetchBanks: () => Promise<void>;
+  lastFetched: number;
+  fetchBanks: (force?: boolean) => Promise<void>;
   addBank: (name: string) => Promise<void>;
   updateBank: (id: string, name: string) => Promise<void>;
   deleteBank: (id: string) => Promise<void>;
@@ -14,12 +17,17 @@ interface BanksState {
 export const useBanksStore = create<BanksState>((set, get) => ({
   banks: [],
   loading: false,
+  lastFetched: 0,
 
-  fetchBanks: async () => {
+  fetchBanks: async (force) => {
+    const { banks, lastFetched } = get();
+    if (!force && banks.length > 0 && Date.now() - lastFetched < STALE_TIME) {
+      return;
+    }
     set({ loading: true });
     const { data, error } = await supabase.from("banks").select("*").order("name");
     if (!error && data) {
-      set({ banks: data });
+      set({ banks: data, lastFetched: Date.now() });
     }
     set({ loading: false });
   },
