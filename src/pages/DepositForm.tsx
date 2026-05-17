@@ -174,8 +174,7 @@ export default function DepositForm() {
 
         <Select
           label="銀行名稱"
-          placeholder="搜尋銀行"
-          searchable
+          placeholder="選擇銀行"
           data={banks.map((b) => ({
             value: b.id,
             label: b.name,
