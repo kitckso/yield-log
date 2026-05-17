@@ -95,22 +95,43 @@ export default function Dashboard() {
         </Stack>
       </Container>
 
-      <ActionIcon
-        size={56}
-        radius="xl"
+      <div
         style={{
-          position: "absolute",
-          right: "24px",
-          bottom: "80px",
-          backgroundColor: "var(--mantine-color-blue-6)",
-          color: "white",
+          position: "fixed",
+          bottom: "76px",
+          left: 0,
+          right: 0,
+          pointerEvents: "none",
+          display: "flex",
+          justifyContent: "center",
         }}
-        onClick={() => navigate("/deposits/new")}
       >
-        <span className="material-symbols-outlined" style={{ fontSize: "28px" }}>
-          add
-        </span>
-      </ActionIcon>
+        <div
+          style={{
+            width: "100%",
+            maxWidth: "480px",
+            position: "relative",
+            pointerEvents: "auto",
+          }}
+        >
+          <ActionIcon
+            size={56}
+            radius="xl"
+            style={{
+              position: "absolute",
+              right: "24px",
+              bottom: 0,
+              backgroundColor: "var(--mantine-color-blue-6)",
+              color: "white",
+            }}
+            onClick={() => navigate("/deposits/new")}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: "28px" }}>
+              add
+            </span>
+          </ActionIcon>
+        </div>
+      </div>
     </div>
   );
 }
