@@ -11,10 +11,11 @@ import {
   ColorSwatch,
   SegmentedControl,
   Skeleton,
+  Button,
 } from "@mantine/core";
 import { DonutChart, BarChart } from "@mantine/charts";
 import UserMenu from "../components/UserMenu";
-import { IconCoin } from "@tabler/icons-react";
+import { IconCoin, IconBuildingBank } from "@tabler/icons-react";
 import { useDepositsStore } from "../store/deposits";
 import { useBanksStore } from "../store/banks";
 import { isMatured, formatCurrency, formatDate } from "../hooks/useCalculations";
@@ -188,6 +189,21 @@ export default function HomePage() {
               <Skeleton height={220} radius="lg" />
               <Skeleton height={200} radius="lg" />
               <Skeleton height={140} radius="lg" />
+            </Stack>
+          ) : deposits.length === 0 && banks.length === 0 ? (
+            <Stack align="center" py="xl" gap="md">
+              <IconCoin size={64} color="var(--mantine-color-gray-4)" />
+              <Text c="dimmed">尚未新增存款記錄</Text>
+              <Text size="sm" c="dimmed" ta="center">
+                先到「銀行」頁面新增銀行，再到「存款」頁面新增存款
+              </Text>
+              <Button
+                variant="light"
+                leftSection={<IconBuildingBank size={16} />}
+                onClick={() => navigate("/banks")}
+              >
+                新增銀行
+              </Button>
             </Stack>
           ) : deposits.length === 0 ? (
             <Stack align="center" py="xl" gap="sm">

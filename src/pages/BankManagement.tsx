@@ -13,7 +13,7 @@ import {
   Button,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconPlus } from "@tabler/icons-react";
+import { IconPlus, IconCoin } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { useDisclosure } from "@mantine/hooks";
 import { useBanksStore } from "../store/banks";
@@ -131,9 +131,25 @@ export default function BankManagement() {
           ))}
 
           {banks.length === 0 && (
-            <Text c="dimmed" ta="center" py="xl">
-              尚未新增銀行
-            </Text>
+            <Center py="xl">
+              <Stack align="center" gap="md">
+                <IconCoin size={48} color="var(--mantine-color-gray-4)" />
+                <Text c="dimmed">尚未新增銀行</Text>
+                <Text size="sm" c="dimmed" ta="center">
+                  新增銀行後可開始新增存款記錄
+                </Text>
+                <Button
+                  variant="light"
+                  leftSection={<IconPlus size={16} />}
+                  onClick={() => {
+                    const input = document.querySelector<HTMLInputElement>("#bank-name-input");
+                    if (input) input.focus();
+                  }}
+                >
+                  新增銀行
+                </Button>
+              </Stack>
+            </Center>
           )}
         </Stack>
       </Stack>
