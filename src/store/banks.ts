@@ -20,8 +20,8 @@ export const useBanksStore = create<BanksState>((set, get) => ({
   lastFetched: 0,
 
   fetchBanks: async (force) => {
-    const { banks, lastFetched } = get();
-    if (!force && banks.length > 0 && Date.now() - lastFetched < STALE_TIME) {
+    const { lastFetched } = get();
+    if (!force && lastFetched && Date.now() - lastFetched < STALE_TIME) {
       return;
     }
     set({ loading: true });

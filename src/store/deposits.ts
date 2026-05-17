@@ -23,8 +23,8 @@ export const useDepositsStore = create<DepositsState>((set, get) => ({
   lastFetched: 0,
 
   fetchDeposits: async (force) => {
-    const { deposits, lastFetched } = get();
-    if (!force && deposits.length > 0 && Date.now() - lastFetched < STALE_TIME) {
+    const { lastFetched } = get();
+    if (!force && lastFetched && Date.now() - lastFetched < STALE_TIME) {
       return;
     }
     set({ loading: true });
