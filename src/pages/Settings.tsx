@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
-import { Container, Title, Text, Stack, Card, Button, Group } from "@mantine/core";
+import { Container, Title, Text, Stack, Card, Button, Group, Avatar, Menu } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconDownload, IconUpload } from "@tabler/icons-react";
+import { IconDownload, IconUpload, IconLogout } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { useNavigate } from "react-router-dom";
 import { version } from "../../package.json";
@@ -15,6 +15,7 @@ export default function Settings() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
   const user = useAuthStore((s) => s.user);
+  const { signOut } = useAuthStore();
 
   const handleExport = () => {
     const deposits = useDepositsStore.getState().deposits;
@@ -123,7 +124,34 @@ export default function Settings() {
   return (
     <Container size="sm" pb={100} pt="md">
       <Stack gap="md">
-        <Title order={4}>設定</Title>
+        <Group justify="space-between">
+          <div>
+            <Title order={2}>設定</Title>
+            <Text size="sm" c="dimmed">
+              版本 {version}
+            </Text>
+          </div>
+          <Menu shadow="md" width={160}>
+            <Menu.Target>
+              <Avatar src={null} alt={user?.email ?? ""} color="blue" style={{ cursor: "pointer" }}>
+                {(user?.email ?? "?").charAt(0).toUpperCase()}
+              </Avatar>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item disabled>
+                <Text size="xs">{user?.email}</Text>
+              </Menu.Item>
+              <Menu.Divider />
+              <Menu.Item
+                color="red"
+                leftSection={<IconLogout size={18} />}
+                onClick={() => signOut()}
+              >
+                登出
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        </Group>
 
         <Card padding="lg" radius="lg" withBorder>
           <Stack gap="sm">

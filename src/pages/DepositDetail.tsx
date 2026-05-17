@@ -84,7 +84,7 @@ export default function DepositDetail() {
           >
             返回
           </Button>
-          <Title order={4}>存款詳情</Title>
+          <Title order={2}>存款詳情</Title>
         </Group>
 
         <Card padding="lg" radius="lg" withBorder>

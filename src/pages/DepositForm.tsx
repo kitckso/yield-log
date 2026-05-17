@@ -242,7 +242,7 @@ export default function DepositForm() {
           >
             返回
           </Button>
-          <Title order={4}>{isEditing ? "編輯存款" : "新增存款"}</Title>
+          <Title order={2}>{isEditing ? "編輯存款" : "新增存款"}</Title>
         </Group>
 
         <Stack gap={4}>

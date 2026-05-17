@@ -11,16 +11,20 @@ import {
   Group,
   Modal,
   Button,
+  Avatar,
+  Menu,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconPlus } from "@tabler/icons-react";
+import { IconPlus, IconLogout } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { useDisclosure } from "@mantine/hooks";
 import { useBanksStore } from "../store/banks";
+import { useAuthStore } from "../store/auth";
 import BankItem from "../components/BankItem";
 
 export default function BankManagement() {
   const { banks, fetchBanks, addBank, updateBank, deleteBank } = useBanksStore();
+  const { user, signOut } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [newBankName, setNewBankName] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -90,12 +94,34 @@ export default function BankManagement() {
   return (
     <Container size="sm" pb={100} pt="md">
       <Stack gap="md">
-        <div>
-          <Title order={2}>銀行管理</Title>
-          <Text size="sm" c="dimmed">
-            設置並管理您的常用存款銀行
-          </Text>
-        </div>
+        <Group justify="space-between">
+          <div>
+            <Title order={2}>銀行管理</Title>
+            <Text size="sm" c="dimmed">
+              設置並管理您的常用存款銀行
+            </Text>
+          </div>
+          <Menu shadow="md" width={160}>
+            <Menu.Target>
+              <Avatar src={null} alt={user?.email ?? ""} color="blue" style={{ cursor: "pointer" }}>
+                {(user?.email ?? "?").charAt(0).toUpperCase()}
+              </Avatar>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item disabled>
+                <Text size="xs">{user?.email}</Text>
+              </Menu.Item>
+              <Menu.Divider />
+              <Menu.Item
+                color="red"
+                leftSection={<IconLogout size={18} />}
+                onClick={() => signOut()}
+              >
+                登出
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        </Group>
 
         <TextInput
           placeholder="輸入銀行名稱 (例如: HSBC)"

@@ -98,7 +98,7 @@ export default function DepositList() {
         <Stack gap="md">
           <Group justify="space-between">
             <div>
-              <Title order={2}>YieldLog</Title>
+              <Title order={2}>存款</Title>
               <Text size="sm" c="dimmed">
                 定期存款管理
               </Text>
@@ -179,8 +179,6 @@ export default function DepositList() {
                   />
                 </Group>
               </Stack>
-
-              <Text fw={600}>存款列表</Text>
 
               <Stack gap="sm">
                 {filteredDeposits.length === 0 ? (
