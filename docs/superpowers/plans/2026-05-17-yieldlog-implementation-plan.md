@@ -18,34 +18,45 @@ yield-log/
 ├── vite.config.ts
 ├── tsconfig.json
 ├── package.json
+├── .env.example
+├── public/
+│   ├── icon-192.png
+│   └── icon-512.png
 ├── src/
 │   ├── main.tsx
 │   ├── App.tsx
 │   ├── theme.ts                 # Mantine theme config (colors, fonts)
-│   ├── supabase.ts             # Supabase client
+│   ├── lib/
+│   │   └── supabase.ts          # Supabase client with helpers
 │   ├── types/
-│   │   └── index.ts            # TypeScript interfaces
+│   │   └── index.ts             # TypeScript interfaces
 │   ├── store/
-│   │   ├── banks.ts            # Bank state management
-│   │   └── deposits.ts        # Deposit state management
+│   │   ├── auth.ts              # Auth state (user session)
+│   │   ├── banks.ts             # Bank state management
+│   │   └── deposits.ts          # Deposit state management
+│   ├── contexts/
+│   │   └── AuthContext.tsx      # Auth provider
 │   ├── hooks/
-│   │   └── useCalculations.ts  # Interest/date calculations
+│   │   ├── useAuth.ts           # Auth hook
+│   │   └── useCalculations.ts   # Interest/date calculations
 │   ├── pages/
-│   │   ├── Dashboard.tsx       # Home page with summary + list
-│   │   ├── DepositForm.tsx     # Add/Edit deposit
-│   │   └── BankManagement.tsx  # Bank CRUD
+│   │   ├── Login.tsx            # Login page
+│   │   ├── Register.tsx         # Register page
+│   │   ├── Dashboard.tsx        # Home page with summary + list
+│   │   ├── DepositForm.tsx      # Add/Edit deposit
+│   │   └── BankManagement.tsx   # Bank CRUD
 │   ├── components/
 │   │   ├── BottomNav.tsx
 │   │   ├── SummaryCard.tsx
 │   │   ├── DepositCard.tsx
 │   │   └── BankItem.tsx
 │   └── layout/
-│       └── AppLayout.tsx       # Shell with BottomNav
+│       └── AppLayout.tsx        # Shell with BottomNav
 ├── docs/superpowers/
 │   ├── specs/2026-05-17-yieldlog-design.md
 │   └── plans/2026-05-17-yieldlog-implementation-plan.md
 └── supabase/
-    └── schema.sql              # Database schema
+    └── schema.sql               # Database schema
 ```
 
 ---
@@ -55,15 +66,22 @@ yield-log/
 ```sql
 -- Run in Supabase SQL Editor
 
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Banks table (user owns their banks)
 CREATE TABLE banks (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Fixed deposits table (user owns their deposits)
 CREATE TABLE fixed_deposits (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  bank_id UUID REFERENCES banks(id) ON DELETE CASCADE,
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  bank_id UUID REFERENCES banks(id) ON DELETE CASCADE NOT NULL,
   amount NUMERIC NOT NULL,
   period_value INTEGER NOT NULL,
   period_unit TEXT NOT NULL CHECK (period_unit IN ('days', 'weeks', 'months', 'years')),
@@ -74,14 +92,53 @@ CREATE TABLE fixed_deposits (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Enable Row Level Security (for future multi-user)
+-- Enable Row Level Security
 ALTER TABLE banks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE fixed_deposits ENABLE ROW LEVEL SECURITY;
 
--- Default policy: allow all for current user (single-user app)
-CREATE POLICY "Allow all" ON banks FOR ALL USING (true);
-CREATE POLICY "Allow all" ON fixed_deposits FOR ALL USING (true);
+-- RLS Policies: user can only access their own data
+CREATE POLICY "Users can manage their own banks" ON banks
+  FOR ALL USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can manage their own deposits" ON fixed_deposits
+  FOR ALL USING (auth.uid() = user_id);
+
+-- Index for faster queries
+CREATE INDEX idx_banks_user_id ON banks(user_id);
+CREATE INDEX idx_fixed_deposits_user_id ON fixed_deposits(user_id);
+CREATE INDEX idx_fixed_deposits_bank_id ON fixed_deposits(bank_id);
+
+-- Seed default banks (only for new users - handled in app logic)
+-- Default banks are copied per user on first login
 ```
+
+---
+
+## Additional File Structure
+
+```
+src/
+├── lib/
+│   └── supabase.ts             # Supabase client with auth helpers
+├── contexts/
+│   └── AuthContext.tsx          # Auth state context
+├── hooks/
+│   └── useAuth.ts              # Auth hook
+├── pages/
+│   ├── Login.tsx               # Login page
+│   ├── Register.tsx            # Register page
+│   └── ProtectedRoute.tsx      # Route wrapper
+```
+
+---
+
+## Auth Flow
+
+1. **Register** — Email + password, create user, copy default banks
+2. **Login** — Email + password, get session
+3. **Logout** — Clear session, redirect to login
+4. **Session** — Auto-refresh via Supabase client
+5. **Protected Routes** — Check auth, redirect to /login if not authenticated
 
 ---
 
