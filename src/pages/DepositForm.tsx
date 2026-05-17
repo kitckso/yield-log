@@ -112,7 +112,7 @@ export default function DepositForm() {
     setEndDateManuallyEdited(true);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (stay?: boolean) => {
     if (
       !bankId ||
       !amount ||
@@ -147,7 +147,24 @@ export default function DepositForm() {
     }
 
     setLoading(false);
-    void navigate("/deposits");
+
+    if (stay) {
+      resetForm();
+    } else {
+      void navigate("/deposits");
+    }
+  };
+
+  const resetForm = () => {
+    setAmount("");
+    setPeriodValue(3);
+    setPeriodUnit("months");
+    setInterestRate("");
+    setInterest(0);
+    setStartDate(new Date());
+    setEndDate(null);
+    setInterestManuallyEdited(false);
+    setEndDateManuallyEdited(false);
   };
 
   if (formLoading) {
@@ -239,7 +256,12 @@ export default function DepositForm() {
           <Button variant="outline" flex={1} onClick={() => navigate("/deposits")}>
             取消
           </Button>
-          <Button flex={2} loading={loading} onClick={handleSubmit}>
+          {!isEditing && (
+            <Button variant="outline" flex={1} loading={loading} onClick={() => handleSubmit(true)}>
+              繼續新增
+            </Button>
+          )}
+          <Button flex={2} loading={loading} onClick={() => handleSubmit()}>
             儲存存款
           </Button>
         </Group>
