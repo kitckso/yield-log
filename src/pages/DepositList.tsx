@@ -33,9 +33,9 @@ export default function DepositList() {
     void fetchBanks();
   }, [fetchBanks]);
 
-  const [statusFilter, setStatusFilter] = useState<string>(searchParams.get("status") ?? "all");
+  const [statusFilter, setStatusFilter] = useState<string>(searchParams.get("status") ?? "active");
   const [bankFilter, setBankFilter] = useState<string | null>(searchParams.get("bankId") ?? null);
-  const [sortBy, setSortBy] = useState<string>(searchParams.get("sort") ?? "start_desc");
+  const [sortBy, setSortBy] = useState<string>(searchParams.get("sort") ?? "end_asc");
 
   const sortOptions = [
     { value: "start_desc", label: "開戶日 (新→舊)" },
@@ -50,9 +50,9 @@ export default function DepositList() {
 
   useEffect(() => {
     const params = new URLSearchParams();
-    if (statusFilter !== "all") params.set("status", statusFilter);
+    if (statusFilter !== "active") params.set("status", statusFilter);
     if (bankFilter) params.set("bankId", bankFilter);
-    if (sortBy !== "start_desc") params.set("sort", sortBy);
+    if (sortBy !== "end_asc") params.set("sort", sortBy);
     setSearchParams(params, { replace: true });
   }, [statusFilter, bankFilter, sortBy, setSearchParams]);
 
