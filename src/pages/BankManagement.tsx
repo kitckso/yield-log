@@ -138,16 +138,6 @@ export default function BankManagement() {
                 <Text size="sm" c="dimmed" ta="center">
                   新增銀行後可開始新增存款記錄
                 </Text>
-                <Button
-                  variant="light"
-                  leftSection={<IconPlus size={16} />}
-                  onClick={() => {
-                    const input = document.querySelector<HTMLInputElement>("#bank-name-input");
-                    if (input) input.focus();
-                  }}
-                >
-                  新增銀行
-                </Button>
               </Stack>
             </Center>
           )}
