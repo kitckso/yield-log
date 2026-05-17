@@ -45,14 +45,14 @@ export default function DepositList() {
   );
 
   const sortOptions = [
-    { value: "start_desc", label: "開戶日 (新→舊)" },
-    { value: "start_asc", label: "開戶日 (舊→新)" },
-    { value: "end_asc", label: "到期日 (近→遠)" },
-    { value: "end_desc", label: "到期日 (遠→近)" },
-    { value: "amount_desc", label: "金額 (大→小)" },
-    { value: "amount_asc", label: "金額 (小→大)" },
-    { value: "rate_desc", label: "利率 (高→低)" },
-    { value: "rate_asc", label: "利率 (低→高)" },
+    { value: "end_asc", label: "到期日 ↑" },
+    { value: "end_desc", label: "到期日 ↓" },
+    { value: "start_asc", label: "開戶日 ↑" },
+    { value: "start_desc", label: "開戶日 ↓" },
+    { value: "amount_asc", label: "金額 ↑" },
+    { value: "amount_desc", label: "金額 ↓" },
+    { value: "rate_asc", label: "利率 ↑" },
+    { value: "rate_desc", label: "利率 ↓" },
   ];
 
   useEffect(() => {
