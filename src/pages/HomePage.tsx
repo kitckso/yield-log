@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Container,
@@ -11,6 +11,7 @@ import {
   Menu,
   SimpleGrid,
   ColorSwatch,
+  SegmentedControl,
 } from "@mantine/core";
 import { DonutChart, BarChart } from "@mantine/charts";
 import { useDepositsStore } from "../store/deposits";
@@ -96,27 +97,30 @@ export default function HomePage() {
     return [...activeDeposits].sort((a, b) => a.end_date.localeCompare(b.end_date)).slice(0, 5);
   }, [activeDeposits]);
 
+  const [yearGroupMode, setYearGroupMode] = useState<string>("start");
+  const yearDateField = yearGroupMode === "start" ? "start_date" : "end_date";
+
   const yearSummary = useMemo(() => {
     const grouped = new Map<
       string,
-      { count: number; amount: number; interest: number; received: number }
+      { count: number; amount: number; pending: number; received: number }
     >();
     deposits.forEach((d) => {
-      const year = dayjs(d.start_date).format("YYYY");
-      const entry = grouped.get(year) ?? { count: 0, amount: 0, interest: 0, received: 0 };
+      const year = dayjs(d[yearDateField as keyof typeof d] as string).format("YYYY");
+      const entry = grouped.get(year) ?? { count: 0, amount: 0, pending: 0, received: 0 };
       entry.count += 1;
       entry.amount += d.amount;
       if (isMatured(d.end_date)) {
         entry.received += d.interest;
       } else {
-        entry.interest += d.interest;
+        entry.pending += d.interest;
       }
       grouped.set(year, entry);
     });
     return Array.from(grouped.entries())
       .sort(([a], [b]) => b.localeCompare(a))
       .map(([year, data]) => ({ year, ...data }));
-  }, [deposits]);
+  }, [deposits, yearDateField]);
 
   const yearChartData = useMemo(() => {
     return yearSummary.map((y) => ({ year: y.year, amount: y.amount }));
@@ -271,7 +275,10 @@ export default function HomePage() {
                       withLabels
                       size={180}
                       thickness={30}
-                      labelsType="percent"
+                      labelsType="value"
+                      valueFormatter={(v: number) =>
+                        v >= 10000 ? `$${(v / 10000).toFixed(0)}萬` : v.toLocaleString()
+                      }
                     />
                     <SimpleGrid cols={2} spacing="xs" w="100%">
                       {bankDistribution.map((item) => (
@@ -339,6 +346,17 @@ export default function HomePage() {
                   <Text fw={600} mb="md">
                     年度摘要
                   </Text>
+                  <SegmentedControl
+                    size="xs"
+                    value={yearGroupMode}
+                    onChange={setYearGroupMode}
+                    data={[
+                      { label: "按開戶日", value: "start" },
+                      { label: "按到期日", value: "end" },
+                    ]}
+                    fullWidth
+                    mb="md"
+                  />
                   <BarChart
                     h={160}
                     data={yearChartData}
@@ -360,6 +378,11 @@ export default function HomePage() {
                           <Text size="sm">{formatCurrency(y.amount)}</Text>
                           <Text size="xs" c="dimmed">
                             {y.count} 筆
+                          </Text>
+                          <Text size="xs" c="dimmed">
+                            {y.pending > 0 && `預期 ${formatCurrency(y.pending)}`}
+                            {y.pending > 0 && y.received > 0 && " · "}
+                            {y.received > 0 && `已收 ${formatCurrency(y.received)}`}
                           </Text>
                         </Stack>
                       </Group>

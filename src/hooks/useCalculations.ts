@@ -45,7 +45,7 @@ export function isMatured(endDate: string): boolean {
 }
 
 export function formatCurrency(amount: number): string {
-  return `HK$ ${amount.toLocaleString("en-HK", {
+  return `$ ${amount.toLocaleString("en-HK", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
