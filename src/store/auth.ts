@@ -19,7 +19,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) return error.message;
 
-    if (data.user) {
+    if (data.user && data.session) {
       set({
         user: { id: data.user.id, email: data.user.email ?? "" },
       });
@@ -35,6 +35,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       for (const name of defaults) {
         await supabase.from("banks").insert({ user_id: data.user.id, name });
       }
+    } else if (data.user && !data.session) {
+      return "請檢查電郵以確認註冊，然後登入";
     }
     return null;
   },

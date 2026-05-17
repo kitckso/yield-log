@@ -35,9 +35,13 @@ export const useDepositsStore = create<DepositsState>((set, get) => ({
   },
 
   addDeposit: async (deposit) => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.user) return;
     const { data, error } = await supabase
       .from("fixed_deposits")
-      .insert(deposit)
+      .insert({ ...deposit, user_id: session.user.id })
       .select("*, banks(name)")
       .single();
     if (!error && data) {

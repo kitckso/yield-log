@@ -25,7 +25,15 @@ export const useBanksStore = create<BanksState>((set, get) => ({
   },
 
   addBank: async (name: string) => {
-    const { data, error } = await supabase.from("banks").insert({ name }).select().single();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.user) return;
+    const { data, error } = await supabase
+      .from("banks")
+      .insert({ user_id: session.user.id, name })
+      .select()
+      .single();
     if (!error && data) {
       set({ banks: [...get().banks, data] });
     }
