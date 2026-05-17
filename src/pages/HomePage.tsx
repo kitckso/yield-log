@@ -305,6 +305,9 @@ export default function HomePage() {
                   tickLine="y"
                   gridAxis="x"
                   withYAxis={false}
+                  valueFormatter={(v: number) =>
+                    `$${v.toLocaleString("en-HK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                  }
                 />
               </Card>
 
