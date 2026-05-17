@@ -1,4 +1,9 @@
 import dayjs from "dayjs";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+
+dayjs.extend(isSameOrBefore);
+dayjs.extend(customParseFormat);
 
 export function calculateInterest(
   amount: number,
@@ -6,8 +11,8 @@ export function calculateInterest(
   startDate: string,
   endDate: string,
 ): number {
-  const start = dayjs(startDate);
-  const end = dayjs(endDate);
+  const start = dayjs(startDate, "YYYY-MM-DD", true);
+  const end = dayjs(endDate, "YYYY-MM-DD", true);
   const days = end.diff(start, "day");
   const interest = amount * (rate / 100) * (days / 365);
   const cents = Math.floor(interest * 100);
@@ -20,8 +25,8 @@ export function calculateInterestRounded(
   startDate: string,
   endDate: string,
 ): number {
-  const start = dayjs(startDate);
-  const end = dayjs(endDate);
+  const start = dayjs(startDate, "YYYY-MM-DD", true);
+  const end = dayjs(endDate, "YYYY-MM-DD", true);
   const days = end.diff(start, "day");
   const interest = amount * (rate / 100) * (days / 365);
   return Math.round(interest * 100) / 100;
@@ -32,7 +37,7 @@ export function calculateEndDate(
   periodValue: number,
   periodUnit: string,
 ): string {
-  const start = dayjs(startDate);
+  const start = dayjs(startDate, "YYYY-MM-DD", true);
   let end = start;
 
   switch (periodUnit) {
@@ -54,7 +59,7 @@ export function calculateEndDate(
 }
 
 export function isMatured(endDate: string): boolean {
-  return dayjs(endDate).isBefore(dayjs(), "day");
+  return dayjs(endDate, "YYYY-MM-DD", true).isSameOrBefore(dayjs(), "day");
 }
 
 export function formatCurrency(amount: number): string {
@@ -65,5 +70,5 @@ export function formatCurrency(amount: number): string {
 }
 
 export function formatDate(dateStr: string): string {
-  return dayjs(dateStr).format("YYYY年MM月DD日");
+  return dayjs(dateStr, "YYYY-MM-DD", true).format("YYYY年MM月DD日");
 }
