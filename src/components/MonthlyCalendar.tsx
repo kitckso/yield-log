@@ -49,8 +49,24 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
   const yearTotalAmount = months.reduce((s, m) => s + m.totalAmount, 0);
   const yearTotalInterest = months.reduce((s, m) => s + m.totalInterest, 0);
 
+  const hasPrevYear = deposits.some((d) => d.end_date.startsWith(String(year - 1)));
+  const hasNextYear = deposits.some((d) => d.end_date.startsWith(String(year + 1)));
+
+  const renderEmptyMonth = (m: MonthGroup) => (
+    <div key={m.month} style={{ padding: "4px 0", textAlign: "center" }}>
+      <Text size="xs" c="dimmed">
+        {m.label} — 暫無記錄
+      </Text>
+    </div>
+  );
+
   const renderMonth = (m: MonthGroup) => {
     const isCurrent = isCurrentYear && m.month === currentMonth;
+
+    if (m.deposits.length === 0) {
+      return renderEmptyMonth(m);
+    }
+
     return (
       <Card
         key={m.month}
@@ -65,70 +81,64 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
           {m.label}
         </Text>
 
-        {m.deposits.length > 0 ? (
-          <>
-            <Card padding="xs" radius="md" bg="gray.0" mb="xs">
-              <Group justify="space-between">
-                <Text size="xs" fw={600}>
-                  合計
-                </Text>
-                <Stack gap={0} align="end">
-                  <Text size="xs" fw={600}>
-                    {formatCurrency(m.totalAmount)}
-                  </Text>
-                  <Text size="xs" c="green" fw={600}>
-                    {formatCurrency(m.totalInterest)}
-                  </Text>
-                </Stack>
-              </Group>
-            </Card>
-
-            <Stack gap="sm">
-              {m.deposits.map((d) => {
-                const matured = isMatured(d.end_date);
-                return (
-                  <Card
-                    key={d.id}
-                    padding="xs"
-                    radius="md"
-                    style={{
-                      backgroundColor: matured ? "var(--mantine-color-gray-0)" : undefined,
-                      opacity: matured ? 0.6 : 1,
-                    }}
-                  >
-                    <Group justify="space-between" mb={2}>
-                      <Text size="sm" fw={500}>
-                        {d.bank_name}
-                      </Text>
-                      {matured ? (
-                        <Badge size="xs" color="gray" variant="light">
-                          已期滿
-                        </Badge>
-                      ) : (
-                        <Text size="xs" c="green" fw={500}>
-                          {d.interest_rate}%
-                        </Text>
-                      )}
-                    </Group>
-                    <Group justify="space-between">
-                      <Text size="sm">{formatCurrency(d.amount)}</Text>
-                      <Text size="xs" c="dimmed">
-                        {formatDate(d.end_date)}
-                      </Text>
-                    </Group>
-                    <Text size="xs" c="dimmed">
-                      利息 {formatCurrency(d.interest)}
-                    </Text>
-                  </Card>
-                );
-              })}
+        <Card padding="xs" radius="md" bg="gray.0" mb="xs">
+          <Group justify="space-between">
+            <Text size="xs" fw={600}>
+              合計
+            </Text>
+            <Stack gap={0} align="end">
+              <Text size="xs" fw={600}>
+                {formatCurrency(m.totalAmount)}
+              </Text>
+              <Text size="xs" c="green" fw={600}>
+                {formatCurrency(m.totalInterest)}
+              </Text>
             </Stack>
-          </>
-        ) : (
-          <Text size="xs" c="dimmed" py="md" ta="center">
-            —
-          </Text>
-        )}
+          </Group>
+        </Card>
+
+        <Stack gap="sm">
+          {m.deposits.map((d) => {
+            const matured = isMatured(d.end_date);
+            return (
+              <Card
+                key={d.id}
+                padding="xs"
+                radius="md"
+                style={{
+                  backgroundColor: matured ? "var(--mantine-color-gray-0)" : undefined,
+                  opacity: matured ? 0.6 : 1,
+                }}
+              >
+                <Group justify="space-between" mb={2}>
+                  <Text size="xs" c="dimmed">
+                    {formatDate(d.end_date)}
+                  </Text>
+                  {matured ? (
+                    <Badge size="xs" color="gray" variant="light">
+                      已期滿
+                    </Badge>
+                  ) : (
+                    <Text size="xs" c="green" fw={500}>
+                      {d.interest_rate}%
+                    </Text>
+                  )}
+                </Group>
+                <Group justify="space-between" mb={2}>
+                  <Text size="sm" fw={500}>
+                    {d.bank_name}
+                  </Text>
+                  <Text size="sm" fw={600}>
+                    {formatCurrency(d.amount)}
+                  </Text>
+                </Group>
+                <Text size="xs" c="dimmed">
+                  利息 {formatCurrency(d.interest)}
+                </Text>
+              </Card>
+            );
+          })}
+        </Stack>
       </Card>
     );
   };
@@ -136,15 +146,23 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
   return (
     <Stack gap="md">
       <Group justify="center" gap="xs">
-        <ActionIcon variant="subtle" onClick={() => onYearChange(year - 1)}>
-          <IconChevronLeft size={20} />
-        </ActionIcon>
+        {hasPrevYear ? (
+          <ActionIcon variant="subtle" onClick={() => onYearChange(year - 1)}>
+            <IconChevronLeft size={20} />
+          </ActionIcon>
+        ) : (
+          <div style={{ width: 36 }} />
+        )}
         <Title order={3} style={{ minWidth: 80, textAlign: "center" }}>
           {year}
         </Title>
-        <ActionIcon variant="subtle" onClick={() => onYearChange(year + 1)}>
-          <IconChevronRight size={20} />
-        </ActionIcon>
+        {hasNextYear ? (
+          <ActionIcon variant="subtle" onClick={() => onYearChange(year + 1)}>
+            <IconChevronRight size={20} />
+          </ActionIcon>
+        ) : (
+          <div style={{ width: 36 }} />
+        )}
       </Group>
 
       <Card padding="sm" radius="lg" withBorder>
