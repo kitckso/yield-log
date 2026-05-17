@@ -1,0 +1,114 @@
+import { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Container, Title, Text, Stack, Group, ActionIcon, Center } from "@mantine/core";
+import { useDepositsStore } from "../store/deposits";
+import SummaryCard from "../components/SummaryCard";
+import DepositCard from "../components/DepositCard";
+import { isMatured } from "../hooks/useCalculations";
+
+export default function Dashboard() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isDepositsPage = location.pathname.startsWith("/deposits");
+  const { deposits, fetchDeposits, deleteDeposit } = useDepositsStore();
+
+  useEffect(() => {
+    void fetchDeposits();
+  }, [fetchDeposits]);
+
+  const totalAmount = deposits.reduce((sum, d) => sum + d.amount, 0);
+  const totalInterest = deposits.reduce((sum, d) => sum + d.interest, 0);
+  const averageRate =
+    deposits.length > 0
+      ? deposits.reduce((sum, d) => sum + d.interest_rate, 0) / deposits.length
+      : 0;
+  const maturedCount = deposits.filter((d) => isMatured(d.end_date)).length;
+
+  const handleDelete = async (id: string) => {
+    if (confirm("確定刪除這筆存款記錄？")) {
+      await deleteDeposit(id);
+    }
+  };
+
+  return (
+    <Container size="sm" pb={100} pt="md">
+      <Stack gap="md">
+        <Group justify="space-between">
+          <div>
+            <Title order={2}>YieldLog</Title>
+            <Text size="sm" c="dimmed">
+              定期存款管理
+            </Text>
+          </div>
+          <ActionIcon variant="subtle" size="lg">
+            <span
+              className="material-symbols-outlined"
+              style={{ fontVariationSettings: "'FILL' 0, 'wght' 400" }}
+            >
+              notifications
+            </span>
+          </ActionIcon>
+        </Group>
+
+        {deposits.length === 0 ? (
+          <Center py="xl">
+            <Stack align="center" gap="sm">
+              <span
+                className="material-symbols-outlined"
+                style={{
+                  fontSize: "64px",
+                  color: "var(--mantine-color-gray-4)",
+                }}
+              >
+                savings
+              </span>
+              <Text c="dimmed">暫無存款記錄</Text>
+              <Text size="sm" c="dimmed">
+                點擊下方按鈕新增定存
+              </Text>
+            </Stack>
+          </Center>
+        ) : (
+          <>
+            <SummaryCard
+              totalAmount={totalAmount}
+              totalInterest={totalInterest}
+              averageRate={averageRate}
+              maturedCount={maturedCount}
+            />
+
+            {!isDepositsPage && <Text fw={600}>存款列表</Text>}
+
+            <Stack gap="sm">
+              {deposits.map((deposit) => (
+                <DepositCard
+                  key={deposit.id}
+                  deposit={deposit}
+                  onEdit={() => navigate(`/deposits/${deposit.id}`)}
+                  onDelete={() => handleDelete(deposit.id)}
+                />
+              ))}
+            </Stack>
+          </>
+        )}
+      </Stack>
+
+      <ActionIcon
+        size={56}
+        radius="xl"
+        style={{
+          position: "fixed",
+          right: "24px",
+          bottom: "80px",
+          backgroundColor: "var(--mantine-color-blue-6)",
+          color: "white",
+        }}
+        onClick={() => navigate("/deposits/new")}
+      >
+        <span className="material-symbols-outlined" style={{ fontSize: "28px" }}>
+          add
+        </span>
+      </ActionIcon>
+    </Container>
+  );
+}
