@@ -27,7 +27,7 @@ export default function SummaryCard({
       }}
     >
       <Stack gap="xs">
-        <Text size="xs" fw={700} opacity={0.8}>
+        <Text size="sm" fw={700} opacity={0.8}>
           進行中定存總額 (HKD)
         </Text>
         <Text fw={700} style={{ fontSize: "28px", lineHeight: "32px" }}>
@@ -39,7 +39,7 @@ export default function SummaryCard({
         </Text>
         <Group gap="lg" mt="sm">
           <Stack gap={4}>
-            <Text size="xs" opacity={0.7}>
+            <Text size="sm" opacity={0.7}>
               預計利息
             </Text>
             <Text size="sm" fw={600}>
@@ -51,7 +51,7 @@ export default function SummaryCard({
             </Text>
           </Stack>
           <Stack gap={4}>
-            <Text size="xs" opacity={0.7}>
+            <Text size="sm" opacity={0.7}>
               已收利息
             </Text>
             <Text size="sm" fw={600}>
@@ -65,7 +65,7 @@ export default function SummaryCard({
         </Group>
         <Group gap="lg" mt="sm">
           <Stack gap={4}>
-            <Text size="xs" opacity={0.7}>
+            <Text size="sm" opacity={0.7}>
               平均利率
             </Text>
             <Text size="sm" fw={600}>
@@ -73,7 +73,7 @@ export default function SummaryCard({
             </Text>
           </Stack>
           <Stack gap={4}>
-            <Text size="xs" opacity={0.7}>
+            <Text size="sm" opacity={0.7}>
               進行中
             </Text>
             <Text size="sm" fw={600}>
@@ -81,7 +81,7 @@ export default function SummaryCard({
             </Text>
           </Stack>
           <Stack gap={4}>
-            <Text size="xs" opacity={0.7}>
+            <Text size="sm" opacity={0.7}>
               已期滿
             </Text>
             <Text size="sm" fw={600}>
