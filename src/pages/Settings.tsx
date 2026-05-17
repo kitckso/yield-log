@@ -1,10 +1,11 @@
 import { useRef, useState } from "react";
-import { Container, Title, Text, Stack, Card, Button, Group, Avatar, Menu } from "@mantine/core";
+import { Container, Title, Text, Stack, Card, Button, Group } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconDownload, IconUpload, IconLogout } from "@tabler/icons-react";
+import { IconDownload, IconUpload } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { useNavigate } from "react-router-dom";
 import { version } from "../../package.json";
+import UserMenu from "../components/UserMenu";
 import { useDepositsStore } from "../store/deposits";
 import { useBanksStore } from "../store/banks";
 import { useAuthStore } from "../store/auth";
@@ -15,7 +16,6 @@ export default function Settings() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
   const user = useAuthStore((s) => s.user);
-  const { signOut } = useAuthStore();
 
   const handleExport = () => {
     const deposits = useDepositsStore.getState().deposits;
@@ -131,26 +131,7 @@ export default function Settings() {
               版本 {version}
             </Text>
           </div>
-          <Menu shadow="md" width={160}>
-            <Menu.Target>
-              <Avatar src={null} alt={user?.email ?? ""} color="blue" style={{ cursor: "pointer" }}>
-                {(user?.email ?? "?").charAt(0).toUpperCase()}
-              </Avatar>
-            </Menu.Target>
-            <Menu.Dropdown>
-              <Menu.Item disabled>
-                <Text size="xs">{user?.email}</Text>
-              </Menu.Item>
-              <Menu.Divider />
-              <Menu.Item
-                color="red"
-                leftSection={<IconLogout size={18} />}
-                onClick={() => signOut()}
-              >
-                登出
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
+          <UserMenu />
         </Group>
 
         <Card padding="lg" radius="lg" withBorder>

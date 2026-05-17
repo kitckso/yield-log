@@ -7,18 +7,16 @@ import {
   Stack,
   Group,
   Card,
-  Avatar,
-  Menu,
   SimpleGrid,
   ColorSwatch,
   SegmentedControl,
   Skeleton,
 } from "@mantine/core";
 import { DonutChart, BarChart } from "@mantine/charts";
-import { IconLogout, IconCoin } from "@tabler/icons-react";
+import UserMenu from "../components/UserMenu";
+import { IconCoin } from "@tabler/icons-react";
 import { useDepositsStore } from "../store/deposits";
 import { useBanksStore } from "../store/banks";
-import { useAuthStore } from "../store/auth";
 import { isMatured, formatCurrency, formatDate } from "../hooks/useCalculations";
 import dayjs from "dayjs";
 
@@ -39,7 +37,6 @@ export default function HomePage() {
   const navigate = useNavigate();
   const { deposits, loading, fetchDeposits } = useDepositsStore();
   const { banks, fetchBanks } = useBanksStore();
-  const { user, signOut } = useAuthStore();
 
   useEffect(() => {
     void fetchDeposits();
@@ -182,31 +179,7 @@ export default function HomePage() {
                 定期存款管理
               </Text>
             </div>
-            <Menu shadow="md" width={160}>
-              <Menu.Target>
-                <Avatar
-                  src={null}
-                  alt={user?.email ?? ""}
-                  color="blue"
-                  style={{ cursor: "pointer" }}
-                >
-                  {(user?.email ?? "?").charAt(0).toUpperCase()}
-                </Avatar>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Item disabled>
-                  <Text size="xs">{user?.email}</Text>
-                </Menu.Item>
-                <Menu.Divider />
-                <Menu.Item
-                  color="red"
-                  leftSection={<IconLogout size={18} />}
-                  onClick={() => signOut()}
-                >
-                  登出
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
+            <UserMenu />
           </Group>
 
           {loading && deposits.length === 0 ? (

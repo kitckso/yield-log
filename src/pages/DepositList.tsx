@@ -8,16 +8,14 @@ import {
   Group,
   ActionIcon,
   Center,
-  Avatar,
-  Menu,
   Skeleton,
   SegmentedControl,
   Select,
 } from "@mantine/core";
-import { IconLogout, IconCoin, IconPlus } from "@tabler/icons-react";
+import { IconCoin, IconPlus } from "@tabler/icons-react";
+import UserMenu from "../components/UserMenu";
 import { useDepositsStore } from "../store/deposits";
 import { useBanksStore } from "../store/banks";
-import { useAuthStore } from "../store/auth";
 import DepositCard from "../components/DepositCard";
 import { isMatured } from "../hooks/useCalculations";
 
@@ -25,7 +23,6 @@ export default function DepositList() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { deposits, loading, fetchDeposits } = useDepositsStore();
-  const { user, signOut } = useAuthStore();
 
   useEffect(() => {
     void fetchDeposits();
@@ -103,31 +100,7 @@ export default function DepositList() {
                 定期存款管理
               </Text>
             </div>
-            <Menu shadow="md" width={160}>
-              <Menu.Target>
-                <Avatar
-                  src={null}
-                  alt={user?.email ?? ""}
-                  color="blue"
-                  style={{ cursor: "pointer" }}
-                >
-                  {(user?.email ?? "?").charAt(0).toUpperCase()}
-                </Avatar>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Item disabled>
-                  <Text size="xs">{user?.email}</Text>
-                </Menu.Item>
-                <Menu.Divider />
-                <Menu.Item
-                  color="red"
-                  leftSection={<IconLogout size={18} />}
-                  onClick={() => signOut()}
-                >
-                  登出
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
+            <UserMenu />
           </Group>
 
           {loading && deposits.length === 0 ? (

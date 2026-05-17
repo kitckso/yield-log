@@ -11,20 +11,17 @@ import {
   Group,
   Modal,
   Button,
-  Avatar,
-  Menu,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconPlus, IconLogout } from "@tabler/icons-react";
+import { IconPlus } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { useDisclosure } from "@mantine/hooks";
 import { useBanksStore } from "../store/banks";
-import { useAuthStore } from "../store/auth";
+import UserMenu from "../components/UserMenu";
 import BankItem from "../components/BankItem";
 
 export default function BankManagement() {
   const { banks, fetchBanks, addBank, updateBank, deleteBank } = useBanksStore();
-  const { user, signOut } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [newBankName, setNewBankName] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -101,26 +98,7 @@ export default function BankManagement() {
               設置並管理您的常用存款銀行
             </Text>
           </div>
-          <Menu shadow="md" width={160}>
-            <Menu.Target>
-              <Avatar src={null} alt={user?.email ?? ""} color="blue" style={{ cursor: "pointer" }}>
-                {(user?.email ?? "?").charAt(0).toUpperCase()}
-              </Avatar>
-            </Menu.Target>
-            <Menu.Dropdown>
-              <Menu.Item disabled>
-                <Text size="xs">{user?.email}</Text>
-              </Menu.Item>
-              <Menu.Divider />
-              <Menu.Item
-                color="red"
-                leftSection={<IconLogout size={18} />}
-                onClick={() => signOut()}
-              >
-                登出
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
+          <UserMenu />
         </Group>
 
         <TextInput
