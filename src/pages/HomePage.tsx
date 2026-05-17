@@ -136,7 +136,8 @@ export default function HomePage() {
         activeAmount: number;
         maturedCount: number;
         maturedAmount: number;
-        totalInterest: number;
+        pendingInterest: number;
+        receivedInterest: number;
       }
     >();
     deposits.forEach((d) => {
@@ -145,16 +146,18 @@ export default function HomePage() {
         activeAmount: 0,
         maturedCount: 0,
         maturedAmount: 0,
-        totalInterest: 0,
+        pendingInterest: 0,
+        receivedInterest: 0,
       };
       if (isMatured(d.end_date)) {
         entry.maturedCount += 1;
         entry.maturedAmount += d.amount;
+        entry.receivedInterest += d.interest;
       } else {
         entry.activeCount += 1;
         entry.activeAmount += d.amount;
+        entry.pendingInterest += d.interest;
       }
-      entry.totalInterest += d.interest;
       grouped.set(d.bank_id, entry);
     });
     return Array.from(grouped.entries())
@@ -397,49 +400,54 @@ export default function HomePage() {
                   <Text fw={600} mb="md">
                     銀行統計
                   </Text>
-                  <Stack gap="sm">
-                    <Group px="xs" c="dimmed">
-                      <Text size="xs" style={{ flex: 1 }}>
-                        銀行
-                      </Text>
-                      <Text size="xs" w={90} ta="right">
-                        進行中
-                      </Text>
-                      <Text size="xs" w={90} ta="right">
-                        已期滿
-                      </Text>
-                    </Group>
-                    {bankStats.map((b) => (
-                      <Group
-                        key={b.bankId}
-                        px="xs"
-                        justify="space-between"
-                        style={{
-                          borderTop: "1px solid var(--mantine-color-gray-2)",
-                          paddingTop: 8,
-                        }}
-                      >
-                        <Text size="sm" fw={500} style={{ flex: 1 }}>
-                          {b.bankName}
-                        </Text>
-                        <Stack gap={0} align="end" w={90}>
-                          <Text size="xs" fw={b.activeCount > 0 ? 600 : 400}>
-                            {b.activeCount}筆
-                          </Text>
-                          <Text size="xs" c="dimmed">
-                            {formatCurrency(b.activeAmount)}
-                          </Text>
+                  <Stack gap="md">
+                    {bankStats.map((b) => {
+                      const totalAmount = b.activeAmount + b.maturedAmount;
+                      return (
+                        <Stack key={b.bankId} gap={4}>
+                          <Group justify="space-between">
+                            <Text size="sm" fw={600}>
+                              {b.bankName}
+                            </Text>
+                            <Text size="sm" fw={600}>
+                              {formatCurrency(totalAmount)}
+                            </Text>
+                          </Group>
+                          <Group grow align="flex-start">
+                            {b.activeCount > 0 && (
+                              <Stack gap={0}>
+                                <Text size="xs" c="dimmed">
+                                  進行中
+                                </Text>
+                                <Text size="xs">
+                                  {b.activeCount}筆 {formatCurrency(b.activeAmount)}
+                                </Text>
+                                {b.pendingInterest > 0 && (
+                                  <Text size="xs" c="dimmed">
+                                    預計利息 {formatCurrency(b.pendingInterest)}
+                                  </Text>
+                                )}
+                              </Stack>
+                            )}
+                            {b.maturedCount > 0 && (
+                              <Stack gap={0}>
+                                <Text size="xs" c="dimmed">
+                                  已期滿
+                                </Text>
+                                <Text size="xs">
+                                  {b.maturedCount}筆 {formatCurrency(b.maturedAmount)}
+                                </Text>
+                                {b.receivedInterest > 0 && (
+                                  <Text size="xs" c="dimmed">
+                                    已收利息 {formatCurrency(b.receivedInterest)}
+                                  </Text>
+                                )}
+                              </Stack>
+                            )}
+                          </Group>
                         </Stack>
-                        <Stack gap={0} align="end" w={90}>
-                          <Text size="xs" fw={b.maturedCount > 0 ? 600 : 400}>
-                            {b.maturedCount}筆
-                          </Text>
-                          <Text size="xs" c="dimmed">
-                            {formatCurrency(b.maturedAmount)}
-                          </Text>
-                        </Stack>
-                      </Group>
-                    ))}
+                      );
+                    })}
                   </Stack>
                 </Card>
               )}
