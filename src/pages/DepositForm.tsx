@@ -345,7 +345,6 @@ export default function DepositForm() {
                 setInterestManuallyEdited(true);
               }}
             >
-              無條件捨去{" "}
               {floorInterest.toLocaleString("en-HK", {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
