@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import DepositForm from "./pages/DepositForm";
 import DepositDetail from "./pages/DepositDetail";
 import BankManagement from "./pages/BankManagement";
+import Settings from "./pages/Settings";
 
 export default function App() {
   const { getSession } = useAuthStore();
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="deposits/:id/detail" element={<DepositDetail />} />
         <Route path="deposits/:id" element={<DepositForm />} />
         <Route path="banks" element={<BankManagement />} />
+        <Route path="settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

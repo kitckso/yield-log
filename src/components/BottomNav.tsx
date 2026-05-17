@@ -10,6 +10,7 @@ const navItems: NavItem[] = [
   { label: "首頁", icon: "dashboard", path: "/" },
   { label: "存款", icon: "savings", path: "/deposits" },
   { label: "銀行", icon: "account_balance", path: "/banks" },
+  { label: "設定", icon: "settings", path: "/settings" },
 ];
 
 export default function BottomNav() {
