@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Container,
   Title,
@@ -23,8 +23,6 @@ import { isMatured } from "../hooks/useCalculations";
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const isDepositsPage = location.pathname.startsWith("/deposits");
   const { deposits, loading, fetchDeposits } = useDepositsStore();
   const { user, signOut } = useAuthStore();
 
@@ -160,7 +158,7 @@ export default function Dashboard() {
                 />
               </Stack>
 
-              {!isDepositsPage && <Text fw={600}>存款列表</Text>}
+              <Text fw={600}>存款列表</Text>
 
               <Stack gap="sm">
                 {filteredDeposits.length === 0 ? (

@@ -6,6 +6,7 @@ import App from "./App";
 import { theme } from "./theme";
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
+import "@mantine/charts/styles.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

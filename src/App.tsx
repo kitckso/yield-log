@@ -6,6 +6,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
+import HomePage from "./pages/HomePage";
 import DepositForm from "./pages/DepositForm";
 import DepositDetail from "./pages/DepositDetail";
 import BankManagement from "./pages/BankManagement";
@@ -30,7 +31,7 @@ export default function App() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<Dashboard />} />
+        <Route index element={<HomePage />} />
         <Route path="deposits" element={<Dashboard />} />
         <Route path="deposits/new" element={<DepositForm />} />
         <Route path="deposits/:id/detail" element={<DepositDetail />} />
