@@ -134,9 +134,14 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
                       利息 {formatCurrency(d.interest)}
                     </Text>
                   ) : (
-                    <Text size="xs" c="green" fw={500}>
-                      {d.interest_rate}%
-                    </Text>
+                    <Stack gap={0} align="end">
+                      <Text size="xs" c="green" fw={500}>
+                        {d.interest_rate}%
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        利息 {formatCurrency(d.interest)}
+                      </Text>
+                    </Stack>
                   )}
                 </Group>
               </div>
