@@ -17,7 +17,6 @@ import {
 import { useDepositsStore } from "../store/deposits";
 import { useBanksStore } from "../store/banks";
 import { useAuthStore } from "../store/auth";
-import SummaryCard from "../components/SummaryCard";
 import DepositCard from "../components/DepositCard";
 import { isMatured } from "../hooks/useCalculations";
 
@@ -46,20 +45,6 @@ export default function DepositList() {
       return true;
     });
   }, [deposits, statusFilter, bankFilter]);
-
-  const activeDeposits = deposits.filter((d) => !isMatured(d.end_date));
-  const maturedDeposits = deposits.filter((d) => isMatured(d.end_date));
-
-  const activeAmount = activeDeposits.reduce((sum, d) => sum + d.amount, 0);
-  const pendingInterest = activeDeposits.reduce((sum, d) => sum + d.interest, 0);
-  const totalReceivedInterest = deposits.reduce((sum, d) => sum + d.interest, 0);
-  const averageRate =
-    activeDeposits.length > 0
-      ? activeDeposits.reduce((sum, d) => sum + d.interest_rate * d.amount, 0) /
-        activeDeposits.reduce((sum, d) => sum + d.amount, 0)
-      : 0;
-  const activeCount = activeDeposits.length;
-  const maturedCount = maturedDeposits.length;
 
   return (
     <div style={{ position: "relative" }}>
@@ -127,15 +112,6 @@ export default function DepositList() {
             </Center>
           ) : (
             <>
-              <SummaryCard
-                activeAmount={activeAmount}
-                pendingInterest={pendingInterest}
-                totalReceivedInterest={totalReceivedInterest}
-                averageRate={averageRate}
-                maturedCount={maturedCount}
-                activeCount={activeCount}
-              />
-
               <Stack gap="xs">
                 <SegmentedControl
                   size="xs"

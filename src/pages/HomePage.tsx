@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Container,
   Title,
@@ -32,6 +33,7 @@ const chartColors = [
 ];
 
 export default function HomePage() {
+  const navigate = useNavigate();
   const { deposits, fetchDeposits } = useDepositsStore();
   const { banks, fetchBanks } = useBanksStore();
   const { user, signOut } = useAuthStore();
@@ -184,6 +186,12 @@ export default function HomePage() {
                       </Text>
                     </Stack>
                   </SimpleGrid>
+                  {maturedDeposits.length > 0 && (
+                    <Text size="xs" c="dimmed" mt="xs">
+                      已期滿 {maturedDeposits.length} 筆，共{" "}
+                      {formatCurrency(maturedDeposits.reduce((s, d) => s + d.amount, 0))}
+                    </Text>
+                  )}
                 </Stack>
               </Card>
 
@@ -239,7 +247,12 @@ export default function HomePage() {
                   </Text>
                   <Stack gap="sm">
                     {upcoming.map((d) => (
-                      <Group key={d.id} justify="space-between">
+                      <Group
+                        key={d.id}
+                        justify="space-between"
+                        style={{ cursor: "pointer" }}
+                        onClick={() => navigate(`/deposits/${d.id}/detail`)}
+                      >
                         <Stack gap={2}>
                           <Text size="sm" fw={500}>
                             {bankMap.get(d.bank_id) ?? "未知"}
