@@ -245,7 +245,6 @@ export default function DepositForm() {
 
         <NumberInput
           label="年利率 (%)"
-          placeholder="4.25"
           value={interestRate}
           onChange={setInterestRate}
           min={0}
