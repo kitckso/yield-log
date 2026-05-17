@@ -31,73 +31,75 @@ export default function Dashboard() {
   };
 
   return (
-    <Container size="sm" pb={100} pt="md">
-      <Stack gap="md">
-        <Group justify="space-between">
-          <div>
-            <Title order={2}>YieldLog</Title>
-            <Text size="sm" c="dimmed">
-              定期存款管理
-            </Text>
-          </div>
-          <ActionIcon variant="subtle" size="lg">
-            <span
-              className="material-symbols-outlined"
-              style={{ fontVariationSettings: "'FILL' 0, 'wght' 400" }}
-            >
-              notifications
-            </span>
-          </ActionIcon>
-        </Group>
-
-        {deposits.length === 0 ? (
-          <Center py="xl">
-            <Stack align="center" gap="sm">
+    <div style={{ position: "relative" }}>
+      <Container size="sm" pb={100} pt="md">
+        <Stack gap="md">
+          <Group justify="space-between">
+            <div>
+              <Title order={2}>YieldLog</Title>
+              <Text size="sm" c="dimmed">
+                定期存款管理
+              </Text>
+            </div>
+            <ActionIcon variant="subtle" size="lg">
               <span
                 className="material-symbols-outlined"
-                style={{
-                  fontSize: "64px",
-                  color: "var(--mantine-color-gray-4)",
-                }}
+                style={{ fontVariationSettings: "'FILL' 0, 'wght' 400" }}
               >
-                savings
+                notifications
               </span>
-              <Text c="dimmed">暫無存款記錄</Text>
-              <Text size="sm" c="dimmed">
-                點擊下方按鈕新增定存
-              </Text>
-            </Stack>
-          </Center>
-        ) : (
-          <>
-            <SummaryCard
-              totalAmount={totalAmount}
-              totalInterest={totalInterest}
-              averageRate={averageRate}
-              maturedCount={maturedCount}
-            />
+            </ActionIcon>
+          </Group>
 
-            {!isDepositsPage && <Text fw={600}>存款列表</Text>}
+          {deposits.length === 0 ? (
+            <Center py="xl">
+              <Stack align="center" gap="sm">
+                <span
+                  className="material-symbols-outlined"
+                  style={{
+                    fontSize: "64px",
+                    color: "var(--mantine-color-gray-4)",
+                  }}
+                >
+                  savings
+                </span>
+                <Text c="dimmed">暫無存款記錄</Text>
+                <Text size="sm" c="dimmed">
+                  點擊下方按鈕新增定存
+                </Text>
+              </Stack>
+            </Center>
+          ) : (
+            <>
+              <SummaryCard
+                totalAmount={totalAmount}
+                totalInterest={totalInterest}
+                averageRate={averageRate}
+                maturedCount={maturedCount}
+              />
 
-            <Stack gap="sm">
-              {deposits.map((deposit) => (
-                <DepositCard
-                  key={deposit.id}
-                  deposit={deposit}
-                  onEdit={() => navigate(`/deposits/${deposit.id}`)}
-                  onDelete={() => handleDelete(deposit.id)}
-                />
-              ))}
-            </Stack>
-          </>
-        )}
-      </Stack>
+              {!isDepositsPage && <Text fw={600}>存款列表</Text>}
+
+              <Stack gap="sm">
+                {deposits.map((deposit) => (
+                  <DepositCard
+                    key={deposit.id}
+                    deposit={deposit}
+                    onEdit={() => navigate(`/deposits/${deposit.id}`)}
+                    onDelete={() => handleDelete(deposit.id)}
+                  />
+                ))}
+              </Stack>
+            </>
+          )}
+        </Stack>
+      </Container>
 
       <ActionIcon
         size={56}
         radius="xl"
         style={{
-          position: "fixed",
+          position: "absolute",
           right: "24px",
           bottom: "80px",
           backgroundColor: "var(--mantine-color-blue-6)",
@@ -109,6 +111,6 @@ export default function Dashboard() {
           add
         </span>
       </ActionIcon>
-    </Container>
+    </div>
   );
 }
