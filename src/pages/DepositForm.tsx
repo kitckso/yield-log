@@ -10,6 +10,7 @@ import {
   Title,
   Loader,
   Center,
+  Text,
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useAuthStore } from "../store/auth";
@@ -200,17 +201,23 @@ export default function DepositForm() {
           <Title order={4}>{isEditing ? "編輯存款" : "新增存款"}</Title>
         </Group>
 
-        <Select
-          label="銀行名稱"
-          placeholder="選擇銀行"
-          data={banks.map((b) => ({
-            value: b.id,
-            label: b.name,
-          }))}
-          value={bankId}
-          onChange={setBankId}
-          required
-        />
+        <Stack gap={4}>
+          <Text size="sm" fw={500}>
+            銀行名稱
+          </Text>
+          <Group gap={4}>
+            {banks.map((b) => (
+              <Button
+                key={b.id}
+                size="compact-sm"
+                variant={bankId === b.id ? "filled" : "light"}
+                onClick={() => setBankId(b.id)}
+              >
+                {b.name}
+              </Button>
+            ))}
+          </Group>
+        </Stack>
 
         <NumberInput
           label="本金 (HKD)"
