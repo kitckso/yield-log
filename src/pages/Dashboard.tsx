@@ -10,6 +10,7 @@ import {
   Center,
   Avatar,
   Menu,
+  Skeleton,
 } from "@mantine/core";
 import { useDepositsStore } from "../store/deposits";
 import { useAuthStore } from "../store/auth";
@@ -21,7 +22,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const location = useLocation();
   const isDepositsPage = location.pathname.startsWith("/deposits");
-  const { deposits, fetchDeposits } = useDepositsStore();
+  const { deposits, loading, fetchDeposits } = useDepositsStore();
   const { user, signOut } = useAuthStore();
 
   useEffect(() => {
@@ -80,7 +81,15 @@ export default function Dashboard() {
             </Menu>
           </Group>
 
-          {deposits.length === 0 ? (
+          {loading && deposits.length === 0 ? (
+            <Stack gap="md">
+              <Skeleton height={180} radius="lg" />
+              <Skeleton height={20} width={80} radius="sm" />
+              <Skeleton height={100} radius="lg" />
+              <Skeleton height={100} radius="lg" />
+              <Skeleton height={100} radius="lg" />
+            </Stack>
+          ) : deposits.length === 0 ? (
             <Center py="xl">
               <Stack align="center" gap="sm">
                 <span
