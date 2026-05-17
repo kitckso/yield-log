@@ -12,6 +12,8 @@ import {
   Center,
   Text,
 } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { IconArrowLeft } from "@tabler/icons-react";
 import { DateInput } from "@mantine/dates";
 import { useAuthStore } from "../store/auth";
 import { useBanksStore } from "../store/banks";
@@ -185,8 +187,18 @@ export default function DepositForm() {
 
     if (isEditing && id) {
       await updateDeposit(id, depositData);
+      notifications.show({
+        title: "已更新",
+        message: "存款記錄已成功更新",
+        color: "green",
+      });
     } else {
       await addDeposit(depositData);
+      notifications.show({
+        title: "已新增",
+        message: "存款記錄已成功新增",
+        color: "green",
+      });
     }
 
     setLoading(false);
@@ -225,7 +237,7 @@ export default function DepositForm() {
         <Group>
           <Button
             variant="subtle"
-            leftSection={<span className="material-symbols-outlined">arrow_back</span>}
+            leftSection={<IconArrowLeft size={20} />}
             onClick={() => navigate("/deposits")}
           >
             返回

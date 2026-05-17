@@ -1,5 +1,8 @@
 import { useRef, useState } from "react";
 import { Container, Title, Text, Stack, Card, Button, Group } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { IconDownload, IconUpload } from "@tabler/icons-react";
+import { modals } from "@mantine/modals";
 import { useNavigate } from "react-router-dom";
 import { version } from "../../package.json";
 import { useDepositsStore } from "../store/deposits";
@@ -24,73 +27,97 @@ export default function Settings() {
     a.download = `yieldlog-export-${new Date().toISOString().split("T")[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
+    notifications.show({
+      title: "已匯出",
+      message: "資料已成功匯出為 JSON 檔案",
+      color: "green",
+    });
   };
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!confirm("警告：匯入將先清除所有現有資料，並以檔案內容取代。是否繼續？")) {
-      if (fileRef.current) fileRef.current.value = "";
-      return;
-    }
+    modals.openConfirmModal({
+      title: "確認匯入",
+      children: (
+        <Text size="sm">
+          警告：匯入將先清除所有現有資料，並以檔案內容取代。此操作無法復原，是否繼續？
+        </Text>
+      ),
+      labels: { confirm: "匯入", cancel: "取消" },
+      confirmProps: { color: "red" },
+      onConfirm: async () => {
+        setImporting(true);
+        try {
+          const text = await file.text();
+          const data = JSON.parse(text);
 
-    setImporting(true);
-    try {
-      const text = await file.text();
-      const data = JSON.parse(text);
+          if (data.version !== "1.0") {
+            notifications.show({
+              title: "匯入失敗",
+              message: "不支援的檔案格式",
+              color: "red",
+            });
+            return;
+          }
 
-      if (data.version !== "1.0") {
-        alert("不支援的檔案格式");
-        return;
-      }
+          const userId = user!.id;
 
-      const userId = user!.id;
+          await supabase.from("fixed_deposits").delete().eq("user_id", userId);
+          await supabase.from("banks").delete().eq("user_id", userId);
 
-      await supabase.from("fixed_deposits").delete().eq("user_id", userId);
-      await supabase.from("banks").delete().eq("user_id", userId);
+          if (data.banks?.length) {
+            const { error } = await supabase.from("banks").upsert(
+              data.banks.map((b: { id: string; name: string }) => ({
+                id: b.id,
+                user_id: userId,
+                name: b.name,
+              })),
+              { onConflict: "id" },
+            );
+            if (error) throw error;
+          }
 
-      if (data.banks?.length) {
-        const { error } = await supabase.from("banks").upsert(
-          data.banks.map((b: { id: string; name: string }) => ({
-            id: b.id,
-            user_id: userId,
-            name: b.name,
-          })),
-          { onConflict: "id" },
-        );
-        if (error) throw error;
-      }
+          if (data.deposits?.length) {
+            const { error } = await supabase.from("fixed_deposits").upsert(
+              data.deposits.map((d: Record<string, unknown>) => ({
+                id: d.id,
+                user_id: userId,
+                bank_id: d.bank_id,
+                amount: d.amount,
+                period_value: d.period_value,
+                period_unit: d.period_unit,
+                interest_rate: d.interest_rate,
+                interest: d.interest,
+                start_date: d.start_date,
+                end_date: d.end_date,
+              })),
+              { onConflict: "id" },
+            );
+            if (error) throw error;
+          }
 
-      if (data.deposits?.length) {
-        const { error } = await supabase.from("fixed_deposits").upsert(
-          data.deposits.map((d: Record<string, unknown>) => ({
-            id: d.id,
-            user_id: userId,
-            bank_id: d.bank_id,
-            amount: d.amount,
-            period_value: d.period_value,
-            period_unit: d.period_unit,
-            interest_rate: d.interest_rate,
-            interest: d.interest,
-            start_date: d.start_date,
-            end_date: d.end_date,
-          })),
-          { onConflict: "id" },
-        );
-        if (error) throw error;
-      }
+          await useBanksStore.getState().fetchBanks(true);
+          await useDepositsStore.getState().fetchDeposits(true);
 
-      await useBanksStore.getState().fetchBanks(true);
-      await useDepositsStore.getState().fetchDeposits(true);
-
-      alert("匯入完成");
-      void navigate("/deposits");
-    } catch {
-      alert("匯入失敗，請檢查檔案格式");
-    }
-    setImporting(false);
-    if (fileRef.current) fileRef.current.value = "";
+          notifications.show({
+            title: "匯入完成",
+            message: "資料已成功匯入",
+            color: "green",
+          });
+          void navigate("/deposits");
+        } catch {
+          notifications.show({
+            title: "匯入失敗",
+            message: "請檢查檔案格式是否正確",
+            color: "red",
+          });
+        }
+        setImporting(false);
+        if (fileRef.current) fileRef.current.value = "";
+      },
+    });
   };
 
   return (
@@ -122,7 +149,7 @@ export default function Settings() {
               <Button
                 variant="outline"
                 onClick={handleExport}
-                leftSection={<span className="material-symbols-outlined">download</span>}
+                leftSection={<IconDownload size={18} />}
               >
                 匯出
               </Button>
@@ -130,7 +157,7 @@ export default function Settings() {
                 variant="outline"
                 onClick={() => fileRef.current?.click()}
                 loading={importing}
-                leftSection={<span className="material-symbols-outlined">upload</span>}
+                leftSection={<IconUpload size={18} />}
               >
                 匯入
               </Button>

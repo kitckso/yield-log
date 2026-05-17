@@ -1,4 +1,5 @@
 import { Card, Text, Group, Badge, Stack } from "@mantine/core";
+import { IconPercentage, IconCalendarCheck, IconCalendar } from "@tabler/icons-react";
 import { isMatured, formatDate, formatCurrency } from "../hooks/useCalculations";
 import type { DepositWithBank } from "../types";
 
@@ -52,30 +53,18 @@ export default function DepositCard({ deposit, onClick }: DepositCardProps) {
         style={{ borderTop: "1px solid var(--mantine-color-gray-3)" }}
       >
         <Group gap="xs">
-          <span
-            className="material-symbols-outlined"
-            style={{
-              fontSize: "18px",
-              color: "var(--mantine-color-blue-6)",
-            }}
-          >
-            percent
-          </span>
+          <IconPercentage size={18} color="var(--mantine-color-blue-6)" />
           <Text fw={600}>{deposit.interest_rate}%</Text>
           <Text size="sm" c="dimmed" ml="xs">
             利息 {formatCurrency(deposit.interest)}
           </Text>
         </Group>
         <Group gap="xs">
-          <span
-            className="material-symbols-outlined"
-            style={{
-              fontSize: "18px",
-              color: "var(--mantine-color-gray-6)",
-            }}
-          >
-            {matured ? "event_available" : "calendar_today"}
-          </span>
+          {matured ? (
+            <IconCalendarCheck size={18} color="var(--mantine-color-gray-6)" />
+          ) : (
+            <IconCalendar size={18} color="var(--mantine-color-gray-6)" />
+          )}
           <Text size="sm" c="dimmed">
             {formatDate(deposit.end_date)}
           </Text>

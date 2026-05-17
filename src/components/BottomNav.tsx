@@ -1,16 +1,24 @@
 import { useLocation, useNavigate } from "react-router-dom";
+import { IconLayoutDashboard, IconCoin, IconBuildingBank, IconSettings } from "@tabler/icons-react";
 
 interface NavItem {
   label: string;
-  icon: string;
+  icon: React.ReactNode;
   path: string;
 }
 
+const icons = {
+  dashboard: <IconLayoutDashboard size={24} />,
+  savings: <IconCoin size={24} />,
+  account_balance: <IconBuildingBank size={24} />,
+  settings: <IconSettings size={24} />,
+};
+
 const navItems: NavItem[] = [
-  { label: "首頁", icon: "dashboard", path: "/" },
-  { label: "存款", icon: "savings", path: "/deposits" },
-  { label: "銀行", icon: "account_balance", path: "/banks" },
-  { label: "設定", icon: "settings", path: "/settings" },
+  { label: "首頁", icon: icons.dashboard, path: "/" },
+  { label: "存款", icon: icons.savings, path: "/deposits" },
+  { label: "銀行", icon: icons.account_balance, path: "/banks" },
+  { label: "設定", icon: icons.settings, path: "/settings" },
 ];
 
 export default function BottomNav() {
@@ -61,15 +69,7 @@ export default function BottomNav() {
               transition: "all 0.2s",
             }}
           >
-            <span
-              className="material-symbols-outlined"
-              style={{
-                fontSize: "24px",
-                fontVariationSettings: active ? "'FILL' 1, 'wght' 400" : "'FILL' 0, 'wght' 400",
-              }}
-            >
-              {item.icon}
-            </span>
+            {item.icon}
             <span
               style={{
                 fontSize: "12px",

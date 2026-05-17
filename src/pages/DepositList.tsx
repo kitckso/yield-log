@@ -14,6 +14,7 @@ import {
   SegmentedControl,
   Select,
 } from "@mantine/core";
+import { IconLogout, IconCoin, IconPlus } from "@tabler/icons-react";
 import { useDepositsStore } from "../store/deposits";
 import { useBanksStore } from "../store/banks";
 import { useAuthStore } from "../store/auth";
@@ -120,7 +121,7 @@ export default function DepositList() {
                 <Menu.Divider />
                 <Menu.Item
                   color="red"
-                  leftSection={<span className="material-symbols-outlined">logout</span>}
+                  leftSection={<IconLogout size={18} />}
                   onClick={() => signOut()}
                 >
                   登出
@@ -140,15 +141,7 @@ export default function DepositList() {
           ) : deposits.length === 0 ? (
             <Center py="xl">
               <Stack align="center" gap="sm">
-                <span
-                  className="material-symbols-outlined"
-                  style={{
-                    fontSize: "64px",
-                    color: "var(--mantine-color-gray-4)",
-                  }}
-                >
-                  savings
-                </span>
+                <IconCoin size={64} color="var(--mantine-color-gray-4)" />
                 <Text c="dimmed">暫無存款記錄</Text>
                 <Text size="sm" c="dimmed">
                   點擊下方按鈕新增定存
@@ -240,9 +233,7 @@ export default function DepositList() {
             }}
             onClick={() => navigate("/deposits/new")}
           >
-            <span className="material-symbols-outlined" style={{ fontSize: "28px" }}>
-              add
-            </span>
+            <IconPlus size={28} color="white" />
           </ActionIcon>
         </div>
       </div>

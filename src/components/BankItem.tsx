@@ -1,4 +1,5 @@
 import { Card, Group, Stack, Text, ActionIcon } from "@mantine/core";
+import { IconBuildingBank, IconEdit, IconTrash } from "@tabler/icons-react";
 
 interface BankItemProps {
   name: string;
@@ -29,12 +30,7 @@ export default function BankItem({ name, onEdit, onDelete }: BankItemProps) {
               justifyContent: "center",
             }}
           >
-            <span
-              className="material-symbols-outlined"
-              style={{ color: "var(--mantine-color-blue-6)" }}
-            >
-              account_balance
-            </span>
+            <IconBuildingBank size={20} color="var(--mantine-color-blue-6)" />
           </div>
           <Stack gap={4}>
             <Text fw={600}>{name}</Text>
@@ -42,10 +38,10 @@ export default function BankItem({ name, onEdit, onDelete }: BankItemProps) {
         </Group>
         <Group gap="xs">
           <ActionIcon variant="subtle" color="gray" onClick={onEdit}>
-            <span className="material-symbols-outlined">edit</span>
+            <IconEdit size={18} />
           </ActionIcon>
           <ActionIcon variant="subtle" color="red" onClick={onDelete}>
-            <span className="material-symbols-outlined">delete</span>
+            <IconTrash size={18} />
           </ActionIcon>
         </Group>
       </Group>

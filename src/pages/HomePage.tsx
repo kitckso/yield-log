@@ -15,6 +15,7 @@ import {
   Skeleton,
 } from "@mantine/core";
 import { DonutChart, BarChart } from "@mantine/charts";
+import { IconLogout, IconCoin } from "@tabler/icons-react";
 import { useDepositsStore } from "../store/deposits";
 import { useBanksStore } from "../store/banks";
 import { useAuthStore } from "../store/auth";
@@ -199,7 +200,7 @@ export default function HomePage() {
                 <Menu.Divider />
                 <Menu.Item
                   color="red"
-                  leftSection={<span className="material-symbols-outlined">logout</span>}
+                  leftSection={<IconLogout size={18} />}
                   onClick={() => signOut()}
                 >
                   登出
@@ -217,12 +218,7 @@ export default function HomePage() {
             </Stack>
           ) : deposits.length === 0 ? (
             <Stack align="center" py="xl" gap="sm">
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "64px", color: "var(--mantine-color-gray-4)" }}
-              >
-                savings
-              </span>
+              <IconCoin size={64} color="var(--mantine-color-gray-4)" />
               <Text c="dimmed">暫無存款記錄</Text>
               <Text size="sm" c="dimmed">
                 前往「存款」頁面新增定存

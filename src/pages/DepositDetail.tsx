@@ -12,6 +12,9 @@ import {
   Center,
   Badge,
 } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { IconArrowLeft, IconTrash, IconEdit } from "@tabler/icons-react";
+import { modals } from "@mantine/modals";
 import { useDepositsStore } from "../store/deposits";
 import { isMatured, formatCurrency, formatDate } from "../hooks/useCalculations";
 import type { DepositWithBank } from "../types";
@@ -33,12 +36,23 @@ export default function DepositDetail() {
     }
   }, [id, deposits]);
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deposit) return;
-    if (confirm("確定刪除這筆存款記錄？")) {
-      await deleteDeposit(deposit.id);
-      void navigate("/deposits");
-    }
+    modals.openConfirmModal({
+      title: "確認刪除",
+      children: <Text size="sm">確定刪除這筆存款記錄？此操作無法復原。</Text>,
+      labels: { confirm: "刪除", cancel: "取消" },
+      confirmProps: { color: "red" },
+      onConfirm: async () => {
+        await deleteDeposit(deposit.id);
+        notifications.show({
+          title: "已刪除",
+          message: "存款記錄已成功刪除",
+          color: "green",
+        });
+        void navigate("/deposits");
+      },
+    });
   };
 
   if (!deposit) {
@@ -65,7 +79,7 @@ export default function DepositDetail() {
         <Group>
           <Button
             variant="subtle"
-            leftSection={<span className="material-symbols-outlined">arrow_back</span>}
+            leftSection={<IconArrowLeft size={20} />}
             onClick={() => navigate("/deposits")}
           >
             返回
@@ -136,13 +150,13 @@ export default function DepositDetail() {
           <Button
             variant="outline"
             color="red"
-            leftSection={<span className="material-symbols-outlined">delete</span>}
+            leftSection={<IconTrash size={18} />}
             onClick={handleDelete}
           >
             刪除
           </Button>
           <Button
-            leftSection={<span className="material-symbols-outlined">edit</span>}
+            leftSection={<IconEdit size={18} />}
             onClick={() => navigate(`/deposits/${deposit.id}`)}
           >
             編輯

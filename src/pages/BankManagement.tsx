@@ -12,6 +12,9 @@ import {
   Modal,
   Button,
 } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { IconPlus } from "@tabler/icons-react";
+import { modals } from "@mantine/modals";
 import { useDisclosure } from "@mantine/hooks";
 import { useBanksStore } from "../store/banks";
 import BankItem from "../components/BankItem";
@@ -32,6 +35,11 @@ export default function BankManagement() {
     if (!newBankName.trim()) return;
     await addBank(newBankName.trim());
     setNewBankName("");
+    notifications.show({
+      title: "已新增",
+      message: `銀行「${newBankName.trim()}」已成功新增`,
+      color: "green",
+    });
   };
 
   const handleEdit = (id: string, name: string) => {
@@ -46,12 +54,29 @@ export default function BankManagement() {
     closeModal();
     setEditingId(null);
     setEditingName("");
+    notifications.show({
+      title: "已更新",
+      message: "銀行名稱已成功更新",
+      color: "green",
+    });
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm("確定刪除此銀行？所有相關存款也會被刪除。")) {
-      await deleteBank(id);
-    }
+  const handleDelete = (id: string) => {
+    const bank = banks.find((b) => b.id === id);
+    modals.openConfirmModal({
+      title: "確認刪除",
+      children: <Text size="sm">確定刪除銀行「{bank?.name}」？所有相關的存款記錄也會被刪除。</Text>,
+      labels: { confirm: "刪除", cancel: "取消" },
+      confirmProps: { color: "red" },
+      onConfirm: async () => {
+        await deleteBank(id);
+        notifications.show({
+          title: "已刪除",
+          message: "銀行已成功刪除",
+          color: "green",
+        });
+      },
+    });
   };
 
   if (loading) {
@@ -86,7 +111,7 @@ export default function BankManagement() {
               onClick={handleAdd}
               disabled={!newBankName.trim()}
             >
-              <span className="material-symbols-outlined">add</span>
+              <IconPlus size={20} />
             </ActionIcon>
           }
         />
