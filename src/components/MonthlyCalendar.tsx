@@ -34,7 +34,9 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
     for (let m = 0; m < 12; m++) {
       const date = dayjs().year(year).month(m);
       const key = date.format("YYYY-MM");
-      const monthDeposits = deposits.filter((d) => d.end_date.startsWith(key));
+      const monthDeposits = deposits
+        .filter((d) => d.end_date.startsWith(key))
+        .sort((a, b) => a.end_date.localeCompare(b.end_date));
       groups.push({
         month: m,
         label: date.format("M月"),
@@ -134,14 +136,14 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
                       利息 {formatCurrency(d.interest)}
                     </Text>
                   ) : (
-                    <Stack gap={0} align="end">
+                    <Group gap={4}>
                       <Text size="xs" c="green" fw={500}>
                         {d.interest_rate}%
                       </Text>
                       <Text size="xs" c="dimmed">
                         利息 {formatCurrency(d.interest)}
                       </Text>
-                    </Stack>
+                    </Group>
                   )}
                 </Group>
               </div>
