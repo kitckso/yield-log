@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Container,
@@ -11,8 +11,11 @@ import {
   Avatar,
   Menu,
   Skeleton,
+  SegmentedControl,
+  Select,
 } from "@mantine/core";
 import { useDepositsStore } from "../store/deposits";
+import { useBanksStore } from "../store/banks";
 import { useAuthStore } from "../store/auth";
 import SummaryCard from "../components/SummaryCard";
 import DepositCard from "../components/DepositCard";
@@ -28,6 +31,23 @@ export default function Dashboard() {
   useEffect(() => {
     void fetchDeposits();
   }, [fetchDeposits]);
+
+  const { banks, fetchBanks } = useBanksStore();
+  useEffect(() => {
+    void fetchBanks();
+  }, [fetchBanks]);
+
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [bankFilter, setBankFilter] = useState<string | null>(null);
+
+  const filteredDeposits = useMemo(() => {
+    return deposits.filter((d) => {
+      if (statusFilter === "active" && isMatured(d.end_date)) return false;
+      if (statusFilter === "matured" && !isMatured(d.end_date)) return false;
+      if (bankFilter && d.bank_id !== bankFilter) return false;
+      return true;
+    });
+  }, [deposits, statusFilter, bankFilter]);
 
   const activeDeposits = deposits.filter((d) => !isMatured(d.end_date));
   const maturedDeposits = deposits.filter((d) => isMatured(d.end_date));
@@ -118,16 +138,44 @@ export default function Dashboard() {
                 activeCount={activeCount}
               />
 
+              <Stack gap="xs">
+                <SegmentedControl
+                  size="xs"
+                  value={statusFilter}
+                  onChange={setStatusFilter}
+                  data={[
+                    { label: "全部", value: "all" },
+                    { label: "進行中", value: "active" },
+                    { label: "已期滿", value: "matured" },
+                  ]}
+                  fullWidth
+                />
+                <Select
+                  size="xs"
+                  placeholder="全部銀行"
+                  clearable
+                  data={banks.map((b) => ({ label: b.name, value: b.id }))}
+                  value={bankFilter}
+                  onChange={setBankFilter}
+                />
+              </Stack>
+
               {!isDepositsPage && <Text fw={600}>存款列表</Text>}
 
               <Stack gap="sm">
-                {deposits.map((deposit) => (
-                  <DepositCard
-                    key={deposit.id}
-                    deposit={deposit}
-                    onClick={() => navigate(`/deposits/${deposit.id}/detail`)}
-                  />
-                ))}
+                {filteredDeposits.length === 0 ? (
+                  <Text c="dimmed" size="sm" ta="center" py="md">
+                    沒有符合篩選條件的記錄
+                  </Text>
+                ) : (
+                  filteredDeposits.map((deposit) => (
+                    <DepositCard
+                      key={deposit.id}
+                      deposit={deposit}
+                      onClick={() => navigate(`/deposits/${deposit.id}/detail`)}
+                    />
+                  ))
+                )}
               </Stack>
             </>
           )}
