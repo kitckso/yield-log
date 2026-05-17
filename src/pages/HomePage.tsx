@@ -96,6 +96,70 @@ export default function HomePage() {
     return [...activeDeposits].sort((a, b) => a.end_date.localeCompare(b.end_date)).slice(0, 5);
   }, [activeDeposits]);
 
+  const yearSummary = useMemo(() => {
+    const grouped = new Map<
+      string,
+      { count: number; amount: number; interest: number; received: number }
+    >();
+    deposits.forEach((d) => {
+      const year = dayjs(d.start_date).format("YYYY");
+      const entry = grouped.get(year) ?? { count: 0, amount: 0, interest: 0, received: 0 };
+      entry.count += 1;
+      entry.amount += d.amount;
+      if (isMatured(d.end_date)) {
+        entry.received += d.interest;
+      } else {
+        entry.interest += d.interest;
+      }
+      grouped.set(year, entry);
+    });
+    return Array.from(grouped.entries())
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([year, data]) => ({ year, ...data }));
+  }, [deposits]);
+
+  const yearChartData = useMemo(() => {
+    return yearSummary.map((y) => ({ year: y.year, amount: y.amount }));
+  }, [yearSummary]);
+
+  const bankStats = useMemo(() => {
+    const grouped = new Map<
+      string,
+      {
+        activeCount: number;
+        activeAmount: number;
+        maturedCount: number;
+        maturedAmount: number;
+        totalInterest: number;
+      }
+    >();
+    deposits.forEach((d) => {
+      const entry = grouped.get(d.bank_id) ?? {
+        activeCount: 0,
+        activeAmount: 0,
+        maturedCount: 0,
+        maturedAmount: 0,
+        totalInterest: 0,
+      };
+      if (isMatured(d.end_date)) {
+        entry.maturedCount += 1;
+        entry.maturedAmount += d.amount;
+      } else {
+        entry.activeCount += 1;
+        entry.activeAmount += d.amount;
+      }
+      entry.totalInterest += d.interest;
+      grouped.set(d.bank_id, entry);
+    });
+    return Array.from(grouped.entries())
+      .map(([bankId, data]) => ({
+        bankId,
+        bankName: bankMap.get(bankId) ?? "未知",
+        ...data,
+      }))
+      .sort((a, b) => b.activeAmount + b.maturedAmount - (a.activeAmount + a.maturedAmount));
+  }, [deposits, bankMap]);
+
   return (
     <div>
       <Container size="sm" pb={100} pt="md">
@@ -264,6 +328,92 @@ export default function HomePage() {
                         <Text fw={600} size="sm">
                           {formatCurrency(d.amount)}
                         </Text>
+                      </Group>
+                    ))}
+                  </Stack>
+                </Card>
+              )}
+
+              {yearSummary.length > 1 && (
+                <Card padding="lg" radius="lg" withBorder>
+                  <Text fw={600} mb="md">
+                    年度摘要
+                  </Text>
+                  <BarChart
+                    h={160}
+                    data={yearChartData}
+                    dataKey="year"
+                    series={[{ name: "amount", color: "blue.6" }]}
+                    tickLine="y"
+                    gridAxis="x"
+                    withYAxis={false}
+                    withLegend={false}
+                    withTooltip={false}
+                  />
+                  <Stack gap="xs" mt="md">
+                    {yearSummary.map((y) => (
+                      <Group key={y.year} justify="space-between">
+                        <Text size="sm" fw={500}>
+                          {y.year}
+                        </Text>
+                        <Stack gap={0} align="end">
+                          <Text size="sm">{formatCurrency(y.amount)}</Text>
+                          <Text size="xs" c="dimmed">
+                            {y.count} 筆
+                          </Text>
+                        </Stack>
+                      </Group>
+                    ))}
+                  </Stack>
+                </Card>
+              )}
+
+              {bankStats.length > 0 && (
+                <Card padding="lg" radius="lg" withBorder>
+                  <Text fw={600} mb="md">
+                    銀行統計
+                  </Text>
+                  <Stack gap="sm">
+                    <Group px="xs" c="dimmed">
+                      <Text size="xs" style={{ flex: 1 }}>
+                        銀行
+                      </Text>
+                      <Text size="xs" w={60} ta="right">
+                        進行中
+                      </Text>
+                      <Text size="xs" w={60} ta="right">
+                        已期滿
+                      </Text>
+                    </Group>
+                    {bankStats.map((b) => (
+                      <Group
+                        key={b.bankId}
+                        px="xs"
+                        justify="space-between"
+                        style={{
+                          borderTop: "1px solid var(--mantine-color-gray-2)",
+                          paddingTop: 8,
+                        }}
+                      >
+                        <Text size="sm" fw={500} style={{ flex: 1 }}>
+                          {b.bankName}
+                        </Text>
+                        <Stack gap={0} align="end" w={60}>
+                          <Text size="xs" fw={b.activeCount > 0 ? 600 : 400}>
+                            {b.activeCount}筆
+                          </Text>
+                          <Text size="xs" c="dimmed">
+                            {formatCurrency(b.activeAmount)}
+                          </Text>
+                        </Stack>
+                        <Stack gap={0} align="end" w={60}>
+                          <Text size="xs" fw={b.maturedCount > 0 ? 600 : 400}>
+                            {b.maturedCount}筆
+                          </Text>
+                          <Text size="xs" c="dimmed">
+                            {formatCurrency(b.maturedAmount)}
+                          </Text>
+                        </Stack>
                       </Group>
                     ))}
                   </Stack>
