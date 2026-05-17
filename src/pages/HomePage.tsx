@@ -120,7 +120,7 @@ export default function HomePage() {
       grouped.set(year, entry);
     });
     return Array.from(grouped.entries())
-      .sort(([a], [b]) => b.localeCompare(a))
+      .sort(([a], [b]) => a.localeCompare(b))
       .map(([year, data]) => ({ year, ...data }));
   }, [deposits, yearDateField]);
 
