@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
-import { Container, Title, Text, Stack, Card, Button, Group } from "@mantine/core";
+import { Container, Title, Text, Stack, Card, Button, Group, Divider } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconDownload, IconUpload } from "@tabler/icons-react";
+import { IconDownload, IconUpload, IconAlertTriangle } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { useNavigate } from "react-router-dom";
 import { version } from "../../package.json";
@@ -178,6 +178,53 @@ export default function Settings() {
               style={{ display: "none" }}
               onChange={handleImport}
             />
+          </Stack>
+        </Card>
+
+        <Divider />
+
+        <Card padding="lg" radius="lg" withBorder bd="1px solid var(--mantine-color-red-4)">
+          <Stack gap="md">
+            <Group gap="xs">
+              <IconAlertTriangle size={20} color="var(--mantine-color-red-6)" />
+              <Text fw={600} c="red">
+                危險區域
+              </Text>
+            </Group>
+            <Text size="sm" c="dimmed">
+              清除所有存款與銀行資料。此操作無法復原。
+            </Text>
+            <Button
+              color="red"
+              variant="outline"
+              fullWidth
+              onClick={() => {
+                modals.openConfirmModal({
+                  title: "確認清除所有資料",
+                  children: (
+                    <Text size="sm">
+                      此操作將永久刪除所有存款記錄與銀行資料，無法復原。是否確定繼續？
+                    </Text>
+                  ),
+                  labels: { confirm: "清除所有資料", cancel: "取消" },
+                  confirmProps: { color: "red" },
+                  onConfirm: async () => {
+                    const userId = user!.id;
+                    await supabase.from("fixed_deposits").delete().eq("user_id", userId);
+                    await supabase.from("banks").delete().eq("user_id", userId);
+                    await useBanksStore.getState().fetchBanks(true);
+                    await useDepositsStore.getState().fetchDeposits(true);
+                    notifications.show({
+                      title: "已清除",
+                      message: "所有資料已成功清除",
+                      color: "green",
+                    });
+                  },
+                });
+              }}
+            >
+              清除所有資料
+            </Button>
           </Stack>
         </Card>
       </Stack>
