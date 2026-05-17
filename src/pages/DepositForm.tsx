@@ -58,6 +58,24 @@ export default function DepositForm() {
     const vals = deposits.filter((d) => d.start_date >= recentCutoff).map((d) => d.interest_rate);
     return [...new Set(vals)].sort((a, b) => b - a).slice(0, 5);
   }, [deposits, recentCutoff]);
+  const recentPeriods = useMemo(() => {
+    const seen = new Set<string>();
+    const vals: { value: number; unit: string }[] = [];
+    for (const d of deposits) {
+      if (d.start_date >= recentCutoff) {
+        const key = `${d.period_value}-${d.period_unit}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          vals.push({ value: d.period_value, unit: d.period_unit });
+        }
+      }
+    }
+    return vals.slice(0, 5);
+  }, [deposits, recentCutoff]);
+  const periodLabel = (v: number, u: string) => {
+    const labels: Record<string, string> = { days: "日", weeks: "週", months: "個月", years: "年" };
+    return `${v}${labels[u] ?? u}`;
+  };
 
   useEffect(() => {
     void fetchBanks();
@@ -242,6 +260,23 @@ export default function DepositForm() {
           <NumberInput label="存期" value={periodValue} onChange={setPeriodValue} min={1} />
           <Select label="單位" data={periodUnits} value={periodUnit} onChange={setPeriodUnit} />
         </Group>
+        {!isEditing && recentPeriods.length > 0 && (
+          <Group gap={4}>
+            {recentPeriods.map((p) => (
+              <Button
+                key={`${p.value}-${p.unit}`}
+                size="compact-xs"
+                variant="light"
+                onClick={() => {
+                  setPeriodValue(p.value);
+                  setPeriodUnit(p.unit);
+                }}
+              >
+                {periodLabel(p.value, p.unit)}
+              </Button>
+            ))}
+          </Group>
+        )}
 
         <NumberInput
           label="年利率 (%)"
