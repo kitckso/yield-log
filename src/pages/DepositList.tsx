@@ -12,6 +12,7 @@ import {
   SegmentedControl,
   Select,
   Divider,
+  Button,
 } from "@mantine/core";
 import { IconCoin, IconPlus } from "@tabler/icons-react";
 import dayjs from "dayjs";
@@ -103,6 +104,28 @@ export default function DepositList() {
   const isDateSort = sortBy.startsWith("start_") || sortBy.startsWith("end_");
 
   const renderList = () => {
+    if (filteredDeposits.length === 0 && deposits.length === 0) {
+      return (
+        <Center py="xl">
+          <Stack align="center" gap="md">
+            <Text size="lg" fw={500} ta="center">
+              尚未新增存款記錄
+            </Text>
+            <Text size="sm" c="dimmed" ta="center">
+              先到「銀行」頁面新增銀行，再到「存款」頁面新增存款
+            </Text>
+            <Button
+              variant="light"
+              leftSection={<IconCoin size={16} />}
+              onClick={() => navigate("/banks")}
+            >
+              新增銀行
+            </Button>
+          </Stack>
+        </Center>
+      );
+    }
+
     if (filteredDeposits.length === 0) {
       return (
         <Text c="dimmed" size="sm" ta="center" py="md">
