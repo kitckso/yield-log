@@ -97,45 +97,49 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
           </Group>
         </Card>
 
-        <Stack gap="sm">
+        <Stack gap="xs">
           {m.deposits.map((d) => {
             const matured = isMatured(d.end_date);
             return (
-              <Card
+              <div
                 key={d.id}
-                padding="xs"
-                radius="md"
                 style={{
+                  padding: "4px 8px",
+                  borderRadius: 6,
                   backgroundColor: matured ? "var(--mantine-color-gray-0)" : undefined,
                   opacity: matured ? 0.6 : 1,
                 }}
               >
-                <Group justify="space-between" mb={2}>
-                  <Text size="xs" c="dimmed">
-                    {formatDate(d.end_date)}
+                <Group justify="space-between" mb={4}>
+                  <Group gap={4}>
+                    <Text size="xs" c="dimmed">
+                      {formatDate(d.end_date)}
+                    </Text>
+                    {matured && (
+                      <Badge size="xs" color="gray" variant="light">
+                        已期滿
+                      </Badge>
+                    )}
+                  </Group>
+                  <Text size="sm" fw={500}>
+                    {d.bank_name}
+                  </Text>
+                </Group>
+                <Group justify="space-between">
+                  <Text size="sm" fw={600}>
+                    {formatCurrency(d.amount)}
                   </Text>
                   {matured ? (
-                    <Badge size="xs" color="gray" variant="light">
-                      已期滿
-                    </Badge>
+                    <Text size="xs" c="dimmed">
+                      利息 {formatCurrency(d.interest)}
+                    </Text>
                   ) : (
                     <Text size="xs" c="green" fw={500}>
                       {d.interest_rate}%
                     </Text>
                   )}
                 </Group>
-                <Group justify="space-between" mb={2}>
-                  <Text size="sm" fw={500}>
-                    {d.bank_name}
-                  </Text>
-                  <Text size="sm" fw={600}>
-                    {formatCurrency(d.amount)}
-                  </Text>
-                </Group>
-                <Text size="xs" c="dimmed">
-                  利息 {formatCurrency(d.interest)}
-                </Text>
-              </Card>
+              </div>
             );
           })}
         </Stack>
