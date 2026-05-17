@@ -1,0 +1,1194 @@
+<!-- 銀行管理 - YieldLog -->
+<!DOCTYPE html>
+
+<html class="light" lang="zh-Hant"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>YieldLog - 銀行管理</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Shared Component Logic & Tailwind Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-variant": "#e2e2e9",
+                        "tertiary": "#5f2200",
+                        "on-primary-fixed-variant": "#00458f",
+                        "on-tertiary": "#ffffff",
+                        "on-surface-variant": "#424751",
+                        "inverse-primary": "#abc7ff",
+                        "error-container": "#ffdad6",
+                        "on-secondary-container": "#00714d",
+                        "secondary": "#006c49",
+                        "primary-fixed": "#d7e2ff",
+                        "on-tertiary-fixed": "#351000",
+                        "background": "#f9f9ff",
+                        "secondary-fixed-dim": "#4edea3",
+                        "on-secondary": "#ffffff",
+                        "secondary-container": "#6cf8bb",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#004a99",
+                        "on-tertiary-fixed-variant": "#7b2f00",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container": "#ededf5",
+                        "surface-container-highest": "#e2e2e9",
+                        "surface-container-low": "#f3f3fa",
+                        "on-background": "#191c21",
+                        "inverse-surface": "#2e3036",
+                        "on-secondary-fixed-variant": "#005236",
+                        "surface-tint": "#255dad",
+                        "on-error-container": "#93000a",
+                        "surface-bright": "#f9f9ff",
+                        "inverse-on-surface": "#f0f0f8",
+                        "on-error": "#ffffff",
+                        "surface-dim": "#d9d9e1",
+                        "tertiary-fixed": "#ffdbcc",
+                        "primary-fixed-dim": "#abc7ff",
+                        "tertiary-container": "#833301",
+                        "tertiary-fixed-dim": "#ffb694",
+                        "surface": "#f9f9ff",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed": "#001b3f",
+                        "on-primary-container": "#9bbdff",
+                        "on-secondary-fixed": "#002113",
+                        "on-tertiary-container": "#ffa77e",
+                        "on-surface": "#191c21",
+                        "surface-container-high": "#e7e8ef",
+                        "primary": "#00346f",
+                        "outline": "#737783",
+                        "outline-variant": "#c2c6d3",
+                        "secondary-fixed": "#6ffbbe"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "section-padding": "1.5rem",
+                        "max-width": "480px",
+                        "bottom-nav-height": "64px",
+                        "stack-gap": "0.75rem",
+                        "container-margin": "1rem"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Inter", "sans-serif"],
+                        "headline-md": ["Inter", "sans-serif"],
+                        "body-md": ["Inter", "sans-serif"],
+                        "headline-sm": ["Inter", "sans-serif"],
+                        "body-lg": ["Inter", "sans-serif"],
+                        "label-bold": ["Inter", "sans-serif"],
+                        "numeral-xl": ["Inter", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-bold": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "numeral-xl": ["28px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #f3f4f6; /* Soft desktop background */
+        }
+        .app-canvas {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 40px rgba(0,0,0,0.03);
+        }
+        @media (min-width: 481px) {
+            .app-canvas {
+                margin: 0 auto;
+                border-left: 1px solid #e5e7eb;
+                border-right: 1px solid #e5e7eb;
+            }
+        }
+        /* Custom scrollbar for clean UI */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 10px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-on-surface">
+<div class="app-canvas max-w-max-width bg-background">
+<!-- TopAppBar: YieldLog Management -->
+<header class="w-full top-0 sticky z-50 bg-background flex items-center justify-between px-section-padding h-16 max-w-max-width mx-auto">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-headline-md" data-icon="account_balance_wallet">account_balance_wallet</span>
+<h1 class="font-headline-md text-headline-md text-primary">YieldLog</h1>
+</div>
+<button class="text-on-surface-variant hover:opacity-80 transition-opacity active:scale-95 duration-100">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</header>
+<!-- Main Content -->
+<main class="flex-1 px-section-padding pb-24">
+<!-- Page Title Section -->
+<div class="py-6">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">銀行管理</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">設置並管理您的常用存款銀行</p>
+</div>
+<!-- Add New Bank Input -->
+<section class="mb-8">
+<div class="relative group">
+<input class="w-full h-14 pl-4 pr-14 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-body-lg text-body-lg placeholder:text-outline shadow-sm" id="bankInput" placeholder="輸入銀行名稱 (例如: HSBC)" type="text"/>
+<button class="absolute right-2 top-2 h-10 w-10 flex items-center justify-center bg-primary text-on-primary rounded-lg active:scale-90 transition-transform duration-200" id="addBankBtn">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+</div>
+</section>
+<!-- Bank List Grid -->
+<section class="space-y-stack-gap" id="bankList">
+<!-- Bank Item: HSBC -->
+<div class="flex items-center justify-between p-4 bg-white border border-outline-variant rounded-xl shadow-[0_1px_3px_0_rgba(0,0,0,0.05)] hover:shadow-md transition-shadow">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed-variant">
+<span class="material-symbols-outlined" data-icon="account_balance">account_balance</span>
+</div>
+<div>
+<p class="font-headline-sm text-headline-sm leading-tight">HSBC</p>
+<p class="font-label-bold text-label-bold text-on-surface-variant">匯豐銀行</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors rounded-lg">
+<span class="material-symbols-outlined" data-icon="edit">edit</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-error hover:bg-error-container transition-colors rounded-lg">
+<span class="material-symbols-outlined" data-icon="delete">delete</span>
+</button>
+</div>
+</div>
+<!-- Bank Item: BOCHK -->
+<div class="flex items-center justify-between p-4 bg-white border border-outline-variant rounded-xl shadow-[0_1px_3px_0_rgba(0,0,0,0.05)] hover:shadow-md transition-shadow">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined" data-icon="account_balance">account_balance</span>
+</div>
+<div>
+<p class="font-headline-sm text-headline-sm leading-tight">BOCHK</p>
+<p class="font-label-bold text-label-bold text-on-surface-variant">中國銀行 (香港)</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors rounded-lg">
+<span class="material-symbols-outlined" data-icon="edit">edit</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-error hover:bg-error-container transition-colors rounded-lg">
+<span class="material-symbols-outlined" data-icon="delete">delete</span>
+</button>
+</div>
+</div>
+<!-- Bank Item: Standard Chartered -->
+<div class="flex items-center justify-between p-4 bg-white border border-outline-variant rounded-xl shadow-[0_1px_3px_0_rgba(0,0,0,0.05)] hover:shadow-md transition-shadow">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed-variant">
+<span class="material-symbols-outlined" data-icon="account_balance">account_balance</span>
+</div>
+<div>
+<p class="font-headline-sm text-headline-sm leading-tight">Standard Chartered</p>
+<p class="font-label-bold text-label-bold text-on-surface-variant">渣打銀行</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors rounded-lg">
+<span class="material-symbols-outlined" data-icon="edit">edit</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-error hover:bg-error-container transition-colors rounded-lg">
+<span class="material-symbols-outlined" data-icon="delete">delete</span>
+</button>
+</div>
+</div>
+<!-- Bank Item: Hang Seng -->
+<div class="flex items-center justify-between p-4 bg-white border border-outline-variant rounded-xl shadow-[0_1px_3px_0_rgba(0,0,0,0.05)] hover:shadow-md transition-shadow">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="account_balance">account_balance</span>
+</div>
+<div>
+<p class="font-headline-sm text-headline-sm leading-tight">Hang Seng Bank</p>
+<p class="font-label-bold text-label-bold text-on-surface-variant">恒生銀行</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors rounded-lg">
+<span class="material-symbols-outlined" data-icon="edit">edit</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-error hover:bg-error-container transition-colors rounded-lg">
+<span class="material-symbols-outlined" data-icon="delete">delete</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Aesthetic Illustration Placeholder -->
+<div class="mt-12 opacity-40 grayscale flex flex-col items-center justify-center text-center">
+<div class="w-32 h-32 mb-4 bg-surface-container rounded-full flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A minimalist architectural photograph of a modern financial district with clean glass skyscrapers and a clear blue sky, reflecting a sense of stability, corporate precision, and wealth growth in a professional light-mode aesthetic. The composition is balanced and elegant." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmCsdtHhvNtEyodw4H6yetRJPMH5V6_QTb29POhuR_ox1nLC3MWvXNXOs_EWBSiYQngqjtVaArQAJ-yfZL17-ZXdur1LD0B0s9GdgCELHgUo_BiIV29nMBZlBUdaPVkUO5NDRuYbnfwLJCnq7ZRYOFItGQjmR9-iuUfZAm6DwD-qhJkxWvxXNlqNte9EfuTTAEl3tsOBKtN7n3HPQfX0bDvQbiyJOj9l4OZ1v1L1uEtNOuE-HC-IAC0xvDhnINTMK0qkWbIrJ0-6E"/>
+</div>
+<p class="font-label-bold text-label-bold max-w-[200px]">安全加密存儲技術 保護您的資產隱私</p>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 h-[bottom-nav-height] bg-surface border-t border-outline-variant shadow-[0_-1px_3px_0_rgba(0,0,0,0.05)] max-w-max-width mx-auto flex justify-around items-center px-4">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-low transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-bold text-label-bold">首頁</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-low transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="savings">savings</span>
+<span class="font-label-bold text-label-bold">存款</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance" style="font-variation-settings: 'FILL' 1;">account_balance</span>
+<span class="font-label-bold text-label-bold">銀行</span>
+</a>
+</nav>
+</div>
+<script>
+        // Micro-interactions for adding a bank
+        const addBtn = document.getElementById('addBankBtn');
+        const input = document.getElementById('bankInput');
+        const list = document.getElementById('bankList');
+
+        addBtn.addEventListener('click', () => {
+            const val = input.value.trim();
+            if (val) {
+                const newItem = document.createElement('div');
+                newItem.className = "flex items-center justify-between p-4 bg-white border border-outline-variant rounded-xl shadow-[0_1px_3px_0_rgba(0,0,0,0.05)] hover:shadow-md transition-all opacity-0 scale-95";
+                newItem.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined">account_balance</span>
+                        </div>
+                        <div>
+                            <p class="font-headline-sm text-headline-sm leading-tight">${val}</p>
+                            <p class="font-label-bold text-label-bold text-on-surface-variant">新增銀行</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button class="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors rounded-lg">
+                            <span class="material-symbols-outlined">edit</span>
+                        </button>
+                        <button class="p-2 text-on-surface-variant hover:text-error hover:bg-error-container transition-colors rounded-lg" onclick="this.closest('.flex.items-center.justify-between').remove()">
+                            <span class="material-symbols-outlined">delete</span>
+                        </button>
+                    </div>
+                `;
+                list.prepend(newItem);
+
+                // Animation frame for entrance
+                requestAnimationFrame(() => {
+                    newItem.classList.remove('opacity-0', 'scale-95');
+                    newItem.classList.add('opacity-100', 'scale-100');
+                });
+
+                input.value = '';
+                input.focus();
+            }
+        });
+
+        // Trigger on Enter
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addBtn.click();
+        });
+    </script>
+</body></html>
+
+<!-- 新增定存 - YieldLog -->
+<!DOCTYPE html>
+
+<html lang="zh-HK"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>YieldLog - 新增存款</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-variant": "#e2e2e9",
+                    "tertiary": "#5f2200",
+                    "on-primary-fixed-variant": "#00458f",
+                    "on-tertiary": "#ffffff",
+                    "on-surface-variant": "#424751",
+                    "inverse-primary": "#abc7ff",
+                    "error-container": "#ffdad6",
+                    "on-secondary-container": "#00714d",
+                    "secondary": "#006c49",
+                    "primary-fixed": "#d7e2ff",
+                    "on-tertiary-fixed": "#351000",
+                    "background": "#f9f9ff",
+                    "secondary-fixed-dim": "#4edea3",
+                    "on-secondary": "#ffffff",
+                    "secondary-container": "#6cf8bb",
+                    "on-primary": "#ffffff",
+                    "primary-container": "#004a99",
+                    "on-tertiary-fixed-variant": "#7b2f00",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container": "#ededf5",
+                    "surface-container-highest": "#e2e2e9",
+                    "surface-container-low": "#f3f3fa",
+                    "on-background": "#191c21",
+                    "inverse-surface": "#2e3036",
+                    "on-secondary-fixed-variant": "#005236",
+                    "surface-tint": "#255dad",
+                    "on-error-container": "#93000a",
+                    "surface-bright": "#f9f9ff",
+                    "inverse-on-surface": "#f0f0f8",
+                    "on-error": "#ffffff",
+                    "surface-dim": "#d9d9e1",
+                    "tertiary-fixed": "#ffdbcc",
+                    "primary-fixed-dim": "#abc7ff",
+                    "tertiary-container": "#833301",
+                    "tertiary-fixed-dim": "#ffb694",
+                    "surface": "#f9f9ff",
+                    "error": "#ba1a1a",
+                    "on-primary-fixed": "#001b3f",
+                    "on-primary-container": "#9bbdff",
+                    "on-secondary-fixed": "#002113",
+                    "on-tertiary-container": "#ffa77e",
+                    "on-surface": "#191c21",
+                    "surface-container-high": "#e7e8ef",
+                    "primary": "#00346f",
+                    "outline": "#737783",
+                    "outline-variant": "#c2c6d3",
+                    "secondary-fixed": "#6ffbbe"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "section-padding": "1.5rem",
+                    "max-width": "480px",
+                    "bottom-nav-height": "64px",
+                    "stack-gap": "0.75rem",
+                    "container-margin": "1rem"
+            },
+            "fontFamily": {
+                    "display-lg": ["Inter", "sans-serif"],
+                    "headline-md": ["Inter", "sans-serif"],
+                    "body-md": ["Inter", "sans-serif"],
+                    "headline-sm": ["Inter", "sans-serif"],
+                    "body-lg": ["Inter", "sans-serif"],
+                    "label-bold": ["Inter", "sans-serif"],
+                    "numeral-xl": ["Inter", "sans-serif"]
+            },
+            "fontSize": {
+                    "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-bold": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "numeral-xl": ["28px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { -webkit-tap-highlight-color: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        input:focus { outline: none; border-color: #00346f !important; ring: 0 !important; }
+        select:focus { outline: none; border-color: #00346f !important; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex justify-center items-start">
+<div class="w-full max-w-max-width bg-background min-h-screen relative flex flex-col pb-32">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky flex items-center justify-between px-section-padding h-16 max-w-max-width mx-auto bg-background z-40">
+<div class="flex items-center gap-3">
+<button class="hover:opacity-80 transition-opacity active:scale-95 duration-100 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">arrow_back</span>
+</button>
+<h1 class="font-headline-md text-headline-md text-primary">新增存款</h1>
+</div>
+<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant">
+<img alt="Profile" data-alt="A professional headshot of a financial advisor in a light-mode office setting. The person is smiling confidently, wearing a clean, modern business casual outfit. Soft sunlight fills the room, reflecting the brand's atmosphere of security and corporate precision. The color palette is composed of soft whites, neutral greys, and subtle blue tones, maintaining a high-end financial app aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD8nc4ctL6_m4qRBfBBaLuoioZqK-_SJzAQkfHwMa5xTBGRmFaSxLg66tvZuZiGM1-yGxC768dzgHg-jztDbxECmRh__S96uJARepkd4U2xZlGIG3dKZlZlUDjOqm4PPHKO6BSo1xfhRriOPc0RqhTTUiDveEaNFv2XFAwJ4VJdM-28p47xF54DO2-8f2wwygouKGjWMzqZ2EKMfU5VicszoTDcg5vRRV9d-XPfXR-qP0swPH6WpzOpdD4ANLbtm5y9aqyUvlS9_1Q"/>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 px-container-margin py-4">
+<form class="flex flex-col gap-stack-gap" id="depositForm">
+<!-- Bank Selection -->
+<div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-[0_1px_3px_0_rgba(0,0,0,0.05)]">
+<label class="block font-label-bold text-label-bold text-on-surface-variant mb-2 uppercase">銀行名稱</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-10 pr-4 py-3 bg-surface-container-low border border-outline-variant rounded-lg font-body-lg text-body-lg" list="banks" placeholder="搜尋銀行，例如：HSBC" type="text"/>
+<datalist id="banks">
+<option value="HSBC 匯豐銀行">
+</option><option value="Standard Chartered 渣打銀行">
+</option><option value="Bank of China 中國銀行">
+</option><option value="Hang Seng 恒生銀行">
+</option><option value="ZA Bank">
+</option><option value="Mox Bank">
+</option></datalist>
+</div>
+</div>
+<!-- Principal Amount -->
+<div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-[0_1px_3px_0_rgba(0,0,0,0.05)]">
+<label class="block font-label-bold text-label-bold text-on-surface-variant mb-2 uppercase">本金 (HKD)</label>
+<div class="flex items-center">
+<span class="font-numeral-xl text-numeral-xl text-primary mr-2">HK$</span>
+<input class="flex-1 border-none p-0 font-numeral-xl text-numeral-xl text-on-surface bg-transparent focus:ring-0" id="amount" placeholder="0.00" step="1000" type="number"/>
+</div>
+</div>
+<!-- Period & Rate Grid -->
+<div class="grid grid-cols-2 gap-stack-gap">
+<!-- Period -->
+<div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-[0_1px_3px_0_rgba(0,0,0,0.05)]">
+<label class="block font-label-bold text-label-bold text-on-surface-variant mb-2 uppercase">存期</label>
+<div class="flex gap-2">
+<input class="w-16 border-b border-outline-variant p-0 font-body-lg text-body-lg bg-transparent text-center focus:border-primary" id="period_val" type="number" value="12"/>
+<select class="flex-1 border-none p-0 font-body-lg text-body-lg bg-transparent text-primary font-semibold" id="period_unit">
+<option value="days">日</option>
+<option value="weeks">星期</option>
+<option selected="" value="months">個月</option>
+<option value="years">年</option>
+</select>
+</div>
+</div>
+<!-- Interest Rate -->
+<div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-[0_1px_3px_0_rgba(0,0,0,0.05)]">
+<label class="block font-label-bold text-label-bold text-on-surface-variant mb-2 uppercase">年利率 (%)</label>
+<div class="flex items-center justify-between">
+<input class="w-full border-none p-0 font-numeral-xl text-numeral-xl text-on-surface bg-transparent focus:ring-0" id="rate" step="0.01" type="number" value="4.25"/>
+<span class="text-primary font-bold">%</span>
+</div>
+</div>
+</div>
+<!-- Dates -->
+<div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-[0_1px_3px_0_rgba(0,0,0,0.05)]">
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="block font-label-bold text-label-bold text-on-surface-variant mb-2 uppercase">起息日期</label>
+<input class="w-full border-none p-0 font-body-lg text-body-lg bg-transparent text-on-surface" id="start_date" type="date"/>
+</div>
+<div class="border-l border-outline-variant pl-4">
+<label class="block font-label-bold text-label-bold text-on-surface-variant mb-2 uppercase">到期日期</label>
+<input class="w-full border-none p-0 font-body-lg text-body-lg bg-transparent text-on-surface" id="end_date" type="date"/>
+</div>
+</div>
+</div>
+<!-- Calculated Interest -->
+<div class="bg-primary-container/10 p-4 rounded-xl border border-primary/20">
+<div class="flex justify-between items-center mb-1">
+<label class="font-label-bold text-label-bold text-primary uppercase">預計利息收益</label>
+<span class="material-symbols-outlined text-[18px] text-primary">info</span>
+</div>
+<div class="flex items-baseline gap-1">
+<span class="font-body-md text-body-md text-primary font-semibold">HK$</span>
+<input class="flex-1 border-none p-0 font-numeral-xl text-numeral-xl text-primary bg-transparent font-bold focus:ring-0" id="interest_calc" type="number" value="0.00"/>
+</div>
+</div>
+</form>
+</main>
+<!-- Fixed Footer Actions -->
+<div class="fixed bottom-0 w-full max-w-max-width bg-white px-container-margin py-4 flex gap-4 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] z-50">
+<button class="flex-1 py-4 border border-outline text-on-surface rounded-xl font-headline-sm text-headline-sm hover:bg-surface-container-low transition-colors active:scale-95 duration-200">
+                取消
+            </button>
+<button class="flex-[2] py-4 bg-primary text-on-primary rounded-xl font-headline-sm text-headline-sm shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all duration-200" id="saveBtn">
+                儲存存款
+            </button>
+</div>
+</div>
+<script>
+        // Simple logic for auto-calculating dates and interest
+        const amountInput = document.getElementById('amount');
+        const rateInput = document.getElementById('rate');
+        const periodVal = document.getElementById('period_val');
+        const periodUnit = document.getElementById('period_unit');
+        const startDateInput = document.getElementById('start_date');
+        const endDateInput = document.getElementById('end_date');
+        const interestInput = document.getElementById('interest_calc');
+
+        // Set default start date to today
+        const today = new Date().toISOString().split('T')[0];
+        startDateInput.value = today;
+
+        function updateCalculations() {
+            const amount = parseFloat(amountInput.value) || 0;
+            const rate = parseFloat(rateInput.value) || 0;
+            const period = parseInt(periodVal.value) || 0;
+            const unit = periodUnit.value;
+            const start = new Date(startDateInput.value);
+
+            if (isNaN(start.getTime())) return;
+
+            // Date Calculation
+            let end = new Date(start);
+            if (unit === 'days') end.setDate(end.getDate() + period);
+            if (unit === 'weeks') end.setDate(end.getDate() + (period * 7));
+            if (unit === 'months') end.setMonth(end.getMonth() + period);
+            if (unit === 'years') end.setFullYear(end.getFullYear() + period);
+
+            endDateInput.value = end.toISOString().split('T')[0];
+
+            // Simplified Interest Calculation (Actual/365)
+            const diffTime = Math.abs(end - start);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const interest = amount * (rate / 100) * (diffDays / 365);
+
+            interestInput.value = interest.toFixed(2);
+        }
+
+        [amountInput, rateInput, periodVal, periodUnit, startDateInput].forEach(el => {
+            el.addEventListener('input', updateCalculations);
+        });
+
+        document.getElementById('saveBtn').addEventListener('click', () => {
+            const btn = document.getElementById('saveBtn');
+            btn.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span>';
+            setTimeout(() => {
+                btn.innerHTML = '儲存成功！';
+                btn.classList.replace('bg-primary', 'bg-secondary');
+            }, 1000);
+        });
+
+        // Initialize
+        updateCalculations();
+    </script>
+</body></html>
+
+<!-- 存款記錄 - YieldLog -->
+<!DOCTYPE html>
+
+<html class="light" lang="zh-Hant"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>YieldLog - 定期存款管理</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-variant": "#e2e2e9",
+                    "tertiary": "#5f2200",
+                    "on-primary-fixed-variant": "#00458f",
+                    "on-tertiary": "#ffffff",
+                    "on-surface-variant": "#424751",
+                    "inverse-primary": "#abc7ff",
+                    "error-container": "#ffdad6",
+                    "on-secondary-container": "#00714d",
+                    "secondary": "#006c49",
+                    "primary-fixed": "#d7e2ff",
+                    "on-tertiary-fixed": "#351000",
+                    "background": "#f9f9ff",
+                    "secondary-fixed-dim": "#4edea3",
+                    "on-secondary": "#ffffff",
+                    "secondary-container": "#6cf8bb",
+                    "on-primary": "#ffffff",
+                    "primary-container": "#004a99",
+                    "on-tertiary-fixed-variant": "#7b2f00",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container": "#ededf5",
+                    "surface-container-highest": "#e2e2e9",
+                    "surface-container-low": "#f3f3fa",
+                    "on-background": "#191c21",
+                    "inverse-surface": "#2e3036",
+                    "on-secondary-fixed-variant": "#005236",
+                    "surface-tint": "#255dad",
+                    "on-error-container": "#93000a",
+                    "surface-bright": "#f9f9ff",
+                    "inverse-on-surface": "#f0f0f8",
+                    "on-error": "#ffffff",
+                    "surface-dim": "#d9d9e1",
+                    "tertiary-fixed": "#ffdbcc",
+                    "primary-fixed-dim": "#abc7ff",
+                    "tertiary-container": "#833301",
+                    "tertiary-fixed-dim": "#ffb694",
+                    "surface": "#f9f9ff",
+                    "error": "#ba1a1a",
+                    "on-primary-fixed": "#001b3f",
+                    "on-primary-container": "#9bbdff",
+                    "on-secondary-fixed": "#002113",
+                    "on-tertiary-container": "#ffa77e",
+                    "on-surface": "#191c21",
+                    "surface-container-high": "#e7e8ef",
+                    "primary": "#00346f",
+                    "outline": "#737783",
+                    "outline-variant": "#c2c6d3",
+                    "secondary-fixed": "#6ffbbe"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "section-padding": "1.5rem",
+                    "max-width": "480px",
+                    "bottom-nav-height": "64px",
+                    "stack-gap": "0.75rem",
+                    "container-margin": "1rem"
+            },
+            "fontFamily": {
+                    "display-lg": ["Inter", "sans-serif"],
+                    "headline-md": ["Inter", "sans-serif"],
+                    "body-md": ["Inter", "sans-serif"],
+                    "headline-sm": ["Inter", "sans-serif"],
+                    "body-lg": ["Inter", "sans-serif"],
+                    "label-bold": ["Inter", "sans-serif"],
+                    "numeral-xl": ["Inter", "sans-serif"]
+            },
+            "fontSize": {
+                    "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-bold": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "numeral-xl": ["28px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            -webkit-tap-highlight-color: transparent;
+        }
+        .custom-shadow {
+            shadow: 0 1px 3px 0 rgba(0,0,0,0.05);
+        }
+        .safe-bottom {
+            padding-bottom: calc(64px + env(safe-area-inset-bottom));
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen">
+<!-- App Shell Container -->
+<div class="max-w-[480px] mx-auto min-h-screen bg-surface flex flex-col relative">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-50 bg-background flex items-center justify-between px-section-padding h-16 max-w-max-width mx-auto">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-2xl" data-icon="account_balance_wallet">account_balance_wallet</span>
+<h1 class="font-headline-md text-headline-md text-primary">YieldLog</h1>
+</div>
+<button class="material-symbols-outlined text-on-surface-variant hover:opacity-80 transition-opacity active:scale-95 duration-100" data-icon="notifications">notifications</button>
+</header>
+<!-- Main Content (Canvas) -->
+<main class="flex-1 px-section-padding pt-4 safe-bottom">
+<!-- Summary Card (Bento Style Fragment) -->
+<section class="mb-8 p-6 bg-primary-container rounded-xl text-on-primary-container shadow-sm overflow-hidden relative">
+<div class="relative z-10">
+<p class="font-label-bold text-label-bold opacity-80 mb-1">預計總資產 (HKD)</p>
+<div class="font-numeral-xl text-numeral-xl mb-4">$ 1,245,600</div>
+<div class="flex gap-4">
+<div class="flex flex-col">
+<span class="font-label-bold text-[10px] opacity-70">平均利率</span>
+<span class="font-headline-sm text-headline-sm">4.12%</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-bold text-[10px] opacity-70">本月到期</span>
+<span class="font-headline-sm text-headline-sm">2</span>
+</div>
+</div>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-10">
+<span class="material-symbols-outlined text-[120px]" data-icon="trending_up">trending_up</span>
+</div>
+</section>
+<!-- List Section Header -->
+<div class="flex items-center justify-between mb-4">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">存款列表</h2>
+<button class="text-primary font-label-bold flex items-center gap-1">
+                    篩選 <span class="material-symbols-outlined text-sm" data-icon="filter_list">filter_list</span>
+</button>
+</div>
+<!-- Deposit Records List -->
+<div class="space-y-stack-gap">
+<!-- Card 1: Active -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-4 transition-transform active:scale-[0.98] duration-200">
+<div class="flex justify-between items-start mb-2">
+<div class="flex flex-col">
+<h3 class="font-headline-sm text-headline-sm">HSBC 匯豐銀行</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">HKD 定期存款</p>
+</div>
+<span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container rounded-full font-label-bold text-[10px]">進行中</span>
+</div>
+<div class="font-numeral-xl text-numeral-xl text-primary mb-3">HK$ 500,000</div>
+<div class="flex justify-between items-center pt-3 border-t border-outline-variant">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="percent">percent</span>
+<span class="font-body-lg text-body-lg font-semibold">3.80%</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm" data-icon="calendar_today">calendar_today</span>
+<span class="font-body-md text-body-md">12-08-2024</span>
+</div>
+</div>
+</div>
+<!-- Card 2: Active -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-4 transition-transform active:scale-[0.98] duration-200">
+<div class="flex justify-between items-start mb-2">
+<div class="flex flex-col">
+<h3 class="font-headline-sm text-headline-sm">Standard Chartered</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">HKD 定期存款</p>
+</div>
+<span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container rounded-full font-label-bold text-[10px]">進行中</span>
+</div>
+<div class="font-numeral-xl text-numeral-xl text-primary mb-3">HK$ 350,000</div>
+<div class="flex justify-between items-center pt-3 border-t border-outline-variant">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="percent">percent</span>
+<span class="font-body-lg text-body-lg font-semibold">4.25%</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm" data-icon="calendar_today">calendar_today</span>
+<span class="font-body-md text-body-md">25-09-2024</span>
+</div>
+</div>
+</div>
+<!-- Card 3: Matured -->
+<div class="bg-surface-container-low border border-outline-variant rounded-lg p-4 opacity-80">
+<div class="flex justify-between items-start mb-2">
+<div class="flex flex-col text-on-surface-variant">
+<h3 class="font-headline-sm text-headline-sm">Bank of China</h3>
+<p class="font-body-md text-body-md">HKD 定期存款</p>
+</div>
+<span class="px-2 py-0.5 bg-surface-variant text-on-surface-variant rounded-full font-label-bold text-[10px]">已期滿</span>
+</div>
+<div class="font-numeral-xl text-numeral-xl text-on-surface-variant mb-3">HK$ 395,600</div>
+<div class="flex justify-between items-center pt-3 border-t border-outline-variant text-on-surface-variant">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="percent">percent</span>
+<span class="font-body-lg text-body-lg font-semibold">3.65%</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="event_available">event_available</span>
+<span class="font-body-md text-body-md">15-05-2024</span>
+</div>
+</div>
+</div>
+<!-- Card 4: Active -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-4 transition-transform active:scale-[0.98] duration-200">
+<div class="flex justify-between items-start mb-2">
+<div class="flex flex-col">
+<h3 class="font-headline-sm text-headline-sm">Hang Seng Bank</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">HKD 定期存款</p>
+</div>
+<span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container rounded-full font-label-bold text-[10px]">進行中</span>
+</div>
+<div class="font-numeral-xl text-numeral-xl text-primary mb-3">HK$ 120,000</div>
+<div class="flex justify-between items-center pt-3 border-t border-outline-variant">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="percent">percent</span>
+<span class="font-body-lg text-body-lg font-semibold">4.00%</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm" data-icon="calendar_today">calendar_today</span>
+<span class="font-body-md text-body-md">02-11-2024</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Floating Action Button -->
+<button aria-label="Add Deposit" class="fixed right-6 bottom-20 z-50 w-14 h-14 bg-primary text-on-primary rounded-xl shadow-lg flex items-center justify-center hover:opacity-90 active:scale-90 transition-all duration-200">
+<span class="material-symbols-outlined text-3xl" data-icon="add">add</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 h-[bottom-nav-height] bg-white dark:bg-inverse-surface border-t border-outline-variant dark:border-outline shadow-[0_-1px_3px_0_rgba(0,0,0,0.05)] max-w-[480px]">
+<div class="flex justify-around items-center h-full px-4">
+<!-- Home -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-low transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-bold text-label-bold mt-1">首頁</span>
+</a>
+<!-- Deposits (Active) -->
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed-dim hover:bg-surface-container-low transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="savings" style="font-variation-settings: 'FILL' 1;">savings</span>
+<span class="font-label-bold text-label-bold mt-1">存款</span>
+</a>
+<!-- Banks -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-low transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance">account_balance</span>
+<span class="font-label-bold text-label-bold mt-1">銀行</span>
+</a>
+</div>
+</nav>
+</div>
+<!-- Atmospheric Overlay (Glassmorphism hint for interactive elements) -->
+<div class="hidden fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex items-center justify-center p-6" id="add-modal">
+<div class="bg-surface w-full max-w-sm rounded-xl overflow-hidden shadow-xl animate-in fade-in zoom-in duration-300">
+<div class="p-6">
+<h4 class="font-headline-sm text-headline-sm mb-4">新增定期存款</h4>
+<div class="space-y-4">
+<div>
+<label class="font-label-bold text-on-surface-variant block mb-1">銀行名稱</label>
+<input class="w-full rounded-lg border-outline-variant bg-surface-container-lowest focus:ring-primary focus:border-primary" placeholder="例如：HSBC" type="text"/>
+</div>
+<div>
+<label class="font-label-bold text-on-surface-variant block mb-1">存款金額 (HK$)</label>
+<input class="w-full rounded-lg border-outline-variant bg-surface-container-lowest focus:ring-primary focus:border-primary" placeholder="500,000" type="number"/>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="font-label-bold text-on-surface-variant block mb-1">年利率 (%)</label>
+<input class="w-full rounded-lg border-outline-variant bg-surface-container-lowest focus:ring-primary focus:border-primary" placeholder="4.25" step="0.01" type="number"/>
+</div>
+<div>
+<label class="font-label-bold text-on-surface-variant block mb-1">到期日</label>
+<input class="w-full rounded-lg border-outline-variant bg-surface-container-lowest focus:ring-primary focus:border-primary" type="date"/>
+</div>
+</div>
+</div>
+<div class="mt-8 flex gap-3">
+<button class="flex-1 py-3 border border-primary text-primary font-label-bold rounded-lg active:scale-95 duration-100" id="close-modal">取消</button>
+<button class="flex-1 py-3 bg-primary text-on-primary font-label-bold rounded-lg active:scale-95 duration-100">儲存</button>
+</div>
+</div>
+</div>
+</div>
+<script>
+        // Simple Interaction Logic
+        const fab = document.querySelector('button[aria-label="Add Deposit"]');
+        const modal = document.getElementById('add-modal');
+        const closeBtn = document.getElementById('close-modal');
+
+        fab.addEventListener('click', () => {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        });
+
+        closeBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        });
+
+        // Close modal on background click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        });
+    </script>
+</body></html>
+
+<!-- 儀表板 - YieldLog -->
+<!DOCTYPE html>
+
+<html class="light" lang="zh-Hant"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>YieldLog Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-variant": "#e2e2e9",
+                    "tertiary": "#5f2200",
+                    "on-primary-fixed-variant": "#00458f",
+                    "on-tertiary": "#ffffff",
+                    "on-surface-variant": "#424751",
+                    "inverse-primary": "#abc7ff",
+                    "error-container": "#ffdad6",
+                    "on-secondary-container": "#00714d",
+                    "secondary": "#006c49",
+                    "primary-fixed": "#d7e2ff",
+                    "on-tertiary-fixed": "#351000",
+                    "background": "#f9f9ff",
+                    "secondary-fixed-dim": "#4edea3",
+                    "on-secondary": "#ffffff",
+                    "secondary-container": "#6cf8bb",
+                    "on-primary": "#ffffff",
+                    "primary-container": "#004a99",
+                    "on-tertiary-fixed-variant": "#7b2f00",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container": "#ededf5",
+                    "surface-container-highest": "#e2e2e9",
+                    "surface-container-low": "#f3f3fa",
+                    "on-background": "#191c21",
+                    "inverse-surface": "#2e3036",
+                    "on-secondary-fixed-variant": "#005236",
+                    "surface-tint": "#255dad",
+                    "on-error-container": "#93000a",
+                    "surface-bright": "#f9f9ff",
+                    "inverse-on-surface": "#f0f0f8",
+                    "on-error": "#ffffff",
+                    "surface-dim": "#d9d9e1",
+                    "tertiary-fixed": "#ffdbcc",
+                    "primary-fixed-dim": "#abc7ff",
+                    "tertiary-container": "#833301",
+                    "tertiary-fixed-dim": "#ffb694",
+                    "surface": "#f9f9ff",
+                    "error": "#ba1a1a",
+                    "on-primary-fixed": "#001b3f",
+                    "on-primary-container": "#9bbdff",
+                    "on-secondary-fixed": "#002113",
+                    "on-tertiary-container": "#ffa77e",
+                    "on-surface": "#191c21",
+                    "surface-container-high": "#e7e8ef",
+                    "primary": "#00346f",
+                    "outline": "#737783",
+                    "outline-variant": "#c2c6d3",
+                    "secondary-fixed": "#6ffbbe"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "section-padding": "1.5rem",
+                    "max-width": "480px",
+                    "bottom-nav-height": "64px",
+                    "stack-gap": "0.75rem",
+                    "container-margin": "1rem"
+            },
+            "fontFamily": {
+                    "display-lg": ["Inter", "sans-serif"],
+                    "headline-md": ["Inter", "sans-serif"],
+                    "body-md": ["Inter", "sans-serif"],
+                    "headline-sm": ["Inter", "sans-serif"],
+                    "body-lg": ["Inter", "sans-serif"],
+                    "label-bold": ["Inter", "sans-serif"],
+                    "numeral-xl": ["Inter", "sans-serif"]
+            },
+            "fontSize": {
+                    "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-bold": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "numeral-xl": ["28px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { -webkit-tap-highlight-color: transparent; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .chart-gradient { background: conic-gradient(from 0deg, #00346f 0%, #00346f 40%, #006c49 40%, #006c49 75%, #5f2200 75%, #5f2200 100%); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md antialiased">
+<!-- Mobile Container (480px max-width focus) -->
+<div class="max-w-max-width mx-auto min-h-screen flex flex-col relative bg-surface shadow-sm">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-40 bg-background dark:bg-background flex items-center justify-between px-section-padding h-16 max-w-max-width mx-auto">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary dark:text-inverse-primary" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+<h1 class="font-headline-md text-headline-md text-primary dark:text-primary-fixed-dim tracking-tight">YieldLog</h1>
+</div>
+<button class="material-symbols-outlined text-on-surface-variant hover:opacity-80 transition-opacity active:scale-95 duration-100">notifications</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 px-4 pb-24 pt-4 space-y-6">
+<!-- Hero Stats: Glassmorphism / Tonal Layers -->
+<section class="bg-primary p-6 rounded-xl shadow-lg relative overflow-hidden">
+<div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+<div class="relative z-10">
+<p class="text-white/80 font-label-bold text-label-bold mb-1">總定存金額 (HKD)</p>
+<h2 class="text-white font-numeral-xl text-numeral-xl mb-4">$ 1,250,000.00</h2>
+<div class="grid grid-cols-2 gap-4 border-t border-white/20 pt-4">
+<div>
+<p class="text-white/70 font-label-bold text-label-bold">總預期利息</p>
+<p class="text-white font-headline-sm text-headline-sm">$ 45,000.00</p>
+</div>
+<div>
+<p class="text-white/70 font-label-bold text-label-bold">平均利率</p>
+<p class="text-white font-headline-sm text-headline-sm">3.6%</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Yield Distribution: Bento Grid Style -->
+<section class="space-y-4">
+<div class="flex items-center justify-between">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">收益分佈</h3>
+<button class="text-primary font-label-bold text-label-bold hover:underline">詳情</button>
+</div>
+<div class="grid grid-cols-1 gap-stack-gap">
+<!-- Bank Wise Grouping Chart Area -->
+<div class="bg-white border border-outline-variant p-5 rounded-xl flex items-center gap-6 shadow-[0_1px_3px_0_rgba(0,0,0,0.05)]">
+<div class="relative w-28 h-28 flex-shrink-0">
+<!-- Simple SVG Donut Chart for Yield Distribution -->
+<div class="w-full h-full rounded-full chart-gradient"></div>
+<div class="absolute inset-4 bg-white rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-container">pie_chart</span>
+</div>
+</div>
+<div class="flex-1 space-y-2">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-primary"></div>
+<span class="text-body-md font-medium">HSBC (40%)</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-secondary"></div>
+<span class="text-body-md font-medium">Standard Chartered (35%)</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-tertiary"></div>
+<span class="text-body-md font-medium">BOC HK (25%)</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Recent Deposits: List Items -->
+<section class="space-y-4">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">最近定存</h3>
+<div class="space-y-3">
+<!-- Deposit Card 1 -->
+<div class="bg-white border border-outline-variant p-4 rounded-xl shadow-[0_1px_3px_0_rgba(0,0,0,0.05)] active:scale-[0.98] transition-transform">
+<div class="flex justify-between items-start mb-2">
+<div>
+<h4 class="font-headline-sm text-headline-sm">HSBC HKD</h4>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">calendar_today</span>
+<span class="text-body-md">到期日: 2024-12-15</span>
+</div>
+</div>
+<span class="px-2 py-1 bg-secondary-container text-on-secondary-container rounded-full text-[10px] font-bold">進行中</span>
+</div>
+<div class="flex justify-between items-end">
+<span class="font-numeral-xl text-numeral-xl text-primary">$ 500,000</span>
+<span class="text-secondary font-headline-sm text-headline-sm">4.1% p.a.</span>
+</div>
+</div>
+<!-- Deposit Card 2 -->
+<div class="bg-white border border-outline-variant p-4 rounded-xl shadow-[0_1px_3px_0_rgba(0,0,0,0.05)] active:scale-[0.98] transition-transform">
+<div class="flex justify-between items-start mb-2">
+<div>
+<h4 class="font-headline-sm text-headline-sm">SCB HKD</h4>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">calendar_today</span>
+<span class="text-body-md">到期日: 2024-11-20</span>
+</div>
+</div>
+<span class="px-2 py-1 bg-surface-variant text-on-surface-variant rounded-full text-[10px] font-bold">已到期</span>
+</div>
+<div class="flex justify-between items-end">
+<span class="font-numeral-xl text-numeral-xl text-primary">$ 350,000</span>
+<span class="text-secondary font-headline-sm text-headline-sm">3.8% p.a.</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Decorative Image for Context -->
+<section class="mt-8">
+<div class="relative rounded-2xl h-48 overflow-hidden group">
+<img alt="Financial Market Concept" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A macro close-up of a modern glass skyscraper reflecting a bright blue sky, symbolizing financial growth and stability. The architectural lines are sharp and precise, following a minimalist corporate aesthetic. The lighting is high-key with soft sunlight creating a professional light-mode atmosphere. The color palette is dominated by deep primary blues and pristine whites, echoing a sense of security and wealth management confidence." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDq9goB-MK5fEYgHdM8vDG-nf29MTq1gY3wwSpLvO8rQskjWMLQR72vhP5aMcG2PtP3TnjeOs8MLIHVcn3sMcSzUznk2MY71DePwWo8GcccbzvivQzeBm5jqydtQBuVX95AKAAK8_clEc7ZF9mwDWYc6DPMBIz_GgO-nKww4-xE7fwmJzySVwiRAJrTbRUp9b8gZAAHbEVv5CalJp-45BLn4N_W5AclvHzgdUNG06jtiJfsEHymcgCjVKgbgKT9hexoi8IP3soKsoQ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6">
+<p class="text-white font-headline-sm text-headline-sm">優化您的財富增長</p>
+<p class="text-white/80 text-body-md">根據即時利率調整您的定存策略</p>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 h-[bottom-nav-height] bg-surface dark:bg-inverse-surface shadow-[0_-1px_3px_0_rgba(0,0,0,0.05)] border-t border-outline-variant dark:border-outline">
+<div class="flex justify-around items-center h-full max-w-max-width mx-auto px-4">
+<!-- Active Tab: 首頁 -->
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed-dim hover:bg-surface-container-low transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-label-bold text-label-bold">首頁</span>
+</a>
+<!-- Inactive Tab: 存款 -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-low transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">savings</span>
+<span class="font-label-bold text-label-bold">存款</span>
+</a>
+<!-- Inactive Tab: 銀行 -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-low transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">account_balance</span>
+<span class="font-label-bold text-label-bold">銀行</span>
+</a>
+</div>
+</nav>
+<!-- Contextual FAB (Only on Dashboard) -->
+<button class="fixed right-4 bottom-20 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform z-40">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+</div>
+<script>
+        // Simple micro-interaction for cards
+        document.querySelectorAll('.active\\:scale-\\[0\\.98\\]').forEach(card => {
+            card.addEventListener('click', () => {
+                // Future expansion: Navigate to details
+                console.log('Deposit detail clicked');
+            });
+        });
+
+        // Theme sync (optional for PWA)
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            // document.documentElement.classList.add('dark'); // Uncomment to enable dark mode based on OS
+        }
+    </script>
+</body></html>
