@@ -99,6 +99,57 @@ export default function DepositList() {
     });
   }, [deposits, statusFilter, bankFilter, sortBy]);
 
+  const isDateSort = sortBy.startsWith("start_") || sortBy.startsWith("end_");
+
+  const renderList = () => {
+    if (filteredDeposits.length === 0) {
+      return (
+        <Text c="dimmed" size="sm" ta="center" py="md">
+          沒有符合篩選條件的記錄
+        </Text>
+      );
+    }
+
+    if (!isDateSort) {
+      return filteredDeposits.map((deposit) => (
+        <DepositCard
+          key={deposit.id}
+          deposit={deposit}
+          onClick={() => navigate(`/deposits/${deposit.id}/detail`)}
+        />
+      ));
+    }
+
+    const sortField = sortBy.startsWith("start_") ? "start_date" : "end_date";
+    const getMonthKey = (d: (typeof filteredDeposits)[number]) =>
+      dayjs(d[sortField]).format("YYYY年M月");
+
+    const elements: React.ReactNode[] = [];
+    let lastMonth = "";
+    filteredDeposits.forEach((deposit) => {
+      const month = getMonthKey(deposit);
+      if (month !== lastMonth) {
+        lastMonth = month;
+        elements.push(
+          <Group key={`sep-${month}`} py="xs">
+            <Text size="xs" fw={600} c="dimmed">
+              {month}
+            </Text>
+            <div style={{ flex: 1, height: 1, backgroundColor: "var(--mantine-color-gray-3)" }} />
+          </Group>,
+        );
+      }
+      elements.push(
+        <DepositCard
+          key={deposit.id}
+          deposit={deposit}
+          onClick={() => navigate(`/deposits/${deposit.id}/detail`)}
+        />,
+      );
+    });
+    return elements;
+  };
+
   return (
     <div style={{ position: "relative" }}>
       <Container size="sm" pb={160} pt="md">
@@ -180,21 +231,7 @@ export default function DepositList() {
                 </Group>
               </Stack>
 
-              <Stack gap="sm">
-                {filteredDeposits.length === 0 ? (
-                  <Text c="dimmed" size="sm" ta="center" py="md">
-                    沒有符合篩選條件的記錄
-                  </Text>
-                ) : (
-                  filteredDeposits.map((deposit) => (
-                    <DepositCard
-                      key={deposit.id}
-                      deposit={deposit}
-                      onClick={() => navigate(`/deposits/${deposit.id}/detail`)}
-                    />
-                  ))
-                )}
-              </Stack>
+              <Stack gap="sm">{renderList()}</Stack>
             </>
           )}
         </Stack>
