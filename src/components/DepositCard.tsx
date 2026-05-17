@@ -34,10 +34,10 @@ export default function DepositCard({ deposit, onClick }: DepositCardProps) {
       <Group justify="space-between" mb="xs">
         <Stack gap={4}>
           <Text fw={600}>{deposit.bank_name}</Text>
-          <Text size="xs" c="dimmed">
-            {periodLabel} 定期存款
-          </Text>
           <Group gap={4}>
+            <Text size="xs" c="dimmed">
+              {periodLabel} 定期存款
+            </Text>
             <IconCalendar size={14} color="var(--mantine-color-gray-6)" />
             <Text size="xs" c="dimmed">
               {formatDate(deposit.start_date)}
