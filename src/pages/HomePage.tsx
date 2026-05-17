@@ -421,38 +421,42 @@ export default function HomePage() {
                               {formatCurrency(totalAmount)}
                             </Text>
                           </Group>
-                          <Group grow align="flex-start">
-                            {b.activeCount > 0 && (
-                              <Stack gap={0}>
-                                <Text size="xs" c="dimmed">
-                                  進行中
-                                </Text>
-                                <Text size="xs">
-                                  {b.activeCount}筆 {formatCurrency(b.activeAmount)}
-                                </Text>
-                                {b.pendingInterest > 0 && (
+                          <SimpleGrid cols={2} spacing="xs">
+                            <Stack gap={0}>
+                              {b.activeCount > 0 && (
+                                <>
                                   <Text size="xs" c="dimmed">
-                                    預計利息 {formatCurrency(b.pendingInterest)}
+                                    進行中
                                   </Text>
-                                )}
-                              </Stack>
-                            )}
-                            {b.maturedCount > 0 && (
-                              <Stack gap={0}>
-                                <Text size="xs" c="dimmed">
-                                  已期滿
-                                </Text>
-                                <Text size="xs">
-                                  {b.maturedCount}筆 {formatCurrency(b.maturedAmount)}
-                                </Text>
-                                {b.receivedInterest > 0 && (
+                                  <Text size="xs">
+                                    {b.activeCount}筆 {formatCurrency(b.activeAmount)}
+                                  </Text>
+                                  {b.pendingInterest > 0 && (
+                                    <Text size="xs" c="dimmed">
+                                      預計利息 {formatCurrency(b.pendingInterest)}
+                                    </Text>
+                                  )}
+                                </>
+                              )}
+                            </Stack>
+                            <Stack gap={0} align="end">
+                              {b.maturedCount > 0 && (
+                                <>
                                   <Text size="xs" c="dimmed">
-                                    已收利息 {formatCurrency(b.receivedInterest)}
+                                    已期滿
                                   </Text>
-                                )}
-                              </Stack>
-                            )}
-                          </Group>
+                                  <Text size="xs">
+                                    {b.maturedCount}筆 {formatCurrency(b.maturedAmount)}
+                                  </Text>
+                                  {b.receivedInterest > 0 && (
+                                    <Text size="xs" c="dimmed">
+                                      已收利息 {formatCurrency(b.receivedInterest)}
+                                    </Text>
+                                  )}
+                                </>
+                              )}
+                            </Stack>
+                          </SimpleGrid>
                         </Stack>
                       );
                     })}
