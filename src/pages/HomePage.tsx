@@ -427,7 +427,9 @@ export default function HomePage() {
                             {b.activeCount}筆
                           </Text>
                           <Text size="xs" c="dimmed">
-                            {formatCurrency(b.activeAmount)}
+                            {b.activeAmount >= 10000
+                              ? `$${(b.activeAmount / 10000).toFixed(1)}萬`
+                              : `$${b.activeAmount.toLocaleString("en-HK")}`}
                           </Text>
                         </Stack>
                         <Stack gap={0} align="end" w={60}>
@@ -435,7 +437,9 @@ export default function HomePage() {
                             {b.maturedCount}筆
                           </Text>
                           <Text size="xs" c="dimmed">
-                            {formatCurrency(b.maturedAmount)}
+                            {b.maturedAmount >= 10000
+                              ? `$${(b.maturedAmount / 10000).toFixed(1)}萬`
+                              : `$${b.maturedAmount.toLocaleString("en-HK")}`}
                           </Text>
                         </Stack>
                       </Group>
