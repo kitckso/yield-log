@@ -15,7 +15,7 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <MantineProvider theme={theme}>
       <ModalsProvider>
-        <Notifications position="bottom-center" />
+        <Notifications position="top-center" />
         <BrowserRouter>
           <App />
         </BrowserRouter>
