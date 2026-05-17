@@ -41,14 +41,6 @@ export default function Dashboard() {
                 定期存款管理
               </Text>
             </div>
-            <ActionIcon variant="subtle" size="lg">
-              <span
-                className="material-symbols-outlined"
-                style={{ fontVariationSettings: "'FILL' 0, 'wght' 400" }}
-              >
-                notifications
-              </span>
-            </ActionIcon>
           </Group>
 
           {deposits.length === 0 ? (
