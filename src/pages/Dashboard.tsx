@@ -1,7 +1,18 @@
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Container, Title, Text, Stack, Group, ActionIcon, Center } from "@mantine/core";
+import {
+  Container,
+  Title,
+  Text,
+  Stack,
+  Group,
+  ActionIcon,
+  Center,
+  Avatar,
+  Menu,
+} from "@mantine/core";
 import { useDepositsStore } from "../store/deposits";
+import { useAuthStore } from "../store/auth";
 import SummaryCard from "../components/SummaryCard";
 import DepositCard from "../components/DepositCard";
 import { isMatured } from "../hooks/useCalculations";
@@ -11,6 +22,7 @@ export default function Dashboard() {
   const location = useLocation();
   const isDepositsPage = location.pathname.startsWith("/deposits");
   const { deposits, fetchDeposits, deleteDeposit } = useDepositsStore();
+  const { user, signOut } = useAuthStore();
 
   useEffect(() => {
     void fetchDeposits();
@@ -41,6 +53,31 @@ export default function Dashboard() {
                 定期存款管理
               </Text>
             </div>
+            <Menu shadow="md" width={160}>
+              <Menu.Target>
+                <Avatar
+                  src={null}
+                  alt={user?.email ?? ""}
+                  color="blue"
+                  style={{ cursor: "pointer" }}
+                >
+                  {(user?.email ?? "?").charAt(0).toUpperCase()}
+                </Avatar>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item disabled>
+                  <Text size="xs">{user?.email}</Text>
+                </Menu.Item>
+                <Menu.Divider />
+                <Menu.Item
+                  color="red"
+                  leftSection={<span className="material-symbols-outlined">logout</span>}
+                  onClick={() => signOut()}
+                >
+                  登出
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
           </Group>
 
           {deposits.length === 0 ? (
