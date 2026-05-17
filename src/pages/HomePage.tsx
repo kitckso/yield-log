@@ -237,7 +237,7 @@ export default function HomePage() {
                   <SimpleGrid cols={2} mt="xs">
                     <Stack gap={0}>
                       <Text size="xs" c="dimmed">
-                        預期利息
+                        待收利息
                       </Text>
                       <Text size="sm" fw={500}>
                         {formatCurrency(pendingInterest)}
@@ -428,7 +428,7 @@ export default function HomePage() {
                                   </Text>
                                   {b.pendingInterest > 0 && (
                                     <Text size="xs" c="dimmed">
-                                      預計利息 {formatCurrency(b.pendingInterest)}
+                                      待收利息 {formatCurrency(b.pendingInterest)}
                                     </Text>
                                   )}
                                 </>

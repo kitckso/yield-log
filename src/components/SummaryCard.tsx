@@ -40,7 +40,7 @@ export default function SummaryCard({
         <Group gap="lg" mt="sm">
           <Stack gap={4}>
             <Text size="sm" opacity={0.7}>
-              預計利息
+              待收利息
             </Text>
             <Text size="sm" fw={600}>
               HK${" "}
