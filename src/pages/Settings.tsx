@@ -78,16 +78,7 @@ export default function Settings() {
   return (
     <Container size="sm" pb={100} pt="md">
       <Stack gap="md">
-        <Group>
-          <Button
-            variant="subtle"
-            leftSection={<span className="material-symbols-outlined">arrow_back</span>}
-            onClick={() => navigate("/deposits")}
-          >
-            返回
-          </Button>
-          <Title order={4}>設定</Title>
-        </Group>
+        <Title order={4}>設定</Title>
 
         <Card padding="lg" radius="lg" withBorder>
           <Stack gap="sm">
