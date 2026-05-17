@@ -131,11 +131,10 @@ export default function DepositList() {
       if (month !== lastMonth) {
         lastMonth = month;
         elements.push(
-          <Group key={`sep-${month}`} py="xs">
+          <Group key={`sep-${month}`} py="xs" justify="center">
             <Text size="xs" fw={600} c="dimmed">
-              {month}
+              -- {month} --
             </Text>
-            <div style={{ flex: 1, height: 1, backgroundColor: "var(--mantine-color-gray-3)" }} />
           </Group>,
         );
       }
