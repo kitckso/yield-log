@@ -1,14 +1,13 @@
-import { Card, Text, Group, Badge, Stack, ActionIcon } from "@mantine/core";
-import { isMatured, formatDate } from "../hooks/useCalculations";
+import { Card, Text, Group, Badge, Stack } from "@mantine/core";
+import { isMatured, formatDate, formatCurrency } from "../hooks/useCalculations";
 import type { DepositWithBank } from "../types";
 
 interface DepositCardProps {
   deposit: DepositWithBank;
-  onEdit: () => void;
-  onDelete: () => void;
+  onClick: () => void;
 }
 
-export default function DepositCard({ deposit, onEdit, onDelete }: DepositCardProps) {
+export default function DepositCard({ deposit, onClick }: DepositCardProps) {
   const matured = isMatured(deposit.end_date);
 
   const periodLabel =
@@ -27,7 +26,9 @@ export default function DepositCard({ deposit, onEdit, onDelete }: DepositCardPr
       style={{
         backgroundColor: "white",
         border: "1px solid var(--mantine-color-gray-3)",
+        cursor: "pointer",
       }}
+      onClick={onClick}
     >
       <Group justify="space-between" mb="xs">
         <Stack gap={4}>
@@ -42,11 +43,7 @@ export default function DepositCard({ deposit, onEdit, onDelete }: DepositCardPr
       </Group>
 
       <Text fw={700} style={{ fontSize: "28px", lineHeight: "32px" }} mb="sm">
-        HK${" "}
-        {deposit.amount.toLocaleString("en-HK", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}
+        {formatCurrency(deposit.amount)}
       </Text>
 
       <Group
@@ -65,6 +62,9 @@ export default function DepositCard({ deposit, onEdit, onDelete }: DepositCardPr
             percent
           </span>
           <Text fw={600}>{deposit.interest_rate}%</Text>
+          <Text size="sm" c="dimmed" ml="xs">
+            利息 {formatCurrency(deposit.interest)}
+          </Text>
         </Group>
         <Group gap="xs">
           <span
@@ -80,15 +80,6 @@ export default function DepositCard({ deposit, onEdit, onDelete }: DepositCardPr
             {formatDate(deposit.end_date)}
           </Text>
         </Group>
-      </Group>
-
-      <Group gap="xs" mt="sm">
-        <ActionIcon variant="subtle" color="gray" onClick={onEdit}>
-          <span className="material-symbols-outlined">edit</span>
-        </ActionIcon>
-        <ActionIcon variant="subtle" color="red" onClick={onDelete}>
-          <span className="material-symbols-outlined">delete</span>
-        </ActionIcon>
       </Group>
     </Card>
   );

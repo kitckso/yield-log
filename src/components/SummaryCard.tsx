@@ -28,7 +28,7 @@ export default function SummaryCard({
     >
       <Stack gap="xs">
         <Text size="xs" fw={700} opacity={0.8}>
-          活期總資產 (HKD)
+          進行中定存總額 (HKD)
         </Text>
         <Text fw={700} style={{ fontSize: "28px", lineHeight: "32px" }}>
           HK${" "}

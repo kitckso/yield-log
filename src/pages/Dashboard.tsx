@@ -21,7 +21,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const location = useLocation();
   const isDepositsPage = location.pathname.startsWith("/deposits");
-  const { deposits, fetchDeposits, deleteDeposit } = useDepositsStore();
+  const { deposits, fetchDeposits } = useDepositsStore();
   const { user, signOut } = useAuthStore();
 
   useEffect(() => {
@@ -41,12 +41,6 @@ export default function Dashboard() {
       : 0;
   const activeCount = activeDeposits.length;
   const maturedCount = maturedDeposits.length;
-
-  const handleDelete = async (id: string) => {
-    if (confirm("確定刪除這筆存款記錄？")) {
-      await deleteDeposit(id);
-    }
-  };
 
   return (
     <div style={{ position: "relative" }}>
@@ -122,8 +116,7 @@ export default function Dashboard() {
                   <DepositCard
                     key={deposit.id}
                     deposit={deposit}
-                    onEdit={() => navigate(`/deposits/${deposit.id}`)}
-                    onDelete={() => handleDelete(deposit.id)}
+                    onClick={() => navigate(`/deposits/${deposit.id}/detail`)}
                   />
                 ))}
               </Stack>

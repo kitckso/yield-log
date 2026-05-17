@@ -7,6 +7,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import DepositForm from "./pages/DepositForm";
+import DepositDetail from "./pages/DepositDetail";
 import BankManagement from "./pages/BankManagement";
 
 export default function App() {
@@ -31,6 +32,7 @@ export default function App() {
         <Route index element={<Dashboard />} />
         <Route path="deposits" element={<Dashboard />} />
         <Route path="deposits/new" element={<DepositForm />} />
+        <Route path="deposits/:id/detail" element={<DepositDetail />} />
         <Route path="deposits/:id" element={<DepositForm />} />
         <Route path="banks" element={<BankManagement />} />
       </Route>
