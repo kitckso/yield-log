@@ -35,8 +35,9 @@ export default function Dashboard() {
   const pendingInterest = activeDeposits.reduce((sum, d) => sum + d.interest, 0);
   const totalReceivedInterest = deposits.reduce((sum, d) => sum + d.interest, 0);
   const averageRate =
-    deposits.length > 0
-      ? deposits.reduce((sum, d) => sum + d.interest_rate, 0) / deposits.length
+    activeDeposits.length > 0
+      ? activeDeposits.reduce((sum, d) => sum + d.interest_rate * d.amount, 0) /
+        activeDeposits.reduce((sum, d) => sum + d.amount, 0)
       : 0;
   const activeCount = activeDeposits.length;
   const maturedCount = maturedDeposits.length;
