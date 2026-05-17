@@ -37,6 +37,12 @@ export default function DepositCard({ deposit, onClick }: DepositCardProps) {
           <Text size="xs" c="dimmed">
             {periodLabel} 定期存款
           </Text>
+          <Group gap={4}>
+            <IconCalendar size={14} color="var(--mantine-color-gray-6)" />
+            <Text size="xs" c="dimmed">
+              {formatDate(deposit.start_date)}
+            </Text>
+          </Group>
         </Stack>
         <Badge color={matured ? "gray" : "green"} variant="light">
           {matured ? "已期滿" : "進行中"}
@@ -69,15 +75,6 @@ export default function DepositCard({ deposit, onClick }: DepositCardProps) {
             {formatDate(deposit.end_date)}
           </Text>
         </Group>
-      </Group>
-
-      <Group justify="space-between" pt={4}>
-        <Text size="xs" c="dimmed">
-          起 {formatDate(deposit.start_date)}
-        </Text>
-        <Text size="xs" c="dimmed">
-          結 {formatDate(deposit.end_date)}
-        </Text>
       </Group>
     </Card>
   );

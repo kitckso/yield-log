@@ -11,6 +11,7 @@ import {
   Skeleton,
   SegmentedControl,
   Select,
+  Divider,
 } from "@mantine/core";
 import { IconCoin, IconPlus } from "@tabler/icons-react";
 import dayjs from "dayjs";
@@ -131,11 +132,7 @@ export default function DepositList() {
       if (month !== lastMonth) {
         lastMonth = month;
         elements.push(
-          <Group key={`sep-${month}`} py="xs" justify="center">
-            <Text size="xs" fw={600} c="dimmed">
-              -- {month} --
-            </Text>
-          </Group>,
+          <Divider key={`sep-${month}`} label={month} labelPosition="center" pt="sm" pb="xs" />,
         );
       }
       elements.push(
