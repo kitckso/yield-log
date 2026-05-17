@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Container,
@@ -16,6 +16,7 @@ import { useAuthStore } from "../store/auth";
 import { useBanksStore } from "../store/banks";
 import { useDepositsStore } from "../store/deposits";
 import { calculateInterest, calculateEndDate } from "../hooks/useCalculations";
+import dayjs from "dayjs";
 
 const periodUnits = [
   { value: "days", label: "日" },
@@ -46,6 +47,16 @@ export default function DepositForm() {
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [interestManuallyEdited, setInterestManuallyEdited] = useState(false);
   const [endDateManuallyEdited, setEndDateManuallyEdited] = useState(false);
+
+  const recentCutoff = dayjs().subtract(6, "month").format("YYYY-MM-DD");
+  const recentAmounts = useMemo(() => {
+    const vals = deposits.filter((d) => d.start_date >= recentCutoff).map((d) => d.amount);
+    return [...new Set(vals)].sort((a, b) => b - a).slice(0, 5);
+  }, [deposits, recentCutoff]);
+  const recentRates = useMemo(() => {
+    const vals = deposits.filter((d) => d.start_date >= recentCutoff).map((d) => d.interest_rate);
+    return [...new Set(vals)].sort((a, b) => b - a).slice(0, 5);
+  }, [deposits, recentCutoff]);
 
   useEffect(() => {
     void fetchBanks();
@@ -210,6 +221,15 @@ export default function DepositForm() {
           min={0}
           required
         />
+        {!isEditing && recentAmounts.length > 0 && (
+          <Group gap={4}>
+            {recentAmounts.map((v) => (
+              <Button key={v} size="compact-xs" variant="light" onClick={() => setAmount(v)}>
+                {v.toLocaleString("en-HK")}
+              </Button>
+            ))}
+          </Group>
+        )}
 
         <Group grow>
           <NumberInput label="存期" value={periodValue} onChange={setPeriodValue} min={1} />
@@ -226,6 +246,15 @@ export default function DepositForm() {
           decimalScale={2}
           required
         />
+        {!isEditing && recentRates.length > 0 && (
+          <Group gap={4}>
+            {recentRates.map((v) => (
+              <Button key={v} size="compact-xs" variant="light" onClick={() => setInterestRate(v)}>
+                {v}%
+              </Button>
+            ))}
+          </Group>
+        )}
 
         <Group grow>
           <DateInput
