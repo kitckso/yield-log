@@ -10,7 +10,7 @@ export function calculateInterest(
   const end = dayjs(endDate);
   const days = end.diff(start, "day");
   const interest = amount * (rate / 100) * (days / 365);
-  const cents = Math.round(interest * 100 + 1e-9);
+  const cents = Math.floor(interest * 100);
   return cents / 100;
 }
 
