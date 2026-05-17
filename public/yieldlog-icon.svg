@@ -1,9 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
-  <rect width="192" height="192" rx="40" fill="#00346f"/>
-  <g stroke="white" stroke-linecap="round" stroke-linejoin="round" fill="none">
-    <path d="M56 136 L80 98 L104 110 L140 60" stroke-width="8"/>
-    <circle cx="140" cy="60" r="28" stroke-width="5"/>
-  </g>
-  <text x="140" y="60" text-anchor="middle" dominant-baseline="central"
-    font-family="system-ui, sans-serif" font-weight="700" font-size="30" fill="#ffd700">$</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="80" fill="#00346f"/>
+
+  <!-- Coin circle -->
+  <circle cx="256" cy="220" r="110" fill="#ffd166" stroke="#ffb700" stroke-width="12"/>
+
+  <!-- Dollar / Yield symbol -->
+  <text
+    x="256"
+    y="258"
+    text-anchor="middle"
+    font-family="Georgia, serif"
+    font-size="130"
+    font-weight="bold"
+    fill="#00346f"
+  >$</text>
+
+  <!-- Rising bar chart (yield growth) -->
+  <rect x="108" y="390" width="44" height="60" rx="6" fill="#4fc3f7"/>
+  <rect x="172" y="360" width="44" height="90" rx="6" fill="#4fc3f7"/>
+  <rect x="236" y="325" width="44" height="125" rx="6" fill="#4fc3f7"/>
+  <rect x="300" y="290" width="44" height="160" rx="6" fill="#ffd166"/>
+  <rect x="364" y="250" width="44" height="200" rx="6" fill="#ffd166"/>
+
+  <!-- Base line -->
+  <rect x="96" y="450" width="324" height="10" rx="5" fill="#ffffff" opacity="0.4"/>
 </svg>
