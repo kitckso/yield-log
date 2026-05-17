@@ -131,7 +131,7 @@ export default function DepositForm() {
   }, [startDate, periodValue, periodUnit, endDateManuallyEdited]);
 
   // Auto-calc interest
-  const [roundedInterest, setRoundedInterest] = useState<number>(0);
+  const [floorInterest, setFloorInterest] = useState<number>(0);
   useEffect(() => {
     if (startDate && endDate && amount && interestRate && !interestManuallyEdited) {
       const a = Number(amount);
@@ -140,8 +140,8 @@ export default function DepositForm() {
       const e = endDate.toISOString().split("T")[0];
       const floor = calculateInterest(a, r, s, e);
       const round = calculateInterestRounded(a, r, s, e);
-      setInterest(floor);
-      setRoundedInterest(round);
+      setInterest(round);
+      setFloorInterest(floor);
     }
   }, [amount, interestRate, startDate, endDate, interestManuallyEdited]);
 
@@ -204,7 +204,7 @@ export default function DepositForm() {
     setPeriodUnit("months");
     setInterestRate("");
     setInterest(0);
-    setRoundedInterest(0);
+    setFloorInterest(0);
     setStartDate(new Date());
     setEndDate(null);
     setInterestManuallyEdited(false);
@@ -335,26 +335,24 @@ export default function DepositForm() {
           decimalScale={2}
           fixedDecimalScale
         />
-        {!interestManuallyEdited &&
-          roundedInterest !== Number(interest) &&
-          Number(interest) > 0 && (
-            <Group gap={4}>
-              <Button
-                size="compact-xs"
-                variant="light"
-                onClick={() => {
-                  setInterest(roundedInterest);
-                  setInterestManuallyEdited(true);
-                }}
-              >
-                四捨五入{" "}
-                {roundedInterest.toLocaleString("en-HK", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </Button>
-            </Group>
-          )}
+        {!interestManuallyEdited && floorInterest !== Number(interest) && Number(interest) > 0 && (
+          <Group gap={4}>
+            <Button
+              size="compact-xs"
+              variant="light"
+              onClick={() => {
+                setInterest(floorInterest);
+                setInterestManuallyEdited(true);
+              }}
+            >
+              無條件捨去{" "}
+              {floorInterest.toLocaleString("en-HK", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </Button>
+          </Group>
+        )}
 
         <Group mt="md">
           <Button variant="outline" flex={1} onClick={() => navigate("/deposits")}>
