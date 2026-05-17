@@ -67,12 +67,14 @@ export default function HomePage() {
     activeDeposits.forEach((d) => {
       grouped.set(d.bank_id, (grouped.get(d.bank_id) ?? 0) + d.amount);
     });
+    const total = activeDeposits.reduce((s, d) => s + d.amount, 0);
     return Array.from(grouped.entries())
       .sort((a, b) => b[1] - a[1])
       .map(([bankId, amount], i) => ({
         name: bankMap.get(bankId) ?? "未知",
         value: amount,
         color: chartColors[i % chartColors.length],
+        pct: total > 0 ? Math.round((amount / total) * 100) : 0,
       }));
   }, [activeDeposits, bankMap]);
 
@@ -97,7 +99,7 @@ export default function HomePage() {
     return [...activeDeposits].sort((a, b) => a.end_date.localeCompare(b.end_date)).slice(0, 5);
   }, [activeDeposits]);
 
-  const [yearGroupMode, setYearGroupMode] = useState<string>("start");
+  const [yearGroupMode, setYearGroupMode] = useState<string>("end");
   const yearDateField = yearGroupMode === "start" ? "start_date" : "end_date";
 
   const yearSummary = useMemo(() => {
@@ -271,13 +273,10 @@ export default function HomePage() {
                   <Stack align="center" gap="md">
                     <DonutChart
                       data={bankDistribution}
-                      withLabelsLine
-                      withLabels
-                      size={180}
+                      size={200}
                       thickness={30}
-                      labelsType="value"
                       valueFormatter={(v: number) =>
-                        v >= 10000 ? `$${(v / 10000).toFixed(0)}萬` : v.toLocaleString()
+                        `$${v.toLocaleString("en-HK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                       }
                     />
                     <SimpleGrid cols={2} spacing="xs" w="100%">
@@ -288,7 +287,9 @@ export default function HomePage() {
                             size={10}
                             withShadow={false}
                           />
-                          <Text size="xs">{item.name}</Text>
+                          <Text size="xs">
+                            {item.name} {item.pct}%
+                          </Text>
                         </Group>
                       ))}
                     </SimpleGrid>
