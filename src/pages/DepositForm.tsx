@@ -16,7 +16,11 @@ import { DateInput } from "@mantine/dates";
 import { useAuthStore } from "../store/auth";
 import { useBanksStore } from "../store/banks";
 import { useDepositsStore } from "../store/deposits";
-import { calculateInterest, calculateEndDate } from "../hooks/useCalculations";
+import {
+  calculateInterest,
+  calculateInterestRounded,
+  calculateEndDate,
+} from "../hooks/useCalculations";
 import dayjs from "dayjs";
 
 const periodUnits = [
@@ -127,15 +131,17 @@ export default function DepositForm() {
   }, [startDate, periodValue, periodUnit, endDateManuallyEdited]);
 
   // Auto-calc interest
+  const [roundedInterest, setRoundedInterest] = useState<number>(0);
   useEffect(() => {
     if (startDate && endDate && amount && interestRate && !interestManuallyEdited) {
-      const calc = calculateInterest(
-        Number(amount),
-        Number(interestRate),
-        startDate.toISOString().split("T")[0],
-        endDate.toISOString().split("T")[0],
-      );
-      setInterest(calc);
+      const a = Number(amount);
+      const r = Number(interestRate);
+      const s = startDate.toISOString().split("T")[0];
+      const e = endDate.toISOString().split("T")[0];
+      const floor = calculateInterest(a, r, s, e);
+      const round = calculateInterestRounded(a, r, s, e);
+      setInterest(floor);
+      setRoundedInterest(round);
     }
   }, [amount, interestRate, startDate, endDate, interestManuallyEdited]);
 
@@ -198,6 +204,7 @@ export default function DepositForm() {
     setPeriodUnit("months");
     setInterestRate("");
     setInterest(0);
+    setRoundedInterest(0);
     setStartDate(new Date());
     setEndDate(null);
     setInterestManuallyEdited(false);
@@ -230,7 +237,7 @@ export default function DepositForm() {
           <Text size="sm" fw={500}>
             銀行名稱
           </Text>
-          <Group gap={4}>
+          <Group gap={8}>
             {banks.map((b) => (
               <Button
                 key={b.id}
@@ -328,6 +335,26 @@ export default function DepositForm() {
           decimalScale={2}
           fixedDecimalScale
         />
+        {!interestManuallyEdited &&
+          roundedInterest !== Number(interest) &&
+          Number(interest) > 0 && (
+            <Group gap={4}>
+              <Button
+                size="compact-xs"
+                variant="light"
+                onClick={() => {
+                  setInterest(roundedInterest);
+                  setInterestManuallyEdited(true);
+                }}
+              >
+                四捨五入{" "}
+                {roundedInterest.toLocaleString("en-HK", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </Button>
+            </Group>
+          )}
 
         <Group mt="md">
           <Button variant="outline" flex={1} onClick={() => navigate("/deposits")}>
