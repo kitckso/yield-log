@@ -13,7 +13,9 @@ import {
   Select,
 } from "@mantine/core";
 import { IconCoin, IconPlus } from "@tabler/icons-react";
+import dayjs from "dayjs";
 import UserMenu from "../components/UserMenu";
+import MonthlyCalendar from "../components/MonthlyCalendar";
 import { useDepositsStore } from "../store/deposits";
 import { useBanksStore } from "../store/banks";
 import DepositCard from "../components/DepositCard";
@@ -36,6 +38,11 @@ export default function DepositList() {
   const [statusFilter, setStatusFilter] = useState<string>(searchParams.get("status") ?? "active");
   const [bankFilter, setBankFilter] = useState<string | null>(searchParams.get("bankId") ?? null);
   const [sortBy, setSortBy] = useState<string>(searchParams.get("sort") ?? "end_asc");
+  const [viewMode, setViewMode] = useState<string>(searchParams.get("view") ?? "list");
+  const yearParam = searchParams.get("year");
+  const [calendarYear, setCalendarYear] = useState<number>(
+    yearParam ? Number(yearParam) : dayjs().year(),
+  );
 
   const sortOptions = [
     { value: "start_desc", label: "開戶日 (新→舊)" },
@@ -53,8 +60,11 @@ export default function DepositList() {
     if (statusFilter !== "active") params.set("status", statusFilter);
     if (bankFilter) params.set("bankId", bankFilter);
     if (sortBy !== "end_asc") params.set("sort", sortBy);
+    if (viewMode !== "list") params.set("view", viewMode);
+    if (viewMode === "calendar" && calendarYear !== dayjs().year())
+      params.set("year", String(calendarYear));
     setSearchParams(params, { replace: true });
-  }, [statusFilter, bankFilter, sortBy, setSearchParams]);
+  }, [statusFilter, bankFilter, sortBy, viewMode, calendarYear, setSearchParams]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -103,6 +113,17 @@ export default function DepositList() {
             <UserMenu />
           </Group>
 
+          <SegmentedControl
+            size="xs"
+            value={viewMode}
+            onChange={setViewMode}
+            data={[
+              { label: "列表", value: "list" },
+              { label: "月曆", value: "calendar" },
+            ]}
+            fullWidth
+          />
+
           {loading && deposits.length === 0 ? (
             <Stack gap="md">
               <Skeleton height={180} radius="lg" />
@@ -121,6 +142,12 @@ export default function DepositList() {
                 </Text>
               </Stack>
             </Center>
+          ) : viewMode === "calendar" ? (
+            <MonthlyCalendar
+              deposits={deposits}
+              year={calendarYear}
+              onYearChange={setCalendarYear}
+            />
           ) : (
             <>
               <Stack gap="xs">
