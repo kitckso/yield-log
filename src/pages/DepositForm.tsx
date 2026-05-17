@@ -124,7 +124,7 @@ export default function DepositForm() {
   useEffect(() => {
     if (startDate && periodValue && periodUnit && !endDateManuallyEdited) {
       const end = calculateEndDate(
-        startDate.toISOString().split("T")[0],
+        startDate.toLocaleDateString("en-CA"),
         Number(periodValue),
         periodUnit,
       );
@@ -138,8 +138,8 @@ export default function DepositForm() {
     if (startDate && endDate && amount && interestRate && !interestManuallyEdited) {
       const a = Number(amount);
       const r = Number(interestRate);
-      const s = startDate.toISOString().split("T")[0];
-      const e = endDate.toISOString().split("T")[0];
+      const s = startDate.toLocaleDateString("en-CA");
+      const e = endDate.toLocaleDateString("en-CA");
       const floor = calculateInterest(a, r, s, e);
       const round = calculateInterestRounded(a, r, s, e);
       setInterest(round);
@@ -181,8 +181,8 @@ export default function DepositForm() {
       period_unit: periodUnit as "days" | "weeks" | "months" | "years",
       interest_rate: Number(interestRate),
       interest: Number(interest),
-      start_date: startDate.toISOString().split("T")[0],
-      end_date: endDate.toISOString().split("T")[0],
+      start_date: startDate.toLocaleDateString("en-CA"),
+      end_date: endDate.toLocaleDateString("en-CA"),
     };
 
     if (isEditing && id) {
