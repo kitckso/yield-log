@@ -31,12 +31,10 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
 
   const months = useMemo(() => {
     const groups: MonthGroup[] = [];
-
     for (let m = 0; m < 12; m++) {
       const date = dayjs().year(year).month(m);
       const key = date.format("YYYY-MM");
       const monthDeposits = deposits.filter((d) => d.end_date.startsWith(key));
-
       groups.push({
         month: m,
         label: date.format("M月"),
@@ -45,12 +43,95 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
         totalInterest: monthDeposits.reduce((s, d) => s + d.interest, 0),
       });
     }
-
     return groups;
   }, [deposits, year]);
 
   const yearTotalAmount = months.reduce((s, m) => s + m.totalAmount, 0);
   const yearTotalInterest = months.reduce((s, m) => s + m.totalInterest, 0);
+
+  const renderMonth = (m: MonthGroup) => {
+    const isCurrent = isCurrentYear && m.month === currentMonth;
+    return (
+      <Card
+        key={m.month}
+        padding="sm"
+        radius="lg"
+        withBorder
+        style={
+          isCurrent ? { borderColor: "var(--mantine-color-blue-5)", borderWidth: 2 } : undefined
+        }
+      >
+        <Text fw={700} size="sm" mb="xs" c={isCurrent ? "blue" : undefined}>
+          {m.label}
+        </Text>
+
+        {m.deposits.length > 0 ? (
+          <>
+            <Card padding="xs" radius="md" bg="gray.0" mb="xs">
+              <Group justify="space-between">
+                <Text size="xs" fw={600}>
+                  合計
+                </Text>
+                <Stack gap={0} align="end">
+                  <Text size="xs" fw={600}>
+                    {formatCurrency(m.totalAmount)}
+                  </Text>
+                  <Text size="xs" c="green" fw={600}>
+                    {formatCurrency(m.totalInterest)}
+                  </Text>
+                </Stack>
+              </Group>
+            </Card>
+
+            <Stack gap="sm">
+              {m.deposits.map((d) => {
+                const matured = isMatured(d.end_date);
+                return (
+                  <Card
+                    key={d.id}
+                    padding="xs"
+                    radius="md"
+                    style={{
+                      backgroundColor: matured ? "var(--mantine-color-gray-0)" : undefined,
+                      opacity: matured ? 0.6 : 1,
+                    }}
+                  >
+                    <Group justify="space-between" mb={2}>
+                      <Text size="sm" fw={500}>
+                        {d.bank_name}
+                      </Text>
+                      {matured ? (
+                        <Badge size="xs" color="gray" variant="light">
+                          已期滿
+                        </Badge>
+                      ) : (
+                        <Text size="xs" c="green" fw={500}>
+                          {d.interest_rate}%
+                        </Text>
+                      )}
+                    </Group>
+                    <Group justify="space-between">
+                      <Text size="sm">{formatCurrency(d.amount)}</Text>
+                      <Text size="xs" c="dimmed">
+                        {formatDate(d.end_date)}
+                      </Text>
+                    </Group>
+                    <Text size="xs" c="dimmed">
+                      利息 {formatCurrency(d.interest)}
+                    </Text>
+                  </Card>
+                );
+              })}
+            </Stack>
+          </>
+        ) : (
+          <Text size="xs" c="dimmed" py="md" ta="center">
+            —
+          </Text>
+        )}
+      </Card>
+    );
+  };
 
   return (
     <Stack gap="md">
@@ -88,116 +169,21 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
       </Card>
 
       <Stack gap="sm">
-        {months.map((m) => {
-          const isCurrent = isCurrentYear && m.month === currentMonth;
-          const isPast = isCurrentYear && m.month < currentMonth;
-          if (isPast && !showPast) return null;
-          return (
-            <Card
-              key={m.month}
-              padding="sm"
-              radius="lg"
-              withBorder
-              style={
-                isCurrent
-                  ? { borderColor: "var(--mantine-color-blue-5)", borderWidth: 2 }
-                  : undefined
-              }
-            >
-              <Text fw={700} size="sm" mb="xs" c={isCurrent ? "blue" : undefined}>
-                {m.label}
-              </Text>
+        {isCurrentYear && showPast && months.filter((m) => m.month < currentMonth).map(renderMonth)}
 
-              {m.deposits.length > 0 ? (
-                <>
-                  <Card padding="xs" radius="md" bg="gray.0" mb="xs">
-                    <Group justify="space-between">
-                      <Text size="xs" fw={600}>
-                        合計
-                      </Text>
-                      <Stack gap={0} align="end">
-                        <Text size="xs" fw={600}>
-                          {formatCurrency(m.totalAmount)}
-                        </Text>
-                        <Text size="xs" c="green" fw={600}>
-                          {formatCurrency(m.totalInterest)}
-                        </Text>
-                      </Stack>
-                    </Group>
-                  </Card>
-
-                  <Stack gap="sm">
-                    {m.deposits.map((d) => {
-                      const matured = isMatured(d.end_date);
-                      return (
-                        <Card
-                          key={d.id}
-                          padding="xs"
-                          radius="md"
-                          style={{
-                            backgroundColor: matured ? "var(--mantine-color-gray-0)" : undefined,
-                            opacity: matured ? 0.6 : 1,
-                          }}
-                        >
-                          <Group justify="space-between" mb={2}>
-                            <Text size="sm" fw={500}>
-                              {d.bank_name}
-                            </Text>
-                            {matured ? (
-                              <Badge size="xs" color="gray" variant="light">
-                                已期滿
-                              </Badge>
-                            ) : (
-                              <Text size="xs" c="green" fw={500}>
-                                {d.interest_rate}%
-                              </Text>
-                            )}
-                          </Group>
-                          <Group justify="space-between">
-                            <Text size="sm">{formatCurrency(d.amount)}</Text>
-                            <Text size="xs" c="dimmed">
-                              {formatDate(d.end_date)}
-                            </Text>
-                          </Group>
-                          <Text size="xs" c="dimmed">
-                            利息 {formatCurrency(d.interest)}
-                          </Text>
-                        </Card>
-                      );
-                    })}
-                  </Stack>
-                </>
-              ) : (
-                <Text size="xs" c="dimmed" py="md" ta="center">
-                  —
-                </Text>
-              )}
-            </Card>
-          );
-        })}
-
-        {isCurrentYear && !showPast && (
+        {isCurrentYear && (
           <Button
             variant="subtle"
             size="sm"
             fullWidth
-            leftSection={<IconChevronDown size={16} />}
-            onClick={() => setShowPast(true)}
+            leftSection={showPast ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
+            onClick={() => setShowPast((v) => !v)}
           >
-            顯示已過月份
+            {showPast ? "隱藏已過月份" : "顯示已過月份"}
           </Button>
         )}
-        {isCurrentYear && showPast && (
-          <Button
-            variant="subtle"
-            size="sm"
-            fullWidth
-            leftSection={<IconChevronUp size={16} />}
-            onClick={() => setShowPast(false)}
-          >
-            隱藏已過月份
-          </Button>
-        )}
+
+        {months.filter((m) => !isCurrentYear || m.month >= currentMonth).map(renderMonth)}
       </Stack>
     </Stack>
   );
