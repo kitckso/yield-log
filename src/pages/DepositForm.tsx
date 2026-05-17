@@ -51,26 +51,33 @@ export default function DepositForm() {
 
   const recentCutoff = dayjs().subtract(6, "month").format("YYYY-MM-DD");
   const recentAmounts = useMemo(() => {
-    const vals = deposits.filter((d) => d.start_date >= recentCutoff).map((d) => d.amount);
-    return [...new Set(vals)].sort((a, b) => b - a).slice(0, 5);
+    const recent = deposits.filter((d) => d.start_date >= recentCutoff);
+    const freq = new Map<number, number>();
+    recent.forEach((d) => freq.set(d.amount, (freq.get(d.amount) ?? 0) + 1));
+    return [...freq.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([v]) => v);
   }, [deposits, recentCutoff]);
   const recentRates = useMemo(() => {
-    const vals = deposits.filter((d) => d.start_date >= recentCutoff).map((d) => d.interest_rate);
-    return [...new Set(vals)].sort((a, b) => b - a).slice(0, 5);
+    const recent = deposits.filter((d) => d.start_date >= recentCutoff);
+    const freq = new Map<number, number>();
+    recent.forEach((d) => freq.set(d.interest_rate, (freq.get(d.interest_rate) ?? 0) + 1));
+    return [...freq.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([v]) => v);
   }, [deposits, recentCutoff]);
   const recentPeriods = useMemo(() => {
-    const seen = new Set<string>();
-    const vals: { value: number; unit: string }[] = [];
-    for (const d of deposits) {
-      if (d.start_date >= recentCutoff) {
-        const key = `${d.period_value}-${d.period_unit}`;
-        if (!seen.has(key)) {
-          seen.add(key);
-          vals.push({ value: d.period_value, unit: d.period_unit });
-        }
-      }
-    }
-    return vals.slice(0, 5);
+    const recent = deposits.filter((d) => d.start_date >= recentCutoff);
+    const freq = new Map<string, { value: number; unit: string; count: number }>();
+    recent.forEach((d) => {
+      const key = `${d.period_value}-${d.period_unit}`;
+      const entry = freq.get(key) ?? { value: d.period_value, unit: d.period_unit, count: 0 };
+      entry.count += 1;
+      freq.set(key, entry);
+    });
+    return [...freq.values()].sort((a, b) => b.count - a.count).slice(0, 5);
   }, [deposits, recentCutoff]);
   const periodLabel = (v: number, u: string) => {
     const labels: Record<string, string> = { days: "日", weeks: "週", months: "個月", years: "年" };
