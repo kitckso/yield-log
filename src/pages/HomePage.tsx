@@ -268,7 +268,7 @@ export default function HomePage() {
                 </Stack>
               </Card>
 
-              {bankDistribution.length > 0 && (
+              {banks.length > 0 && bankDistribution.length > 0 && (
                 <Card padding="lg" radius="lg" withBorder>
                   <Text fw={600} mb="md">
                     銀行分佈
