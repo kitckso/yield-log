@@ -12,6 +12,7 @@ import {
   SimpleGrid,
   ColorSwatch,
   SegmentedControl,
+  Skeleton,
 } from "@mantine/core";
 import { DonutChart, BarChart } from "@mantine/charts";
 import { useDepositsStore } from "../store/deposits";
@@ -35,7 +36,7 @@ const chartColors = [
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { deposits, fetchDeposits } = useDepositsStore();
+  const { deposits, loading, fetchDeposits } = useDepositsStore();
   const { banks, fetchBanks } = useBanksStore();
   const { user, signOut } = useAuthStore();
 
@@ -207,7 +208,14 @@ export default function HomePage() {
             </Menu>
           </Group>
 
-          {deposits.length === 0 ? (
+          {loading && deposits.length === 0 ? (
+            <Stack gap="md">
+              <Skeleton height={180} radius="lg" />
+              <Skeleton height={220} radius="lg" />
+              <Skeleton height={200} radius="lg" />
+              <Skeleton height={140} radius="lg" />
+            </Stack>
+          ) : deposits.length === 0 ? (
             <Stack align="center" py="xl" gap="sm">
               <span
                 className="material-symbols-outlined"
