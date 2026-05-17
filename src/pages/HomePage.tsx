@@ -9,6 +9,7 @@ import {
   Avatar,
   Menu,
   SimpleGrid,
+  ColorSwatch,
 } from "@mantine/core";
 import { DonutChart, BarChart } from "@mantine/charts";
 import { useDepositsStore } from "../store/deposits";
@@ -191,14 +192,28 @@ export default function HomePage() {
                   <Text fw={600} mb="md">
                     銀行分佈
                   </Text>
-                  <DonutChart
-                    data={bankDistribution}
-                    withLabelsLine
-                    withLabels
-                    size={180}
-                    thickness={30}
-                    labelsType="percent"
-                  />
+                  <Stack align="center" gap="md">
+                    <DonutChart
+                      data={bankDistribution}
+                      withLabelsLine
+                      withLabels
+                      size={180}
+                      thickness={30}
+                      labelsType="percent"
+                    />
+                    <SimpleGrid cols={2} spacing="xs" w="100%">
+                      {bankDistribution.map((item) => (
+                        <Group key={item.name} gap="xs">
+                          <ColorSwatch
+                            color={`var(--mantine-color-${item.color.replace(".", "-")})`}
+                            size={10}
+                            withShadow={false}
+                          />
+                          <Text size="xs">{item.name}</Text>
+                        </Group>
+                      ))}
+                    </SimpleGrid>
+                  </Stack>
                 </Card>
               )}
 

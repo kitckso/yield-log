@@ -5,7 +5,7 @@ import AppLayout from "./layout/AppLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
+import DepositList from "./pages/DepositList";
 import HomePage from "./pages/HomePage";
 import DepositForm from "./pages/DepositForm";
 import DepositDetail from "./pages/DepositDetail";
@@ -32,7 +32,7 @@ export default function App() {
         }
       >
         <Route index element={<HomePage />} />
-        <Route path="deposits" element={<Dashboard />} />
+        <Route path="deposits" element={<DepositList />} />
         <Route path="deposits/new" element={<DepositForm />} />
         <Route path="deposits/:id/detail" element={<DepositDetail />} />
         <Route path="deposits/:id" element={<DepositForm />} />

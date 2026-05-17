@@ -21,7 +21,7 @@ import SummaryCard from "../components/SummaryCard";
 import DepositCard from "../components/DepositCard";
 import { isMatured } from "../hooks/useCalculations";
 
-export default function Dashboard() {
+export default function DepositList() {
   const navigate = useNavigate();
   const { deposits, loading, fetchDeposits } = useDepositsStore();
   const { user, signOut } = useAuthStore();
@@ -63,7 +63,7 @@ export default function Dashboard() {
 
   return (
     <div style={{ position: "relative" }}>
-      <Container size="sm" pb={100} pt="md">
+      <Container size="sm" pb={160} pt="md">
         <Stack gap="md">
           <Group justify="space-between">
             <div>
