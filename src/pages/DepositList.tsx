@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Container,
   Title,
@@ -22,6 +22,7 @@ import { isMatured } from "../hooks/useCalculations";
 
 export default function DepositList() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { deposits, loading, fetchDeposits } = useDepositsStore();
   const { user, signOut } = useAuthStore();
 
@@ -34,9 +35,9 @@ export default function DepositList() {
     void fetchBanks();
   }, [fetchBanks]);
 
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [bankFilter, setBankFilter] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<string>("start_desc");
+  const [statusFilter, setStatusFilter] = useState<string>(searchParams.get("status") ?? "all");
+  const [bankFilter, setBankFilter] = useState<string | null>(searchParams.get("bankId") ?? null);
+  const [sortBy, setSortBy] = useState<string>(searchParams.get("sort") ?? "start_desc");
 
   const sortOptions = [
     { value: "start_desc", label: "開戶日 (新→舊)" },
@@ -48,6 +49,14 @@ export default function DepositList() {
     { value: "rate_desc", label: "利率 (高→低)" },
     { value: "rate_asc", label: "利率 (低→高)" },
   ];
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (statusFilter !== "all") params.set("status", statusFilter);
+    if (bankFilter) params.set("bankId", bankFilter);
+    if (sortBy !== "start_desc") params.set("sort", sortBy);
+    setSearchParams(params, { replace: true });
+  }, [statusFilter, bankFilter, sortBy, setSearchParams]);
 
   const filteredDeposits = useMemo(() => {
     const filtered = deposits.filter((d) => {

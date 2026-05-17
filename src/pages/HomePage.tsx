@@ -412,7 +412,12 @@ export default function HomePage() {
                     {bankStats.map((b) => {
                       const totalAmount = b.activeAmount + b.maturedAmount;
                       return (
-                        <Stack key={b.bankId} gap={4}>
+                        <Stack
+                          key={b.bankId}
+                          gap={4}
+                          style={{ cursor: "pointer" }}
+                          onClick={() => navigate(`/deposits?bankId=${b.bankId}`)}
+                        >
                           <Group justify="space-between">
                             <Text size="sm" fw={600}>
                               {b.bankName}
