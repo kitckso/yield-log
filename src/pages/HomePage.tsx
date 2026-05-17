@@ -326,12 +326,15 @@ export default function HomePage() {
                             {bankMap.get(d.bank_id) ?? "未知"}
                           </Text>
                           <Text size="xs" c="dimmed">
-                            {formatDate(d.end_date)} 到期 · 利息 {formatCurrency(d.interest)}
+                            {formatDate(d.end_date)} 到期
                           </Text>
                         </Stack>
                         <Stack gap={0} align="end">
                           <Text fw={600} size="sm">
                             {formatCurrency(d.amount)}
+                          </Text>
+                          <Text size="xs" c="dimmed">
+                            利息 {formatCurrency(d.interest)}
                           </Text>
                         </Stack>
                       </Group>
