@@ -58,6 +58,10 @@ export default function DepositList() {
     setSearchParams(params, { replace: true });
   }, [statusFilter, bankFilter, sortBy, setSearchParams]);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [searchParams]);
+
   const filteredDeposits = useMemo(() => {
     const filtered = deposits.filter((d) => {
       if (statusFilter === "active" && isMatured(d.end_date)) return false;
