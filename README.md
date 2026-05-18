@@ -4,6 +4,32 @@
 
 > **Demo**: [yieldlog.netlify.app](https://yieldlog.netlify.app/) — 使用訪客帳戶 `guest@example.com` / `guest` 登入（唯讀）。
 
+## 畫面預覽
+
+### 儀表板
+
+![Dashboard](docs/dashboard.png)
+
+### 新增存款
+
+![Deposit Form](docs/deposit-form.png)
+
+### 銀行管理
+
+![Bank Management](docs/bank-management.png)
+
+### 設定
+
+![Settings](docs/settings.png)
+
+### 統計圖表
+
+![Statistics Overview](docs/statistics-overview.png)
+
+![Statistics Charts](docs/statistics-charts.png)
+
+![Statistics Summary](docs/statistics-summary.png)
+
 ## 功能
 
 - **用戶認證** — Supabase Auth（Email/密碼）
