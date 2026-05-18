@@ -31,12 +31,46 @@ CREATE TABLE fixed_deposits (
 ALTER TABLE banks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE fixed_deposits ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies
-CREATE POLICY "Users can manage their own banks" ON banks
-  FOR ALL USING (auth.uid() = user_id);
+-- set guest user metadata (app_metadata is secure, user_metadata is user-editable)
+-- UPDATE auth.users
+-- SET
+--   raw_app_meta_data = COALESCE(raw_app_meta_data, '{}'::jsonb) || '{"is_guest": true}'::jsonb
+-- WHERE email = 'guest@example.com';
 
-CREATE POLICY "Users can manage their own deposits" ON fixed_deposits
-  FOR ALL USING (auth.uid() = user_id);
+-- RLS Policies
+-- Allow both normal users AND guests to READ their own banks
+CREATE POLICY "Users can view their own banks"
+ON banks
+FOR SELECT
+TO authenticated
+USING (auth.uid() = user_id);
+
+-- Allow ONLY non-guests to INSERT, UPDATE, or DELETE banks
+CREATE POLICY "Non-guests can modify their own banks"
+ON banks
+FOR ALL
+TO authenticated
+USING (
+  auth.uid() = user_id
+  AND (auth.jwt() -> 'app_metadata' ->> 'is_guest')::boolean IS NOT TRUE
+);
+
+-- Allow both normal users AND guests to READ their own deposits
+CREATE POLICY "Users can view their own deposits"
+ON fixed_deposits
+FOR SELECT
+TO authenticated
+USING (auth.uid() = user_id);
+
+-- Allow ONLY non-guests to INSERT, UPDATE, or DELETE deposits
+CREATE POLICY "Non-guests can modify their own deposits"
+ON fixed_deposits
+FOR ALL
+TO authenticated
+USING (
+  auth.uid() = user_id
+  AND (auth.jwt() -> 'app_metadata' ->> 'is_guest')::boolean IS NOT TRUE
+);
 
 -- Triggers to auto-set user_id on insert
 CREATE OR REPLACE FUNCTION public.set_user_id()

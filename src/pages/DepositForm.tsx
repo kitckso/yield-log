@@ -22,6 +22,7 @@ import {
   calculateInterest,
   calculateInterestRounded,
   calculateEndDate,
+  getErrorMessage,
 } from "../hooks/useCalculations";
 import dayjs from "dayjs";
 
@@ -185,20 +186,30 @@ export default function DepositForm() {
       end_date: endDate.toLocaleDateString("en-CA"),
     };
 
-    if (isEditing && id) {
-      await updateDeposit(id, depositData);
+    try {
+      if (isEditing && id) {
+        await updateDeposit(id, depositData);
+        notifications.show({
+          title: "已更新",
+          message: "存款記錄已成功更新",
+          color: "green",
+        });
+      } else {
+        await addDeposit(depositData);
+        notifications.show({
+          title: "已新增",
+          message: "存款記錄已成功新增",
+          color: "green",
+        });
+      }
+    } catch (e) {
       notifications.show({
-        title: "已更新",
-        message: "存款記錄已成功更新",
-        color: "green",
+        title: "錯誤",
+        message: getErrorMessage(e),
+        color: "red",
       });
-    } else {
-      await addDeposit(depositData);
-      notifications.show({
-        title: "已新增",
-        message: "存款記錄已成功新增",
-        color: "green",
-      });
+      setLoading(false);
+      return;
     }
 
     setLoading(false);

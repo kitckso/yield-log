@@ -72,3 +72,13 @@ export function formatCurrency(amount: number): string {
 export function formatDate(dateStr: string): string {
   return dayjs(dateStr, "YYYY-MM-DD", true).format("YYYY年MM月DD日");
 }
+
+export function getErrorMessage(err: unknown): string {
+  if (typeof err === "object" && err !== null) {
+    const e = err as Record<string, unknown>;
+    if (e.code === "42501" || e.status === 406) {
+      return "沒有權限，訪客帳戶無法執行此操作";
+    }
+  }
+  return "操作失敗，請稍後再試";
+}

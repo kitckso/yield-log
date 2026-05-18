@@ -36,15 +36,14 @@ export const useBanksStore = create<BanksState>((set, get) => ({
     const {
       data: { session },
     } = await supabase.auth.getSession();
-    if (!session?.user) return;
+    if (!session?.user) throw new Error("Not authenticated");
     const { data, error } = await supabase
       .from("banks")
       .insert({ user_id: session.user.id, name })
       .select()
       .single();
-    if (!error && data) {
-      set({ banks: [...get().banks, data] });
-    }
+    if (error) throw error;
+    set({ banks: [...get().banks, data] });
   },
 
   updateBank: async (id: string, name: string) => {
@@ -54,13 +53,13 @@ export const useBanksStore = create<BanksState>((set, get) => ({
       .eq("id", id)
       .select()
       .single();
-    if (!error && data) {
-      set({ banks: get().banks.map((b) => (b.id === id ? data : b)) });
-    }
+    if (error) throw error;
+    set({ banks: get().banks.map((b) => (b.id === id ? data : b)) });
   },
 
   deleteBank: async (id: string) => {
-    await supabase.from("banks").delete().eq("id", id);
+    const { error } = await supabase.from("banks").delete().eq("id", id);
+    if (error) throw error;
     set({ banks: get().banks.filter((b) => b.id !== id) });
   },
 }));

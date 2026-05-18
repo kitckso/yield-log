@@ -17,6 +17,7 @@ import { IconPlus, IconCoin } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { useDisclosure } from "@mantine/hooks";
 import { useBanksStore } from "../store/banks";
+import { getErrorMessage } from "../hooks/useCalculations";
 import UserMenu from "../components/UserMenu";
 import BankItem from "../components/BankItem";
 
@@ -34,13 +35,21 @@ export default function BankManagement() {
 
   const handleAdd = async () => {
     if (!newBankName.trim()) return;
-    await addBank(newBankName.trim());
-    setNewBankName("");
-    notifications.show({
-      title: "已新增",
-      message: `銀行「${newBankName.trim()}」已成功新增`,
-      color: "green",
-    });
+    try {
+      await addBank(newBankName.trim());
+      setNewBankName("");
+      notifications.show({
+        title: "已新增",
+        message: `銀行「${newBankName.trim()}」已成功新增`,
+        color: "green",
+      });
+    } catch (e) {
+      notifications.show({
+        title: "錯誤",
+        message: getErrorMessage(e),
+        color: "red",
+      });
+    }
   };
 
   const handleEdit = (id: string, name: string) => {
@@ -51,15 +60,23 @@ export default function BankManagement() {
 
   const handleUpdate = async () => {
     if (!editingId || !editingName.trim()) return;
-    await updateBank(editingId, editingName.trim());
-    closeModal();
-    setEditingId(null);
-    setEditingName("");
-    notifications.show({
-      title: "已更新",
-      message: "銀行名稱已成功更新",
-      color: "green",
-    });
+    try {
+      await updateBank(editingId, editingName.trim());
+      closeModal();
+      setEditingId(null);
+      setEditingName("");
+      notifications.show({
+        title: "已更新",
+        message: "銀行名稱已成功更新",
+        color: "green",
+      });
+    } catch (e) {
+      notifications.show({
+        title: "錯誤",
+        message: getErrorMessage(e),
+        color: "red",
+      });
+    }
   };
 
   const handleDelete = (id: string) => {
@@ -70,12 +87,20 @@ export default function BankManagement() {
       labels: { confirm: "刪除", cancel: "取消" },
       confirmProps: { color: "red" },
       onConfirm: async () => {
-        await deleteBank(id);
-        notifications.show({
-          title: "已刪除",
-          message: "銀行已成功刪除",
-          color: "green",
-        });
+        try {
+          await deleteBank(id);
+          notifications.show({
+            title: "已刪除",
+            message: "銀行已成功刪除",
+            color: "green",
+          });
+        } catch (e) {
+          notifications.show({
+            title: "錯誤",
+            message: getErrorMessage(e),
+            color: "red",
+          });
+        }
       },
     });
   };

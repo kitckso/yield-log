@@ -46,19 +46,18 @@ export const useDepositsStore = create<DepositsState>((set, get) => ({
     const {
       data: { session },
     } = await supabase.auth.getSession();
-    if (!session?.user) return;
+    if (!session?.user) throw new Error("Not authenticated");
     const { data, error } = await supabase
       .from("fixed_deposits")
       .insert({ ...deposit, user_id: session.user.id })
       .select("*, banks(name)")
       .single();
-    if (!error && data) {
-      const withBank: DepositWithBank = {
-        ...(data as Omit<DepositWithBank, "bank_name">),
-        bank_name: (data.banks as unknown as { name: string })?.name ?? "",
-      };
-      set({ deposits: [withBank, ...get().deposits] });
-    }
+    if (error) throw error;
+    const withBank: DepositWithBank = {
+      ...(data as Omit<DepositWithBank, "bank_name">),
+      bank_name: (data.banks as unknown as { name: string })?.name ?? "",
+    };
+    set({ deposits: [withBank, ...get().deposits] });
   },
 
   updateDeposit: async (id, deposit) => {
@@ -68,19 +67,19 @@ export const useDepositsStore = create<DepositsState>((set, get) => ({
       .eq("id", id)
       .select("*, banks(name)")
       .single();
-    if (!error && data) {
-      const withBank: DepositWithBank = {
-        ...(data as Omit<DepositWithBank, "bank_name">),
-        bank_name: (data.banks as unknown as { name: string })?.name ?? "",
-      };
-      set({
-        deposits: get().deposits.map((d) => (d.id === id ? withBank : d)),
-      });
-    }
+    if (error) throw error;
+    const withBank: DepositWithBank = {
+      ...(data as Omit<DepositWithBank, "bank_name">),
+      bank_name: (data.banks as unknown as { name: string })?.name ?? "",
+    };
+    set({
+      deposits: get().deposits.map((d) => (d.id === id ? withBank : d)),
+    });
   },
 
   deleteDeposit: async (id: string) => {
-    await supabase.from("fixed_deposits").delete().eq("id", id);
+    const { error } = await supabase.from("fixed_deposits").delete().eq("id", id);
+    if (error) throw error;
     set({ deposits: get().deposits.filter((d) => d.id !== id) });
   },
 }));

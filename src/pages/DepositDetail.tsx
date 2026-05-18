@@ -16,7 +16,7 @@ import { notifications } from "@mantine/notifications";
 import { IconArrowLeft, IconTrash, IconEdit } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { useDepositsStore } from "../store/deposits";
-import { isMatured, formatCurrency, formatDate } from "../hooks/useCalculations";
+import { isMatured, formatCurrency, formatDate, getErrorMessage } from "../hooks/useCalculations";
 import type { DepositWithBank } from "../types";
 
 export default function DepositDetail() {
@@ -44,13 +44,21 @@ export default function DepositDetail() {
       labels: { confirm: "刪除", cancel: "取消" },
       confirmProps: { color: "red" },
       onConfirm: async () => {
-        await deleteDeposit(deposit.id);
-        notifications.show({
-          title: "已刪除",
-          message: "存款記錄已成功刪除",
-          color: "green",
-        });
-        void navigate("/deposits");
+        try {
+          await deleteDeposit(deposit.id);
+          notifications.show({
+            title: "已刪除",
+            message: "存款記錄已成功刪除",
+            color: "green",
+          });
+          void navigate("/deposits");
+        } catch (e) {
+          notifications.show({
+            title: "錯誤",
+            message: getErrorMessage(e),
+            color: "red",
+          });
+        }
       },
     });
   };
