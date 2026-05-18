@@ -79,7 +79,9 @@ LANGUAGE plpgsql
 SECURITY DEFINER SET search_path = public
 AS $$
 BEGIN
-  NEW.user_id = auth.uid();
+  IF NEW.user_id IS NULL THEN
+    NEW.user_id = auth.uid();
+  END IF;
   RETURN NEW;
 END;
 $$;

@@ -58,8 +58,13 @@ export const useBanksStore = create<BanksState>((set, get) => ({
   },
 
   deleteBank: async (id: string) => {
-    const { error } = await supabase.from("banks").delete().eq("id", id);
+    const { data, error } = await supabase.from("banks").delete().eq("id", id).select();
     if (error) throw error;
+    if (!data || data.length === 0) {
+      const e = new Error("No permission");
+      (e as any).code = "42501";
+      throw e;
+    }
     set({ banks: get().banks.filter((b) => b.id !== id) });
   },
 }));

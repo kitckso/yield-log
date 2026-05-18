@@ -78,8 +78,13 @@ export const useDepositsStore = create<DepositsState>((set, get) => ({
   },
 
   deleteDeposit: async (id: string) => {
-    const { error } = await supabase.from("fixed_deposits").delete().eq("id", id);
+    const { data, error } = await supabase.from("fixed_deposits").delete().eq("id", id).select();
     if (error) throw error;
+    if (!data || data.length === 0) {
+      const e = new Error("No permission");
+      (e as any).code = "42501";
+      throw e;
+    }
     set({ deposits: get().deposits.filter((d) => d.id !== id) });
   },
 }));

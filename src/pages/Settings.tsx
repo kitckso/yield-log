@@ -10,6 +10,7 @@ import { useDepositsStore } from "../store/deposits";
 import { useBanksStore } from "../store/banks";
 import { useAuthStore } from "../store/auth";
 import { supabase } from "../lib/supabase";
+import { getErrorMessage } from "../hooks/useCalculations";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -209,16 +210,44 @@ export default function Settings() {
                   labels: { confirm: "清除所有資料", cancel: "取消" },
                   confirmProps: { color: "red" },
                   onConfirm: async () => {
-                    const userId = user!.id;
-                    await supabase.from("fixed_deposits").delete().eq("user_id", userId);
-                    await supabase.from("banks").delete().eq("user_id", userId);
-                    await useBanksStore.getState().fetchBanks(true);
-                    await useDepositsStore.getState().fetchDeposits(true);
-                    notifications.show({
-                      title: "已清除",
-                      message: "所有資料已成功清除",
-                      color: "green",
-                    });
+                    try {
+                      const userId = user!.id;
+                      const { error: fdErr } = await supabase
+                        .from("fixed_deposits")
+                        .delete()
+                        .eq("user_id", userId);
+                      if (fdErr) throw fdErr;
+
+                      const { error: bErr } = await supabase
+                        .from("banks")
+                        .delete()
+                        .eq("user_id", userId);
+                      if (bErr) throw bErr;
+
+                      await useBanksStore.getState().fetchBanks(true);
+                      await useDepositsStore.getState().fetchDeposits(true);
+
+                      if (
+                        useDepositsStore.getState().deposits.length > 0 ||
+                        useBanksStore.getState().banks.length > 0
+                      ) {
+                        const e = new Error("No permission");
+                        (e as any).code = "42501";
+                        throw e;
+                      }
+
+                      notifications.show({
+                        title: "已清除",
+                        message: "所有資料已成功清除",
+                        color: "green",
+                      });
+                    } catch (e) {
+                      notifications.show({
+                        title: "錯誤",
+                        message: getErrorMessage(e),
+                        color: "red",
+                      });
+                    }
                   },
                 });
               }}
