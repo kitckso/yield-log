@@ -84,6 +84,27 @@ export default function HomePage() {
       }));
   }, [deposits, activeDeposits, bankMap, groupBy, scope]);
 
+  const termDistribution = useMemo(() => {
+    const monthMap: Record<string, number> = {
+      days: 1 / 30,
+      weeks: 7 / 30,
+      months: 1,
+      years: 12,
+    };
+    const buckets: Record<string, { name: string; value: number; color: string }> = {
+      short: { name: "短期（<6個月）", value: 0, color: "green.6" },
+      medium: { name: "中期（6-12個月）", value: 0, color: "blue.6" },
+      long: { name: "長期（1年以上）", value: 0, color: "grape.6" },
+    };
+    activeDeposits.forEach((d) => {
+      const months = d.period_value * (monthMap[d.period_unit] ?? 1);
+      if (months < 6) buckets.short.value += d.amount;
+      else if (months < 12) buckets.medium.value += d.amount;
+      else buckets.long.value += d.amount;
+    });
+    return Object.values(buckets).filter((b) => b.value > 0);
+  }, [activeDeposits]);
+
   const maturityTimeline = useMemo(() => {
     const now = dayjs();
     const grouped = new Map<string, number>();
@@ -307,14 +328,12 @@ export default function HomePage() {
                         data={bankDistribution}
                         size={200}
                         thickness={30}
-                        valueFormatter={(v: number) =>
-                          `$${v.toLocaleString("en-HK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                        }
+                        withTooltip={false}
                         pieProps={{ isAnimationActive: true, animationDuration: 500 }}
                       />
                       <SimpleGrid cols={2} spacing="xs" w="100%">
                         {bankDistribution.map((item) => (
-                          <Group key={item.name} gap="xs">
+                          <Group key={item.name} gap="xs" style={{ flexWrap: "nowrap" }}>
                             <ColorSwatch
                               color={`var(--mantine-color-${item.color.replace(".", "-")})`}
                               size={10}
@@ -326,6 +345,40 @@ export default function HomePage() {
                           </Group>
                         ))}
                       </SimpleGrid>
+                    </Stack>
+                  </Stack>
+                </Card>
+              )}
+
+              {termDistribution.length > 0 && (
+                <Card padding="lg" radius="lg" withBorder>
+                  <Text fw={600} mb="md">
+                    期長分佈
+                  </Text>
+                  <Stack align="center" gap="md">
+                    <DonutChart
+                      data={termDistribution}
+                      size={200}
+                      thickness={30}
+                      withTooltip={false}
+                      pieProps={{ isAnimationActive: true, animationDuration: 500 }}
+                    />
+                    <Stack gap="xs" w="100%">
+                      {termDistribution.map((item) => (
+                        <Group key={item.name} gap="xs" style={{ flexWrap: "nowrap" }}>
+                          <ColorSwatch
+                            color={`var(--mantine-color-${item.color.replace(".", "-")})`}
+                            size={10}
+                            withShadow={false}
+                          />
+                          <Text size="xs" style={{ flex: 1 }}>
+                            {item.name}
+                          </Text>
+                          <Text size="xs" fw={500}>
+                            {formatCurrency(item.value)}
+                          </Text>
+                        </Group>
+                      ))}
                     </Stack>
                   </Stack>
                 </Card>
