@@ -2,6 +2,8 @@
 
 個人定存記錄工具（Hong Kong Fixed Deposit Tracker）— 追蹤管理銀行定期存款，繁體中文介面，港幣結算。
 
+> **Demo**: [yieldlog.netlify.app](https://yieldlog.netlify.app/) — 使用訪客帳戶 `guest@example.com` / `guest` 登入（唯讀）。
+
 ## 功能
 
 - **用戶認證** — Supabase Auth（Email/密碼）
@@ -58,11 +60,16 @@ cp .env.example .env
 1. 前往 Supabase Dashboard → **SQL Editor**
 2. 將 `supabase/schema.sql` 全部貼上並執行
 3. 前往 **Authentication → Settings** → 關閉 **Confirm email**
-4. （可選）執行 `supabase/seed.sql` 填入範例資料
+4. 前往 **Authentication → Settings** → **User Signups** → 關閉 **Allow new user sign-ups**
+5. （可選）執行 `supabase/seed.sql` 填入範例資料
 
 ### 訪客帳戶設定
 
-如需啟用訪客唯讀帳戶，執行以下 SQL：
+如需啟用訪客唯讀帳戶（guest@example.com / guest），請在 Supabase 建立該帳戶後執行以下 SQL：
+
+1. 前往 Supabase Dashboard → **Authentication → Users** → **Add User**
+2. 填入電郵 `guest@example.com`、密碼 `guest`，取消勾選 **Confirm email**
+3. 前往 **SQL Editor**，執行：
 
 ```sql
 UPDATE auth.users
