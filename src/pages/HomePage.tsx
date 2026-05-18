@@ -14,7 +14,7 @@ import {
   Button,
   Badge,
 } from "@mantine/core";
-import { DonutChart, BarChart } from "@mantine/charts";
+import { DonutChart, BarChart, LineChart } from "@mantine/charts";
 import UserMenu from "../components/UserMenu";
 import { IconCoin, IconBuildingBank } from "@tabler/icons-react";
 import { useDepositsStore } from "../store/deposits";
@@ -104,6 +104,38 @@ export default function HomePage() {
     });
     return Object.values(buckets).filter((b) => b.value > 0);
   }, [activeDeposits]);
+
+  const growthData = useMemo(() => {
+    if (deposits.length === 0) return [];
+    const sorted = [...deposits]
+      .flatMap((d) => [dayjs(d.start_date), dayjs(d.end_date)])
+      .sort((a, b) => a.valueOf() - b.valueOf());
+    const minDate = sorted[0].startOf("month");
+    const maxDate = sorted[sorted.length - 1].endOf("month");
+    const result: { month: string; 累計利息: number }[] = [];
+    let cursor = minDate;
+    while (cursor.isBefore(maxDate) || cursor.isSame(maxDate, "month")) {
+      const monthEnd = cursor.endOf("month");
+      let cumulative = 0;
+      deposits.forEach((d) => {
+        const start = dayjs(d.start_date, "YYYY-MM-DD", true);
+        const end = dayjs(d.end_date, "YYYY-MM-DD", true);
+        if (end.isBefore(monthEnd) || end.isSame(monthEnd, "day")) {
+          cumulative += d.interest;
+        } else if (start.isBefore(monthEnd) || start.isSame(monthEnd, "day")) {
+          const totalDays = end.diff(start, "day");
+          const elapsedDays = monthEnd.diff(start, "day");
+          if (totalDays > 0) cumulative += d.interest * Math.min(elapsedDays / totalDays, 1);
+        }
+      });
+      result.push({
+        month: cursor.format("YYYY-MM"),
+        累計利息: Math.round(cumulative * 100) / 100,
+      });
+      cursor = cursor.add(1, "month");
+    }
+    return result;
+  }, [deposits]);
 
   const maturityTimeline = useMemo(() => {
     const now = dayjs();
@@ -433,6 +465,34 @@ export default function HomePage() {
                       ))}
                     </Stack>
                   </Stack>
+                </Card>
+              )}
+
+              {growthData.length > 1 && (
+                <Card padding="lg" radius="lg" withBorder>
+                  <Text fw={600} mb="md">
+                    利息累積走勢
+                  </Text>
+                  <LineChart
+                    h={200}
+                    data={growthData}
+                    dataKey="month"
+                    series={[{ name: "累計利息", color: "green.6" }]}
+                    tickLine="y"
+                    gridAxis="x"
+                    withDots={false}
+                    curveType="linear"
+                    yAxisProps={{
+                      tickFormatter: (v: number) => {
+                        if (v >= 100_000_000) return `$${(v / 100_000_000).toFixed(1)}億`;
+                        if (v >= 10_000) return `$${(v / 10_000).toFixed(1)}萬`;
+                        return `$${v}`;
+                      },
+                    }}
+                    valueFormatter={(v: number) =>
+                      `$${v.toLocaleString("en-HK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                    }
+                  />
                 </Card>
               )}
 
