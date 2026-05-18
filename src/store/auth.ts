@@ -16,6 +16,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   loading: true,
 
   signUp: async (email, password) => {
+    if (import.meta.env.VITE_ENABLE_REGISTRATION !== "true") {
+      return "註冊已關閉";
+    }
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) return error.message;
 
