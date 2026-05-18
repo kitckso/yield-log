@@ -385,7 +385,7 @@ export default function HomePage() {
                             {y.count} 筆
                           </Text>
                           <Text size="xs" c="dimmed">
-                            {y.pending > 0 && `預期 ${formatCurrency(y.pending)}`}
+                            {y.pending > 0 && `待收 ${formatCurrency(y.pending)}`}
                             {y.pending > 0 && y.received > 0 && " · "}
                             {y.received > 0 && `已收 ${formatCurrency(y.received)}`}
                           </Text>
