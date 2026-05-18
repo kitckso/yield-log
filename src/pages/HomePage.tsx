@@ -53,6 +53,9 @@ export default function HomePage() {
   const activeDeposits = deposits.filter((d) => !isMatured(d.end_date));
   const maturedDeposits = deposits.filter((d) => isMatured(d.end_date));
 
+  const [groupBy, setGroupBy] = useState<"amount" | "interest">("amount");
+  const [scope, setScope] = useState<"active" | "all">("active");
+
   const activeAmount = activeDeposits.reduce((sum, d) => sum + d.amount, 0);
   const pendingInterest = activeDeposits.reduce((sum, d) => sum + d.interest, 0);
   const totalReceivedInterest = maturedDeposits.reduce((sum, d) => sum + d.interest, 0);
@@ -63,20 +66,22 @@ export default function HomePage() {
       : 0;
 
   const bankDistribution = useMemo(() => {
+    const source = scope === "active" ? activeDeposits : deposits;
     const grouped = new Map<string, number>();
-    activeDeposits.forEach((d) => {
-      grouped.set(d.bank_id, (grouped.get(d.bank_id) ?? 0) + d.amount);
+    source.forEach((d) => {
+      const val = groupBy === "amount" ? d.amount : d.interest;
+      grouped.set(d.bank_id, (grouped.get(d.bank_id) ?? 0) + val);
     });
-    const total = activeDeposits.reduce((s, d) => s + d.amount, 0);
+    const total = Array.from(grouped.values()).reduce((s, v) => s + v, 0);
     return Array.from(grouped.entries())
       .sort((a, b) => b[1] - a[1])
-      .map(([bankId, amount], i) => ({
+      .map(([bankId, value], i) => ({
         name: bankMap.get(bankId) ?? "未知",
-        value: amount,
+        value,
         color: chartColors[i % chartColors.length],
-        pct: total > 0 ? Math.round((amount / total) * 100) : 0,
+        pct: total > 0 ? Math.round((value / total) * 100) : 0,
       }));
-  }, [activeDeposits, bankMap]);
+  }, [deposits, activeDeposits, bankMap, groupBy, scope]);
 
   const maturityTimeline = useMemo(() => {
     const now = dayjs();
@@ -263,32 +268,56 @@ export default function HomePage() {
 
               {banks.length > 0 && bankDistribution.length > 0 && (
                 <Card padding="lg" radius="lg" withBorder>
-                  <Text fw={600} mb="md">
+                  <Text fw={600} mb="sm">
                     銀行分佈
                   </Text>
-                  <Stack align="center" gap="md">
-                    <DonutChart
-                      data={bankDistribution}
-                      size={200}
-                      thickness={30}
-                      valueFormatter={(v: number) =>
-                        `$${v.toLocaleString("en-HK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                      }
+                  <Stack gap="xs">
+                    <SegmentedControl
+                      size="xs"
+                      value={groupBy}
+                      onChange={(v) => setGroupBy(v as "amount" | "interest")}
+                      data={[
+                        { label: "本金", value: "amount" },
+                        { label: "利息", value: "interest" },
+                      ]}
+                      fullWidth
                     />
-                    <SimpleGrid cols={2} spacing="xs" w="100%">
-                      {bankDistribution.map((item) => (
-                        <Group key={item.name} gap="xs">
-                          <ColorSwatch
-                            color={`var(--mantine-color-${item.color.replace(".", "-")})`}
-                            size={10}
-                            withShadow={false}
-                          />
-                          <Text size="xs">
-                            {item.name} {item.pct}%
-                          </Text>
-                        </Group>
-                      ))}
-                    </SimpleGrid>
+                    <SegmentedControl
+                      size="xs"
+                      value={scope}
+                      onChange={(v) => setScope(v as "active" | "all")}
+                      data={[
+                        { label: "進行中", value: "active" },
+                        { label: "全部", value: "all" },
+                      ]}
+                      fullWidth
+                      mb="sm"
+                    />
+                    <Stack align="center" gap="md">
+                      <DonutChart
+                        data={bankDistribution}
+                        size={200}
+                        thickness={30}
+                        valueFormatter={(v: number) =>
+                          `$${v.toLocaleString("en-HK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                        }
+                        pieProps={{ isAnimationActive: true, animationDuration: 500 }}
+                      />
+                      <SimpleGrid cols={2} spacing="xs" w="100%">
+                        {bankDistribution.map((item) => (
+                          <Group key={item.name} gap="xs">
+                            <ColorSwatch
+                              color={`var(--mantine-color-${item.color.replace(".", "-")})`}
+                              size={10}
+                              withShadow={false}
+                            />
+                            <Text size="xs">
+                              {item.name} {formatCurrency(item.value)} {item.pct}%
+                            </Text>
+                          </Group>
+                        ))}
+                      </SimpleGrid>
+                    </Stack>
                   </Stack>
                 </Card>
               )}
