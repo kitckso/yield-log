@@ -12,6 +12,7 @@ import {
   SegmentedControl,
   Skeleton,
   Button,
+  Badge,
 } from "@mantine/core";
 import { DonutChart, BarChart } from "@mantine/charts";
 import UserMenu from "../components/UserMenu";
@@ -103,6 +104,14 @@ export default function HomePage() {
   const upcoming = useMemo(() => {
     return [...activeDeposits].sort((a, b) => a.end_date.localeCompare(b.end_date)).slice(0, 5);
   }, [activeDeposits]);
+
+  const recentlyMatured = useMemo(() => {
+    const weekAgo = dayjs().subtract(7, "day");
+    return maturedDeposits
+      .filter((d) => dayjs(d.end_date, "YYYY-MM-DD", true).isAfter(weekAgo))
+      .sort((a, b) => b.end_date.localeCompare(a.end_date))
+      .slice(0, 5);
+  }, [maturedDeposits]);
 
   const [yearGroupMode, setYearGroupMode] = useState<string>("end");
   const yearDateField = yearGroupMode === "start" ? "start_date" : "end_date";
@@ -340,40 +349,57 @@ export default function HomePage() {
                 />
               </Card>
 
-              {upcoming.length > 0 && (
+              {upcoming.length > 0 || recentlyMatured.length > 0 ? (
                 <Card padding="lg" radius="lg" withBorder>
                   <Text fw={600} mb="md">
-                    即將到期
+                    到期動態
                   </Text>
                   <Stack gap="sm">
-                    {upcoming.map((d) => (
-                      <Group
-                        key={d.id}
-                        justify="space-between"
-                        style={{ cursor: "pointer" }}
-                        onClick={() => navigate(`/deposits/${d.id}/detail`)}
-                      >
-                        <Stack gap={2}>
-                          <Text size="sm" fw={500}>
-                            {bankMap.get(d.bank_id) ?? "未知"}
-                          </Text>
-                          <Text size="xs" c="dimmed">
-                            {formatDate(d.end_date)} 到期
-                          </Text>
-                        </Stack>
-                        <Stack gap={0} align="end">
-                          <Text fw={600} size="sm">
-                            {formatCurrency(d.amount)}
-                          </Text>
-                          <Text size="xs" c="dimmed">
-                            利息 {formatCurrency(d.interest)}
-                          </Text>
-                        </Stack>
-                      </Group>
-                    ))}
+                    {[...recentlyMatured, ...upcoming]
+                      .sort((a, b) => a.end_date.localeCompare(b.end_date))
+                      .map((d) => {
+                        const matured = isMatured(d.end_date);
+                        return (
+                          <Group
+                            key={d.id}
+                            justify="space-between"
+                            style={{ cursor: "pointer" }}
+                            onClick={() => navigate(`/deposits/${d.id}/detail`)}
+                            {...(matured ? { opacity: 0.65 } : {})}
+                          >
+                            <Stack gap={2}>
+                              <Group gap={6}>
+                                <Text
+                                  size="sm"
+                                  fw={matured ? 400 : 500}
+                                  c={matured ? "dimmed" : undefined}
+                                >
+                                  {bankMap.get(d.bank_id) ?? "未知"}
+                                </Text>
+                                {matured && (
+                                  <Badge size="xs" color="gray" variant="light">
+                                    已期滿
+                                  </Badge>
+                                )}
+                              </Group>
+                              <Text size="xs" c="dimmed">
+                                {formatDate(d.end_date)} 到期
+                              </Text>
+                            </Stack>
+                            <Stack gap={0} align="end">
+                              <Text fw={600} size="sm" c={matured ? "dimmed" : undefined}>
+                                {formatCurrency(d.amount)}
+                              </Text>
+                              <Text size="xs" c="dimmed">
+                                利息 {formatCurrency(d.interest)}
+                              </Text>
+                            </Stack>
+                          </Group>
+                        );
+                      })}
                   </Stack>
                 </Card>
-              )}
+              ) : null}
 
               {yearSummary.length > 1 && (
                 <Card padding="lg" radius="lg" withBorder>
