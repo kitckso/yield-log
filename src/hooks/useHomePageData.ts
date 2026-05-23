@@ -222,7 +222,7 @@ export function useHomePageData(
     const weekAgo = dayjs().subtract(7, "day");
     return maturedDeposits
       .filter((d) => dayjs(d.end_date, "YYYY-MM-DD", true).isAfter(weekAgo))
-      .sort((a, b) => b.end_date.localeCompare(a.end_date))
+      .sort((a, b) => a.end_date.localeCompare(b.end_date))
       .slice(0, 5);
   }, [maturedDeposits]);
 

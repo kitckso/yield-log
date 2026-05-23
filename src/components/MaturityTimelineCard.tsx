@@ -1,5 +1,5 @@
 import { Card, Text, Stack, Group, Badge, Divider } from "@mantine/core";
-import { isMatured, formatCurrency } from "../hooks/useCalculations";
+import { formatCurrency } from "../hooks/useCalculations";
 import type { DepositWithBank } from "../types";
 import dayjs from "dayjs";
 
@@ -19,35 +19,49 @@ export default function MaturityTimelineCard({
   if (upcoming.length === 0 && recentlyMatured.length === 0) return null;
 
   function renderItem(d: DepositWithBank) {
-    const matured = isMatured(d.end_date);
     const today = dayjs().startOf("day");
     const target = dayjs(d.end_date).startOf("day");
     const daysDiff = target.diff(today, "day");
+    const isToday = daysDiff === 0;
+    const matured = daysDiff < 0;
     return (
       <Group
         key={d.id}
         justify="space-between"
         style={{ cursor: "pointer" }}
         onClick={() => onNavigate(d.id)}
-        {...(matured ? { opacity: 0.65 } : {})}
+        {...(!isToday && matured ? { opacity: 0.65 } : {})}
       >
         <Stack gap={2}>
           <Group gap={6}>
-            <Text size="sm" fw={matured ? 400 : 500} c={matured ? "dimmed" : undefined}>
+            <Text
+              size="sm"
+              fw={isToday ? 700 : matured ? 400 : 500}
+              c={isToday ? "green.7" : matured ? "dimmed" : undefined}
+            >
               {bankMap.get(d.bank_id) ?? "未知"}
             </Text>
-            {matured && (
+            {matured && !isToday && (
               <Badge size="xs" color="gray" variant="light">
                 已期滿
               </Badge>
             )}
+            {isToday && (
+              <Badge size="xs" color="green" variant="light">
+                今日到期
+              </Badge>
+            )}
           </Group>
           <Text size="xs" c="dimmed">
-            {matured ? `${Math.abs(daysDiff)} 天前到期` : `${daysDiff} 天後到期`}
+            {isToday
+              ? "今日到期"
+              : matured
+                ? `${Math.abs(daysDiff)} 天前到期`
+                : `${daysDiff} 天後到期`}
           </Text>
         </Stack>
         <Stack gap={0} align="end">
-          <Text fw={600} size="sm" c={matured ? "dimmed" : undefined}>
+          <Text fw={600} size="sm" c={isToday ? "green.7" : matured ? "dimmed" : undefined}>
             {formatCurrency(d.amount)}
           </Text>
           <Text size="xs" c="dimmed">
