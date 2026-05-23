@@ -1,240 +1,27 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Container,
-  Title,
-  Text,
-  Stack,
-  Group,
-  Card,
-  SimpleGrid,
-  ColorSwatch,
-  SegmentedControl,
-  Skeleton,
-  Button,
-  Badge,
-} from "@mantine/core";
-import { DonutChart, BarChart, LineChart } from "@mantine/charts";
+import { Container, Title, Text, Stack, Group, Skeleton, Button } from "@mantine/core";
 import UserMenu from "../components/UserMenu";
+import DashboardSummaryCard from "../components/DashboardSummaryCard";
+import MaturityTimelineCard from "../components/MaturityTimelineCard";
+import BankDistributionCard from "../components/BankDistributionCard";
+import TermDistributionCard from "../components/TermDistributionCard";
+import InterestGrowthCard from "../components/InterestGrowthCard";
+import MonthlyMaturityCard from "../components/MonthlyMaturityCard";
+import YearSummaryCard from "../components/YearSummaryCard";
+import BankStatsCard from "../components/BankStatsCard";
 import { IconCoin, IconBuildingBank } from "@tabler/icons-react";
-import { useDepositsStore } from "../store/deposits";
 import { useBanksStore } from "../store/banks";
-import { isMatured, formatCurrency, formatDate } from "../hooks/useCalculations";
-import dayjs from "dayjs";
-
-const chartColors = [
-  "blue.6",
-  "cyan.6",
-  "teal.6",
-  "grape.6",
-  "pink.6",
-  "orange.6",
-  "yellow.6",
-  "lime.6",
-  "green.6",
-  "violet.6",
-];
+import { useHomePageData } from "../hooks/useHomePageData";
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { deposits, loading, fetchDeposits } = useDepositsStore();
-  const { banks, fetchBanks } = useBanksStore();
-
-  useEffect(() => {
-    void fetchDeposits();
-    void fetchBanks();
-  }, [fetchDeposits, fetchBanks]);
-
-  const bankMap = useMemo(() => {
-    const map = new Map<string, string>();
-    banks.forEach((b) => map.set(b.id, b.name));
-    return map;
-  }, [banks]);
-
-  const activeDeposits = deposits.filter((d) => !isMatured(d.end_date));
-  const maturedDeposits = deposits.filter((d) => isMatured(d.end_date));
-
+  const { banks } = useBanksStore();
   const [groupBy, setGroupBy] = useState<"amount" | "interest">("amount");
   const [scope, setScope] = useState<"active" | "all">("active");
+  const [yearGroupMode, setYearGroupMode] = useState<"end" | "start">("end");
 
-  const activeAmount = activeDeposits.reduce((sum, d) => sum + d.amount, 0);
-  const pendingInterest = activeDeposits.reduce((sum, d) => sum + d.interest, 0);
-  const totalReceivedInterest = maturedDeposits.reduce((sum, d) => sum + d.interest, 0);
-  const avgRate =
-    activeDeposits.length > 0
-      ? activeDeposits.reduce((sum, d) => sum + d.interest_rate * d.amount, 0) /
-        activeDeposits.reduce((sum, d) => sum + d.amount, 0)
-      : 0;
-
-  const bankDistribution = useMemo(() => {
-    const source = scope === "active" ? activeDeposits : deposits;
-    const grouped = new Map<string, number>();
-    source.forEach((d) => {
-      const val = groupBy === "amount" ? d.amount : d.interest;
-      grouped.set(d.bank_id, (grouped.get(d.bank_id) ?? 0) + val);
-    });
-    const total = Array.from(grouped.values()).reduce((s, v) => s + v, 0);
-    return Array.from(grouped.entries())
-      .sort((a, b) => b[1] - a[1])
-      .map(([bankId, value], i) => ({
-        name: bankMap.get(bankId) ?? "未知",
-        value,
-        color: chartColors[i % chartColors.length],
-        pct: total > 0 ? Math.round((value / total) * 100) : 0,
-      }));
-  }, [deposits, activeDeposits, bankMap, groupBy, scope]);
-
-  const termDistribution = useMemo(() => {
-    const monthMap: Record<string, number> = {
-      days: 1 / 30,
-      weeks: 7 / 30,
-      months: 1,
-      years: 12,
-    };
-    const buckets: Record<string, { name: string; value: number; color: string }> = {
-      short: { name: "短期（<6個月）", value: 0, color: "green.6" },
-      medium: { name: "中期（6-12個月）", value: 0, color: "blue.6" },
-      long: { name: "長期（1年以上）", value: 0, color: "grape.6" },
-    };
-    activeDeposits.forEach((d) => {
-      const months = d.period_value * (monthMap[d.period_unit] ?? 1);
-      if (months < 6) buckets.short.value += d.amount;
-      else if (months < 12) buckets.medium.value += d.amount;
-      else buckets.long.value += d.amount;
-    });
-    return Object.values(buckets).filter((b) => b.value > 0);
-  }, [activeDeposits]);
-
-  const growthData = useMemo(() => {
-    if (deposits.length === 0) return [];
-    const sorted = [...deposits]
-      .flatMap((d) => [dayjs(d.start_date), dayjs(d.end_date)])
-      .sort((a, b) => a.valueOf() - b.valueOf());
-    const minDate = sorted[0].startOf("month");
-    const maxDate = sorted[sorted.length - 1].endOf("month");
-    const result: { month: string; 累計利息: number }[] = [];
-    let cursor = minDate;
-    while (cursor.isBefore(maxDate) || cursor.isSame(maxDate, "month")) {
-      const monthEnd = cursor.endOf("month");
-      let cumulative = 0;
-      deposits.forEach((d) => {
-        const start = dayjs(d.start_date, "YYYY-MM-DD", true);
-        const end = dayjs(d.end_date, "YYYY-MM-DD", true);
-        if (end.isBefore(monthEnd) || end.isSame(monthEnd, "day")) {
-          cumulative += d.interest;
-        } else if (start.isBefore(monthEnd) || start.isSame(monthEnd, "day")) {
-          const totalDays = end.diff(start, "day");
-          const elapsedDays = monthEnd.diff(start, "day");
-          if (totalDays > 0) cumulative += d.interest * Math.min(elapsedDays / totalDays, 1);
-        }
-      });
-      result.push({
-        month: cursor.format("YYYY-MM"),
-        累計利息: Math.round(cumulative * 100) / 100,
-      });
-      cursor = cursor.add(1, "month");
-    }
-    return result;
-  }, [deposits]);
-
-  const maturityTimeline = useMemo(() => {
-    const now = dayjs();
-    const grouped = new Map<string, number>();
-    activeDeposits.forEach((d) => {
-      const monthKey = dayjs(d.end_date).format("YYYY-MM");
-      grouped.set(monthKey, (grouped.get(monthKey) ?? 0) + d.amount);
-    });
-
-    const months: { month: string; 金額: number }[] = [];
-    for (let i = 0; i < 6; i++) {
-      const m = now.add(i, "month");
-      const key = m.format("YYYY-MM");
-      months.push({ month: m.format("M月"), 金額: grouped.get(key) ?? 0 });
-    }
-    return months;
-  }, [activeDeposits]);
-
-  const upcoming = useMemo(() => {
-    return [...activeDeposits].sort((a, b) => a.end_date.localeCompare(b.end_date)).slice(0, 5);
-  }, [activeDeposits]);
-
-  const recentlyMatured = useMemo(() => {
-    const weekAgo = dayjs().subtract(7, "day");
-    return maturedDeposits
-      .filter((d) => dayjs(d.end_date, "YYYY-MM-DD", true).isAfter(weekAgo))
-      .sort((a, b) => b.end_date.localeCompare(a.end_date))
-      .slice(0, 5);
-  }, [maturedDeposits]);
-
-  const [yearGroupMode, setYearGroupMode] = useState<string>("end");
-  const yearDateField = yearGroupMode === "start" ? "start_date" : "end_date";
-
-  const yearSummary = useMemo(() => {
-    const grouped = new Map<
-      string,
-      { count: number; amount: number; pending: number; received: number }
-    >();
-    deposits.forEach((d) => {
-      const year = dayjs(d[yearDateField as keyof typeof d] as string).format("YYYY");
-      const entry = grouped.get(year) ?? { count: 0, amount: 0, pending: 0, received: 0 };
-      entry.count += 1;
-      entry.amount += d.amount;
-      if (isMatured(d.end_date)) {
-        entry.received += d.interest;
-      } else {
-        entry.pending += d.interest;
-      }
-      grouped.set(year, entry);
-    });
-    return Array.from(grouped.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([year, data]) => ({ year, ...data }));
-  }, [deposits, yearDateField]);
-
-  const yearChartData = useMemo(() => {
-    return yearSummary.map((y) => ({ year: y.year, amount: y.amount }));
-  }, [yearSummary]);
-
-  const bankStats = useMemo(() => {
-    const grouped = new Map<
-      string,
-      {
-        activeCount: number;
-        activeAmount: number;
-        maturedCount: number;
-        maturedAmount: number;
-        pendingInterest: number;
-        receivedInterest: number;
-      }
-    >();
-    deposits.forEach((d) => {
-      const entry = grouped.get(d.bank_id) ?? {
-        activeCount: 0,
-        activeAmount: 0,
-        maturedCount: 0,
-        maturedAmount: 0,
-        pendingInterest: 0,
-        receivedInterest: 0,
-      };
-      if (isMatured(d.end_date)) {
-        entry.maturedCount += 1;
-        entry.maturedAmount += d.amount;
-        entry.receivedInterest += d.interest;
-      } else {
-        entry.activeCount += 1;
-        entry.activeAmount += d.amount;
-        entry.pendingInterest += d.interest;
-      }
-      grouped.set(d.bank_id, entry);
-    });
-    return Array.from(grouped.entries())
-      .map(([bankId, data]) => ({
-        bankId,
-        bankName: bankMap.get(bankId) ?? "未知",
-        ...data,
-      }))
-      .sort((a, b) => b.activeAmount + b.maturedAmount - (a.activeAmount + a.maturedAmount));
-  }, [deposits, bankMap]);
+  const data = useHomePageData(groupBy, scope, yearGroupMode);
 
   return (
     <div>
@@ -250,14 +37,16 @@ export default function HomePage() {
             <UserMenu />
           </Group>
 
-          {loading && deposits.length === 0 ? (
+          {data.loading && data.activeDeposits.length === 0 && data.maturedDeposits.length === 0 ? (
             <Stack gap="md">
               <Skeleton height={180} radius="lg" />
               <Skeleton height={220} radius="lg" />
               <Skeleton height={200} radius="lg" />
               <Skeleton height={140} radius="lg" />
             </Stack>
-          ) : deposits.length === 0 && banks.length === 0 ? (
+          ) : data.activeDeposits.length === 0 &&
+            data.maturedDeposits.length === 0 &&
+            banks.length === 0 ? (
             <Stack align="center" py="xl" gap="md">
               <IconCoin size={64} color="var(--mantine-color-gray-4)" />
               <Text c="dimmed">尚未新增存款記錄</Text>
@@ -272,7 +61,7 @@ export default function HomePage() {
                 新增銀行
               </Button>
             </Stack>
-          ) : deposits.length === 0 ? (
+          ) : data.activeDeposits.length === 0 && data.maturedDeposits.length === 0 ? (
             <Stack align="center" py="xl" gap="sm">
               <IconCoin size={64} color="var(--mantine-color-gray-4)" />
               <Text c="dimmed">暫無存款記錄</Text>
@@ -282,353 +71,48 @@ export default function HomePage() {
             </Stack>
           ) : (
             <>
-              <Card padding="lg" radius="lg" withBorder>
-                <Stack gap="xs">
-                  <Text size="sm" c="dimmed">
-                    總資產（進行中）
-                  </Text>
-                  <Title order={1} style={{ fontSize: "36px", lineHeight: "40px" }}>
-                    {formatCurrency(activeAmount)}
-                  </Title>
-                  <Group gap="xs">
-                    <Text size="sm" fw={600}>
-                      {activeDeposits.length} 筆定存
-                    </Text>
-                    <Text size="sm" c="dimmed">
-                      ·
-                    </Text>
-                    <Text size="sm" fw={600}>
-                      加權平均 {avgRate.toFixed(2)}%
-                    </Text>
-                  </Group>
-                  <SimpleGrid cols={2} mt="xs">
-                    <Stack gap={0}>
-                      <Text size="xs" c="dimmed">
-                        待收利息
-                      </Text>
-                      <Text size="sm" fw={500}>
-                        {formatCurrency(pendingInterest)}
-                      </Text>
-                    </Stack>
-                    <Stack gap={0}>
-                      <Text size="xs" c="dimmed">
-                        已收利息
-                      </Text>
-                      <Text size="sm" fw={500}>
-                        {formatCurrency(totalReceivedInterest)}
-                      </Text>
-                    </Stack>
-                  </SimpleGrid>
-                  {maturedDeposits.length > 0 && (
-                    <Text size="xs" c="dimmed" mt="xs">
-                      已期滿 {maturedDeposits.length} 筆，共{" "}
-                      {formatCurrency(maturedDeposits.reduce((s, d) => s + d.amount, 0))}
-                    </Text>
-                  )}
-                </Stack>
-              </Card>
+              <DashboardSummaryCard
+                activeAmount={data.activeAmount}
+                activeCount={data.activeDeposits.length}
+                avgRate={data.avgRate}
+                pendingInterest={data.pendingInterest}
+                totalReceivedInterest={data.totalReceivedInterest}
+                maturedCount={data.maturedDeposits.length}
+                maturedTotal={data.maturedDeposits.reduce((s, d) => s + d.amount, 0)}
+              />
 
-              {upcoming.length > 0 || recentlyMatured.length > 0 ? (
-                <Card padding="lg" radius="lg" withBorder>
-                  <Text fw={600} mb="md">
-                    到期動態
-                  </Text>
-                  <Stack gap="sm">
-                    {[...recentlyMatured, ...upcoming]
-                      .sort((a, b) => a.end_date.localeCompare(b.end_date))
-                      .map((d) => {
-                        const matured = isMatured(d.end_date);
-                        return (
-                          <Group
-                            key={d.id}
-                            justify="space-between"
-                            style={{ cursor: "pointer" }}
-                            onClick={() => navigate(`/deposits/${d.id}/detail`)}
-                            {...(matured ? { opacity: 0.65 } : {})}
-                          >
-                            <Stack gap={2}>
-                              <Group gap={6}>
-                                <Text
-                                  size="sm"
-                                  fw={matured ? 400 : 500}
-                                  c={matured ? "dimmed" : undefined}
-                                >
-                                  {bankMap.get(d.bank_id) ?? "未知"}
-                                </Text>
-                                {matured && (
-                                  <Badge size="xs" color="gray" variant="light">
-                                    已期滿
-                                  </Badge>
-                                )}
-                              </Group>
-                              <Text size="xs" c="dimmed">
-                                {formatDate(d.end_date)} 到期
-                              </Text>
-                            </Stack>
-                            <Stack gap={0} align="end">
-                              <Text fw={600} size="sm" c={matured ? "dimmed" : undefined}>
-                                {formatCurrency(d.amount)}
-                              </Text>
-                              <Text size="xs" c="dimmed">
-                                利息 {formatCurrency(d.interest)}
-                              </Text>
-                            </Stack>
-                          </Group>
-                        );
-                      })}
-                  </Stack>
-                </Card>
-              ) : null}
+              <MaturityTimelineCard
+                upcoming={data.upcoming}
+                recentlyMatured={data.recentlyMatured}
+                bankMap={data.bankMap}
+                onNavigate={(id) => navigate(`/deposits/${id}/detail`)}
+              />
 
-              {banks.length > 0 && bankDistribution.length > 0 && (
-                <Card padding="lg" radius="lg" withBorder>
-                  <Text fw={600} mb="sm">
-                    銀行分佈
-                  </Text>
-                  <Stack gap="xs">
-                    <SegmentedControl
-                      size="xs"
-                      value={groupBy}
-                      onChange={(v) => setGroupBy(v as "amount" | "interest")}
-                      data={[
-                        { label: "本金", value: "amount" },
-                        { label: "利息", value: "interest" },
-                      ]}
-                      fullWidth
-                    />
-                    <SegmentedControl
-                      size="xs"
-                      value={scope}
-                      onChange={(v) => setScope(v as "active" | "all")}
-                      data={[
-                        { label: "進行中", value: "active" },
-                        { label: "全部", value: "all" },
-                      ]}
-                      fullWidth
-                      mb="sm"
-                    />
-                    <Stack align="center" gap="md">
-                      <DonutChart
-                        data={bankDistribution}
-                        size={200}
-                        thickness={30}
-                        withTooltip={false}
-                        pieProps={{ isAnimationActive: true, animationDuration: 500 }}
-                      />
-                      <SimpleGrid cols={2} spacing="xs" w="100%">
-                        {bankDistribution.map((item) => (
-                          <Group key={item.name} gap="xs" style={{ flexWrap: "nowrap" }}>
-                            <ColorSwatch
-                              color={`var(--mantine-color-${item.color.replace(".", "-")})`}
-                              size={10}
-                              withShadow={false}
-                            />
-                            <Text size="xs">
-                              {item.name} {formatCurrency(item.value)} {item.pct}%
-                            </Text>
-                          </Group>
-                        ))}
-                      </SimpleGrid>
-                    </Stack>
-                  </Stack>
-                </Card>
-              )}
+              <BankDistributionCard
+                bankDistribution={data.bankDistribution}
+                groupBy={groupBy}
+                onGroupByChange={setGroupBy}
+                scope={scope}
+                onScopeChange={setScope}
+              />
 
-              {termDistribution.length > 0 && (
-                <Card padding="lg" radius="lg" withBorder>
-                  <Text fw={600} mb="md">
-                    期長分佈
-                  </Text>
-                  <Stack align="center" gap="md">
-                    <DonutChart
-                      data={termDistribution}
-                      size={200}
-                      thickness={30}
-                      withTooltip={false}
-                      pieProps={{ isAnimationActive: true, animationDuration: 500 }}
-                    />
-                    <Stack gap="xs" w="100%">
-                      {termDistribution.map((item) => (
-                        <Group key={item.name} gap="xs" style={{ flexWrap: "nowrap" }}>
-                          <ColorSwatch
-                            color={`var(--mantine-color-${item.color.replace(".", "-")})`}
-                            size={10}
-                            withShadow={false}
-                          />
-                          <Text size="xs" style={{ flex: 1 }}>
-                            {item.name}
-                          </Text>
-                          <Text size="xs" fw={500}>
-                            {formatCurrency(item.value)}
-                          </Text>
-                        </Group>
-                      ))}
-                    </Stack>
-                  </Stack>
-                </Card>
-              )}
+              <TermDistributionCard termDistribution={data.termDistribution} />
 
-              {growthData.length > 1 && (
-                <Card padding="lg" radius="lg" withBorder>
-                  <Text fw={600} mb="md">
-                    利息累積走勢
-                  </Text>
-                  <LineChart
-                    h={200}
-                    data={growthData}
-                    dataKey="month"
-                    series={[{ name: "累計利息", color: "green.6" }]}
-                    tickLine="y"
-                    gridAxis="x"
-                    withDots={false}
-                    curveType="linear"
-                    yAxisProps={{
-                      tickFormatter: (v: number) => {
-                        if (v >= 100_000_000) return `$${(v / 100_000_000).toFixed(1)}億`;
-                        if (v >= 10_000) return `$${(v / 10_000).toFixed(1)}萬`;
-                        return `$${v}`;
-                      },
-                    }}
-                    valueFormatter={(v: number) =>
-                      `$${v.toLocaleString("en-HK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                    }
-                  />
-                </Card>
-              )}
+              <InterestGrowthCard growthData={data.growthData} />
 
-              <Card padding="lg" radius="lg" withBorder>
-                <Text fw={600} mb="md">
-                  每月到期金額
-                </Text>
-                <BarChart
-                  h={200}
-                  data={maturityTimeline}
-                  dataKey="month"
-                  series={[{ name: "金額", color: "blue.6" }]}
-                  tickLine="y"
-                  gridAxis="x"
-                  withYAxis={false}
-                  valueFormatter={(v: number) =>
-                    `$${v.toLocaleString("en-HK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                  }
-                />
-              </Card>
+              <MonthlyMaturityCard maturityTimeline={data.maturityTimeline} />
 
-              {yearSummary.length > 1 && (
-                <Card padding="lg" radius="lg" withBorder>
-                  <Text fw={600} mb="md">
-                    年度摘要
-                  </Text>
-                  <SegmentedControl
-                    size="xs"
-                    value={yearGroupMode}
-                    onChange={setYearGroupMode}
-                    data={[
-                      { label: "按開戶日", value: "start" },
-                      { label: "按到期日", value: "end" },
-                    ]}
-                    fullWidth
-                    mb="md"
-                  />
-                  <BarChart
-                    h={160}
-                    data={yearChartData}
-                    dataKey="year"
-                    series={[{ name: "amount", color: "blue.6" }]}
-                    tickLine="y"
-                    gridAxis="x"
-                    withYAxis={false}
-                    withLegend={false}
-                    withTooltip={false}
-                  />
-                  <Stack gap="xs" mt="md">
-                    {yearSummary.map((y) => (
-                      <Group key={y.year} justify="space-between">
-                        <Text size="sm" fw={500}>
-                          {y.year}
-                        </Text>
-                        <Stack gap={0} align="end">
-                          <Text size="sm">{formatCurrency(y.amount)}</Text>
-                          <Text size="xs" c="dimmed">
-                            {y.count} 筆
-                          </Text>
-                          <Text size="xs" c="dimmed">
-                            {y.pending > 0 && `待收 ${formatCurrency(y.pending)}`}
-                            {y.pending > 0 && y.received > 0 && " · "}
-                            {y.received > 0 && `已收 ${formatCurrency(y.received)}`}
-                          </Text>
-                        </Stack>
-                      </Group>
-                    ))}
-                  </Stack>
-                </Card>
-              )}
+              <YearSummaryCard
+                yearSummary={data.yearSummary}
+                yearChartData={data.yearChartData}
+                yearGroupMode={yearGroupMode}
+                onYearGroupModeChange={setYearGroupMode}
+              />
 
-              {bankStats.length > 0 && (
-                <Card padding="lg" radius="lg" withBorder>
-                  <Text fw={600} mb="md">
-                    銀行統計
-                  </Text>
-                  <Stack gap="md">
-                    {bankStats.map((b) => {
-                      const totalAmount = b.activeAmount + b.maturedAmount;
-                      return (
-                        <Stack
-                          key={b.bankId}
-                          gap={4}
-                          style={{ cursor: "pointer" }}
-                          onClick={() => navigate(`/deposits?bankId=${b.bankId}`)}
-                        >
-                          <Group justify="space-between">
-                            <Text size="sm" fw={600}>
-                              {b.bankName}
-                            </Text>
-                            <Text size="sm" fw={600}>
-                              {formatCurrency(totalAmount)}
-                            </Text>
-                          </Group>
-                          <SimpleGrid cols={2} spacing="xs">
-                            <Stack gap={0}>
-                              {b.activeCount > 0 && (
-                                <>
-                                  <Text size="xs" c="dimmed">
-                                    進行中
-                                  </Text>
-                                  <Text size="xs">
-                                    {b.activeCount}筆 {formatCurrency(b.activeAmount)}
-                                  </Text>
-                                  {b.pendingInterest > 0 && (
-                                    <Text size="xs" c="dimmed">
-                                      待收利息 {formatCurrency(b.pendingInterest)}
-                                    </Text>
-                                  )}
-                                </>
-                              )}
-                            </Stack>
-                            <Stack gap={0} align="end">
-                              {b.maturedCount > 0 && (
-                                <>
-                                  <Text size="xs" c="dimmed">
-                                    已期滿
-                                  </Text>
-                                  <Text size="xs">
-                                    {b.maturedCount}筆 {formatCurrency(b.maturedAmount)}
-                                  </Text>
-                                  {b.receivedInterest > 0 && (
-                                    <Text size="xs" c="dimmed">
-                                      已收利息 {formatCurrency(b.receivedInterest)}
-                                    </Text>
-                                  )}
-                                </>
-                              )}
-                            </Stack>
-                          </SimpleGrid>
-                        </Stack>
-                      );
-                    })}
-                  </Stack>
-                </Card>
-              )}
+              <BankStatsCard
+                bankStats={data.bankStats}
+                onNavigate={(bankId) => navigate(`/deposits?bankId=${bankId}`)}
+              />
             </>
           )}
         </Stack>
