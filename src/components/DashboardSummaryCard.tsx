@@ -39,6 +39,16 @@ export default function DashboardSummaryCard({
           <Text size="sm" fw={600}>
             加權平均 {avgRate.toFixed(2)}%
           </Text>
+          {activeCount > 0 && (
+            <>
+              <Text size="sm" c="dimmed">
+                ·
+              </Text>
+              <Text size="sm" fw={600}>
+                平均每筆 {formatCurrency(Math.round(activeAmount / activeCount))}
+              </Text>
+            </>
+          )}
         </Group>
         <SimpleGrid cols={2} mt="xs">
           <Stack gap={0}>
