@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import { supabase } from "../lib/supabase";
+import { useDepositsStore } from "./deposits";
+import { useBanksStore } from "./banks";
 import type { User } from "../types";
 
 interface AuthState {
@@ -58,6 +60,8 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   signOut: async () => {
     await supabase.auth.signOut();
+    useDepositsStore.setState({ deposits: [], loading: false, lastFetched: 0 });
+    useBanksStore.setState({ banks: [], loading: false, lastFetched: 0 });
     set({ user: null });
   },
 
