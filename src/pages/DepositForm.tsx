@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   Container,
   Stack,
@@ -36,7 +36,9 @@ const periodUnits = [
 export default function DepositForm() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const isEditing = !!id;
+  const isRenew = !isEditing && searchParams.get("renew") === "1";
 
   const { user } = useAuthStore();
   const { banks, fetchBanks } = useBanksStore();
@@ -115,11 +117,24 @@ export default function DepositForm() {
         setEndDate(new Date(deposit.end_date));
       }
       setFormLoading(false);
+    } else if (isRenew) {
+      const bankIdParam = searchParams.get("bankId");
+      const amountParam = searchParams.get("amount");
+      const periodValueParam = searchParams.get("periodValue");
+      const periodUnitParam = searchParams.get("periodUnit");
+      const interestRateParam = searchParams.get("interestRate");
+      if (bankIdParam) setBankId(bankIdParam);
+      if (amountParam) setAmount(Number(amountParam));
+      if (periodValueParam) setPeriodValue(Number(periodValueParam));
+      if (periodUnitParam) setPeriodUnit(periodUnitParam);
+      if (interestRateParam) setInterestRate(Number(interestRateParam));
+      setStartDate(new Date());
+      setFormLoading(false);
     } else {
       setFormLoading(false);
       setStartDate(new Date());
     }
-  }, [id, deposits, isEditing]);
+  }, [id, deposits, isEditing, isRenew, searchParams]);
 
   // Auto-calc end date
   useEffect(() => {
@@ -253,7 +268,7 @@ export default function DepositForm() {
           >
             返回
           </Button>
-          <Title order={2}>{isEditing ? "編輯存款" : "新增存款"}</Title>
+          <Title order={2}>{isEditing ? "編輯存款" : isRenew ? "續存" : "新增存款"}</Title>
         </Group>
 
         <Stack gap={4}>

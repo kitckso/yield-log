@@ -68,8 +68,11 @@ export default function DashboardSummaryCard({
             </Text>
           </Stack>
         </SimpleGrid>
+        <Text size="sm" fw={500} mt="xs">
+          預估總利息 {formatCurrency(pendingInterest + totalReceivedInterest)}
+        </Text>
         {maturedCount > 0 && (
-          <Text size="xs" c="dimmed" mt="xs">
+          <Text size="xs" c="dimmed">
             已期滿 {maturedCount} 筆，共 {formatCurrency(maturedTotal)}
           </Text>
         )}

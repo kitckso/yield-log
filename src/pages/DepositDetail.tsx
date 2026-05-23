@@ -13,7 +13,7 @@ import {
   Badge,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconArrowLeft, IconTrash, IconEdit } from "@tabler/icons-react";
+import { IconArrowLeft, IconTrash, IconEdit, IconRefresh } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { useDepositsStore } from "../store/deposits";
 import { isMatured, formatCurrency, formatDate, getErrorMessage } from "../hooks/useCalculations";
@@ -153,6 +153,20 @@ export default function DepositDetail() {
             </div>
           </Stack>
         </Card>
+
+        {matured && (
+          <Button
+            leftSection={<IconRefresh size={18} />}
+            onClick={() =>
+              navigate(
+                `/deposits/new?renew=1&bankId=${deposit.bank_id}&amount=${deposit.amount}&periodValue=${deposit.period_value}&periodUnit=${deposit.period_unit}&interestRate=${deposit.interest_rate}`,
+              )
+            }
+            fullWidth
+          >
+            續存
+          </Button>
+        )}
 
         <Group grow mt="md">
           <Button

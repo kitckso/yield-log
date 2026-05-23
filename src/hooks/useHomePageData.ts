@@ -214,7 +214,7 @@ export function useHomePageData(
   }, [deposits, maturityGroupBy]);
 
   const upcoming = useMemo(
-    () => [...activeDeposits].sort((a, b) => a.end_date.localeCompare(b.end_date)).slice(0, 5),
+    () => [...activeDeposits].sort((a, b) => a.end_date.localeCompare(b.end_date)),
     [activeDeposits],
   );
 
@@ -222,8 +222,7 @@ export function useHomePageData(
     const weekAgo = dayjs().subtract(7, "day");
     return maturedDeposits
       .filter((d) => dayjs(d.end_date, "YYYY-MM-DD", true).isAfter(weekAgo))
-      .sort((a, b) => a.end_date.localeCompare(b.end_date))
-      .slice(0, 5);
+      .sort((a, b) => a.end_date.localeCompare(b.end_date));
   }, [maturedDeposits]);
 
   const yearDateField = yearGroupMode === "start" ? "start_date" : "end_date";

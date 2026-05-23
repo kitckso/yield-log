@@ -1,4 +1,5 @@
-import { Card, Text, Stack, Group, Badge, Divider } from "@mantine/core";
+import { useState } from "react";
+import { Card, Text, Stack, Group, Badge, Divider, Button } from "@mantine/core";
 import { formatCurrency } from "../hooks/useCalculations";
 import type { DepositWithBank } from "../types";
 import dayjs from "dayjs";
@@ -10,13 +11,21 @@ interface MaturityTimelineCardProps {
   onNavigate: (id: string) => void;
 }
 
+const INITIAL_SHOW = 5;
+
 export default function MaturityTimelineCard({
   upcoming,
   recentlyMatured,
   bankMap,
   onNavigate,
 }: MaturityTimelineCardProps) {
+  const [showAll, setShowAll] = useState(false);
+
   if (upcoming.length === 0 && recentlyMatured.length === 0) return null;
+
+  const displayRecent = showAll ? recentlyMatured : recentlyMatured.slice(0, INITIAL_SHOW);
+  const displayUpcoming = showAll ? upcoming : upcoming.slice(0, INITIAL_SHOW);
+  const hasMore = recentlyMatured.length > INITIAL_SHOW || upcoming.length > INITIAL_SHOW;
 
   function renderItem(d: DepositWithBank) {
     const today = dayjs().startOf("day");
@@ -78,9 +87,14 @@ export default function MaturityTimelineCard({
         到期動態
       </Text>
       <Stack gap="sm">
-        {recentlyMatured.length > 0 && recentlyMatured.map(renderItem)}
-        {recentlyMatured.length > 0 && upcoming.length > 0 && <Divider />}
-        {upcoming.length > 0 && upcoming.map(renderItem)}
+        {displayRecent.length > 0 && displayRecent.map(renderItem)}
+        {displayRecent.length > 0 && displayUpcoming.length > 0 && <Divider />}
+        {displayUpcoming.length > 0 && displayUpcoming.map(renderItem)}
+        {hasMore && (
+          <Button variant="subtle" size="compact-sm" fullWidth onClick={() => setShowAll(!showAll)}>
+            {showAll ? "收起" : `顯示全部 (${recentlyMatured.length + upcoming.length})`}
+          </Button>
+        )}
       </Stack>
     </Card>
   );
