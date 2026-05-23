@@ -1,6 +1,7 @@
-import { Card, Text, Stack, Group, Badge } from "@mantine/core";
-import { isMatured, formatDate, formatCurrency } from "../hooks/useCalculations";
+import { Card, Text, Stack, Group, Badge, Divider } from "@mantine/core";
+import { isMatured, formatCurrency } from "../hooks/useCalculations";
 import type { DepositWithBank } from "../types";
+import dayjs from "dayjs";
 
 interface MaturityTimelineCardProps {
   upcoming: DepositWithBank[];
@@ -17,9 +18,45 @@ export default function MaturityTimelineCard({
 }: MaturityTimelineCardProps) {
   if (upcoming.length === 0 && recentlyMatured.length === 0) return null;
 
-  const items = [...recentlyMatured, ...upcoming].sort((a, b) =>
-    a.end_date.localeCompare(b.end_date),
-  );
+  function renderItem(d: DepositWithBank) {
+    const matured = isMatured(d.end_date);
+    const today = dayjs().startOf("day");
+    const target = dayjs(d.end_date).startOf("day");
+    const daysDiff = target.diff(today, "day");
+    return (
+      <Group
+        key={d.id}
+        justify="space-between"
+        style={{ cursor: "pointer" }}
+        onClick={() => onNavigate(d.id)}
+        {...(matured ? { opacity: 0.65 } : {})}
+      >
+        <Stack gap={2}>
+          <Group gap={6}>
+            <Text size="sm" fw={matured ? 400 : 500} c={matured ? "dimmed" : undefined}>
+              {bankMap.get(d.bank_id) ?? "未知"}
+            </Text>
+            {matured && (
+              <Badge size="xs" color="gray" variant="light">
+                已期滿
+              </Badge>
+            )}
+          </Group>
+          <Text size="xs" c="dimmed">
+            {matured ? `${Math.abs(daysDiff)} 天前到期` : `${daysDiff} 天後到期`}
+          </Text>
+        </Stack>
+        <Stack gap={0} align="end">
+          <Text fw={600} size="sm" c={matured ? "dimmed" : undefined}>
+            {formatCurrency(d.amount)}
+          </Text>
+          <Text size="xs" c="dimmed">
+            利息 {formatCurrency(d.interest)}
+          </Text>
+        </Stack>
+      </Group>
+    );
+  }
 
   return (
     <Card padding="lg" radius="lg" withBorder>
@@ -27,42 +64,9 @@ export default function MaturityTimelineCard({
         到期動態
       </Text>
       <Stack gap="sm">
-        {items.map((d) => {
-          const matured = isMatured(d.end_date);
-          return (
-            <Group
-              key={d.id}
-              justify="space-between"
-              style={{ cursor: "pointer" }}
-              onClick={() => onNavigate(d.id)}
-              {...(matured ? { opacity: 0.65 } : {})}
-            >
-              <Stack gap={2}>
-                <Group gap={6}>
-                  <Text size="sm" fw={matured ? 400 : 500} c={matured ? "dimmed" : undefined}>
-                    {bankMap.get(d.bank_id) ?? "未知"}
-                  </Text>
-                  {matured && (
-                    <Badge size="xs" color="gray" variant="light">
-                      已期滿
-                    </Badge>
-                  )}
-                </Group>
-                <Text size="xs" c="dimmed">
-                  {formatDate(d.end_date)} 到期
-                </Text>
-              </Stack>
-              <Stack gap={0} align="end">
-                <Text fw={600} size="sm" c={matured ? "dimmed" : undefined}>
-                  {formatCurrency(d.amount)}
-                </Text>
-                <Text size="xs" c="dimmed">
-                  利息 {formatCurrency(d.interest)}
-                </Text>
-              </Stack>
-            </Group>
-          );
-        })}
+        {recentlyMatured.length > 0 && recentlyMatured.map(renderItem)}
+        {recentlyMatured.length > 0 && upcoming.length > 0 && <Divider />}
+        {upcoming.length > 0 && upcoming.map(renderItem)}
       </Stack>
     </Card>
   );
