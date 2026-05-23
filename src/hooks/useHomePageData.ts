@@ -37,7 +37,7 @@ interface GrowthItem {
 
 interface MaturityMonth {
   month: string;
-  金額: number;
+  value: number;
 }
 
 interface YearSummaryItem {
@@ -83,6 +83,7 @@ export function useHomePageData(
   groupBy: "amount" | "interest",
   scope: "active" | "all",
   yearGroupMode: "start" | "end",
+  maturityGroupBy: "amount" | "interest",
 ): HomePageData {
   const { deposits, loading, fetchDeposits } = useDepositsStore();
   const { banks, fetchBanks } = useBanksStore();
@@ -200,16 +201,17 @@ export function useHomePageData(
     const grouped = new Map<string, number>();
     deposits.forEach((d) => {
       const monthKey = dayjs(d.end_date).format("YYYY-MM");
-      grouped.set(monthKey, (grouped.get(monthKey) ?? 0) + d.amount);
+      const val = maturityGroupBy === "amount" ? d.amount : d.interest;
+      grouped.set(monthKey, (grouped.get(monthKey) ?? 0) + val);
     });
     const months: MaturityMonth[] = [];
     for (let i = 0; i < 6; i++) {
       const m = now.add(i, "month");
       const key = m.format("YYYY-MM");
-      months.push({ month: m.format("M月"), 金額: grouped.get(key) ?? 0 });
+      months.push({ month: m.format("M月"), value: grouped.get(key) ?? 0 });
     }
     return months;
-  }, [deposits]);
+  }, [deposits, maturityGroupBy]);
 
   const upcoming = useMemo(
     () => [...activeDeposits].sort((a, b) => a.end_date.localeCompare(b.end_date)).slice(0, 5),

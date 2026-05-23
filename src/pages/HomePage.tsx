@@ -20,8 +20,9 @@ export default function HomePage() {
   const [groupBy, setGroupBy] = useState<"amount" | "interest">("amount");
   const [scope, setScope] = useState<"active" | "all">("active");
   const [yearGroupMode, setYearGroupMode] = useState<"end" | "start">("end");
+  const [maturityGroupBy, setMaturityGroupBy] = useState<"amount" | "interest">("amount");
 
-  const data = useHomePageData(groupBy, scope, yearGroupMode);
+  const data = useHomePageData(groupBy, scope, yearGroupMode, maturityGroupBy);
 
   return (
     <div>
@@ -100,7 +101,11 @@ export default function HomePage() {
 
               <InterestGrowthCard growthData={data.growthData} />
 
-              <MonthlyMaturityCard maturityTimeline={data.maturityTimeline} />
+              <MonthlyMaturityCard
+                maturityTimeline={data.maturityTimeline}
+                maturityGroupBy={maturityGroupBy}
+                onMaturityGroupByChange={setMaturityGroupBy}
+              />
 
               <YearSummaryCard
                 yearSummary={data.yearSummary}
