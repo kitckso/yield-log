@@ -154,16 +154,6 @@
   flex: 1;
 }
 
-.app-layout-mobile .mantine-Container-root {
-  padding-bottom: 100px;
-}
-
-@media (min-width: 768px) {
-  .app-content .mantine-Container-root {
-    padding-bottom: 16px !important;
-  }
-}
-
 /* ========= FAB & inline add (responsive) ========= */
 .fab-container {
   display: block;

@@ -161,7 +161,7 @@ export default function DepositList() {
 
   return (
     <div style={{ position: "relative" }}>
-      <Container size="sm" pt="md">
+      <Container size="sm" pt="md" pb={{ base: 170, sm: 16 }}>
         <Stack gap="md">
           <Group justify="space-between">
             <div>
