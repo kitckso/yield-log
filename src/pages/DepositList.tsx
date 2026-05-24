@@ -12,6 +12,7 @@ import {
   SegmentedControl,
   Select,
   Divider,
+  Button,
 } from "@mantine/core";
 import { IconCoin, IconPlus } from "@tabler/icons-react";
 import dayjs from "dayjs";
@@ -169,7 +170,17 @@ export default function DepositList() {
                 定期存款管理
               </Text>
             </div>
-            <UserMenu />
+            <Group gap="xs">
+              <Button
+                size="xs"
+                className="desktop-add-btn"
+                leftSection={<IconPlus size={16} />}
+                onClick={() => navigate("/deposits/new")}
+              >
+                新增
+              </Button>
+              <UserMenu />
+            </Group>
           </Group>
 
           <SegmentedControl
@@ -246,6 +257,7 @@ export default function DepositList() {
       </Container>
 
       <div
+        className="fab-container"
         style={{
           position: "fixed",
           bottom: "76px",

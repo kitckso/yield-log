@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Container, Title, Text, Stack, Group, Skeleton, Button } from "@mantine/core";
+import { Container, Title, Text, Stack, Group, Skeleton, Button, SimpleGrid } from "@mantine/core";
 import UserMenu from "../components/UserMenu";
 import DashboardSummaryCard from "../components/DashboardSummaryCard";
 import MaturityTimelineCard from "../components/MaturityTimelineCard";
@@ -89,23 +89,25 @@ export default function HomePage() {
                 onNavigate={(id) => navigate(`/deposits/${id}/detail`)}
               />
 
-              <BankDistributionCard
-                bankDistribution={data.bankDistribution}
-                groupBy={groupBy}
-                onGroupByChange={setGroupBy}
-                scope={scope}
-                onScopeChange={setScope}
-              />
+              <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+                <BankDistributionCard
+                  bankDistribution={data.bankDistribution}
+                  groupBy={groupBy}
+                  onGroupByChange={setGroupBy}
+                  scope={scope}
+                  onScopeChange={setScope}
+                />
 
-              <TermDistributionCard termDistribution={data.termDistribution} />
+                <TermDistributionCard termDistribution={data.termDistribution} />
 
-              <InterestGrowthCard growthData={data.growthData} />
+                <InterestGrowthCard growthData={data.growthData} />
 
-              <MonthlyMaturityCard
-                maturityTimeline={data.maturityTimeline}
-                maturityGroupBy={maturityGroupBy}
-                onMaturityGroupByChange={setMaturityGroupBy}
-              />
+                <MonthlyMaturityCard
+                  maturityTimeline={data.maturityTimeline}
+                  maturityGroupBy={maturityGroupBy}
+                  onMaturityGroupByChange={setMaturityGroupBy}
+                />
+              </SimpleGrid>
 
               <YearSummaryCard
                 yearSummary={data.yearSummary}

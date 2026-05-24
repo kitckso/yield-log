@@ -55,3 +55,118 @@
 [data-fs] .mantine-Badge-label {
   font-size: var(--mantine-font-size-xs) !important;
 }
+
+/* ========= Sidebar ========= */
+.app-sidebar {
+  width: 240px;
+  height: 100dvh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: white;
+  border-right: 1px solid var(--mantine-color-gray-3);
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  z-index: 1000;
+}
+
+.sidebar-brand {
+  padding: 12px 8px;
+  margin-bottom: 24px;
+}
+
+.sidebar-nav {
+  flex: 1;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--mantine-color-gray-7);
+  font-size: 15px;
+  transition: all 0.15s;
+  width: 100%;
+  text-align: left;
+}
+
+.sidebar-link:hover {
+  background-color: var(--mantine-color-gray-0);
+}
+
+.sidebar-link.active {
+  background-color: var(--mantine-color-blue-0);
+  color: var(--mantine-color-blue-6);
+  font-weight: 600;
+}
+
+.sidebar-user {
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar-user-email {
+  flex: 1;
+  overflow: hidden;
+}
+
+.sidebar-logout-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--mantine-color-gray-5);
+  padding: 4px;
+}
+
+.sidebar-logout-btn:hover {
+  color: var(--mantine-color-red-6);
+}
+
+/* ========= Layouts ========= */
+.app-layout-desktop {
+  display: flex;
+  min-height: 100dvh;
+  background-color: var(--mantine-color-gray-0);
+}
+
+.app-layout-desktop .app-content {
+  flex: 1;
+  margin-left: 240px;
+}
+
+.app-layout-mobile {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background-color: var(--mantine-color-gray-0);
+}
+
+.app-layout-mobile .app-content {
+  flex: 1;
+}
+
+/* ========= FAB & inline add (responsive) ========= */
+.fab-container {
+  display: block;
+}
+
+.desktop-add-btn {
+  display: none !important;
+}
+
+@media (min-width: 768px) {
+  .fab-container {
+    display: none !important;
+  }
+  .desktop-add-btn {
+    display: inline-flex !important;
+  }
+}
