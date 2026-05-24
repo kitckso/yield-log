@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
-import { Container, Title, Text, Stack, Card, Button, Group, Divider } from "@mantine/core";
+import { Container, Title, Text, Stack, Card, Button, Group, Divider, Slider } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconDownload, IconUpload, IconAlertTriangle } from "@tabler/icons-react";
+import { IconDownload, IconUpload, IconAlertTriangle, IconTextSize } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { useNavigate } from "react-router-dom";
 import { version } from "../../package.json";
@@ -9,6 +9,7 @@ import UserMenu from "../components/UserMenu";
 import { useDepositsStore } from "../store/deposits";
 import { useBanksStore } from "../store/banks";
 import { useAuthStore } from "../store/auth";
+import { useAppStore } from "../store/app";
 import { supabase } from "../lib/supabase";
 import { getErrorMessage } from "../hooks/useCalculations";
 
@@ -17,6 +18,8 @@ export default function Settings() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
   const user = useAuthStore((s) => s.user);
+  const fontSizeLevel = useAppStore((s) => s.fontSizeLevel);
+  const setFontSizeLevel = useAppStore((s) => s.setFontSizeLevel);
 
   const handleExport = () => {
     const deposits = useDepositsStore.getState().deposits;
@@ -146,6 +149,33 @@ export default function Settings() {
             <Text size="xs" c="dimmed">
               個人定存記錄工具（Hong Kong Fixed Deposit Tracker）
             </Text>
+          </Stack>
+        </Card>
+
+        <Card padding="lg" radius="lg" withBorder>
+          <Stack gap="md">
+            <Group gap="xs">
+              <IconTextSize size={20} />
+              <Text fw={600}>字體大小</Text>
+            </Group>
+            <Text size="sm" c="dimmed">
+              調整內容區域的文字大小（不影響底部導航）
+            </Text>
+            <Slider
+              min={1}
+              max={5}
+              step={1}
+              value={fontSizeLevel}
+              onChange={(v) => setFontSizeLevel(v as 1 | 2 | 3 | 4 | 5)}
+              marks={[
+                { value: 1, label: "最小" },
+                { value: 2, label: "小" },
+                { value: 3, label: "中" },
+                { value: 4, label: "大" },
+                { value: 5, label: "最大" },
+              ]}
+              styles={{ markLabel: { fontSize: "var(--mantine-font-size-xs)" } }}
+            />
           </Stack>
         </Card>
 

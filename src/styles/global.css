@@ -1,0 +1,57 @@
+[data-fs="1"] {
+  --mantine-font-size-xs: 0.625rem;
+  --mantine-font-size-sm: 0.75rem;
+  --mantine-font-size-md: 0.875rem;
+  --mantine-font-size-lg: 1rem;
+  --mantine-font-size-xl: 1.0625rem;
+}
+
+[data-fs="2"] {
+  --mantine-font-size-xs: 0.75rem;
+  --mantine-font-size-sm: 0.875rem;
+  --mantine-font-size-md: 1rem;
+  --mantine-font-size-lg: 1.125rem;
+  --mantine-font-size-xl: 1.25rem;
+}
+
+[data-fs="3"] {
+  --mantine-font-size-xs: 0.8125rem;
+  --mantine-font-size-sm: 1rem;
+  --mantine-font-size-md: 1.125rem;
+  --mantine-font-size-lg: 1.25rem;
+  --mantine-font-size-xl: 1.375rem;
+}
+
+[data-fs="4"] {
+  --mantine-font-size-xs: 0.9375rem;
+  --mantine-font-size-sm: 1.125rem;
+  --mantine-font-size-md: 1.25rem;
+  --mantine-font-size-lg: 1.375rem;
+  --mantine-font-size-xl: 1.5625rem;
+}
+
+[data-fs="5"] {
+  --mantine-font-size-xs: 1rem;
+  --mantine-font-size-sm: 1.1875rem;
+  --mantine-font-size-md: 1.375rem;
+  --mantine-font-size-lg: 1.5625rem;
+  --mantine-font-size-xl: 1.6875rem;
+}
+
+[data-fs] {
+  --badge-fz: var(--mantine-font-size-xs);
+  --sc-font-size: var(--mantine-font-size-sm);
+  --table-font-size: var(--mantine-font-size-sm);
+}
+
+[data-fs] .recharts-cartesian-axis-tick-value {
+  font-size: var(--mantine-font-size-sm) !important;
+}
+
+[data-fs] .recharts-legend-item-text {
+  font-size: var(--mantine-font-size-sm) !important;
+}
+
+[data-fs] .mantine-Badge-label {
+  font-size: var(--mantine-font-size-xs) !important;
+}

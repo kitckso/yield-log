@@ -1,7 +1,10 @@
 import { Outlet } from "react-router-dom";
 import BottomNav from "../components/BottomNav";
+import { useAppStore } from "../store/app";
 
 export default function AppLayout() {
+  const fontSizeLevel = useAppStore((s) => s.fontSizeLevel);
+
   return (
     <div
       style={{
@@ -13,7 +16,7 @@ export default function AppLayout() {
         flexDirection: "column",
       }}
     >
-      <div style={{ flex: 1 }}>
+      <div style={{ flex: 1 }} data-fs={fontSizeLevel}>
         <Outlet />
       </div>
       <BottomNav />
