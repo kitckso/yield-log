@@ -44,8 +44,6 @@ export default function BottomNav() {
         justifyContent: "space-around",
         alignItems: "center",
         zIndex: 1000,
-        maxWidth: "480px",
-        margin: "0 auto",
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}
     >
