@@ -1,9 +1,13 @@
 import { Avatar, Menu, Text } from "@mantine/core";
 import { IconLogout } from "@tabler/icons-react";
+import { useMediaQuery } from "@mantine/hooks";
 import { useAuthStore } from "../store/auth";
 
 export default function UserMenu() {
   const { user, signOut } = useAuthStore();
+  const isDesktop = useMediaQuery("(min-width: 768px)", false);
+
+  if (isDesktop) return null;
 
   return (
     <Menu shadow="md" width={160}>

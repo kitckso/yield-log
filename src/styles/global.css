@@ -59,7 +59,9 @@
 /* ========= Sidebar ========= */
 .app-sidebar {
   width: 240px;
-  min-height: 100dvh;
+  height: 100dvh;
+  position: sticky;
+  top: 0;
   background-color: white;
   border-right: 1px solid var(--mantine-color-gray-3);
   display: flex;
