@@ -82,7 +82,7 @@ export default function DepositDetail() {
           : `${deposit.period_value}年`;
 
   return (
-    <Container size="sm" pb={100} pt="md">
+    <Container size="sm" pt="md">
       <Stack gap="md">
         <Group>
           <Button

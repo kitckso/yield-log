@@ -126,7 +126,7 @@ export default function Settings() {
   };
 
   return (
-    <Container size="sm" pb={100} pt="md">
+    <Container size="sm" pt="md">
       <Stack gap="md">
         <Group justify="space-between">
           <div>
