@@ -125,24 +125,36 @@ export default function DepositList() {
     const getMonthKey = (d: (typeof filteredDeposits)[number]) =>
       dayjs(d[sortField]).format("YYYY年M月");
 
+    const grouped = new Map<string, (typeof filteredDeposits)[number][]>();
+    filteredDeposits.forEach((d) => {
+      const key = getMonthKey(d);
+      if (!grouped.has(key)) grouped.set(key, []);
+      grouped.get(key)!.push(d);
+    });
+
     const elements: React.ReactNode[] = [];
-    let lastMonth = "";
-    filteredDeposits.forEach((deposit) => {
-      const month = getMonthKey(deposit);
-      if (month !== lastMonth) {
-        lastMonth = month;
-        elements.push(
-          <Divider key={`sep-${month}`} label={month} labelPosition="center" pt="sm" pb="xs" />,
-        );
-      }
+    const fmt = (n: number) => `$${n.toLocaleString("en-HK")}`;
+    for (const [month, items] of grouped) {
+      const total = items.reduce((s, d) => s + d.amount, 0);
       elements.push(
-        <DepositCard
-          key={deposit.id}
-          deposit={deposit}
-          onClick={() => navigate(`/deposits/${deposit.id}/detail`)}
+        <Divider
+          key={`sep-${month}`}
+          label={`${month}  ·  ${fmt(total)}`}
+          labelPosition="center"
+          pt="sm"
+          pb="xs"
         />,
       );
-    });
+      elements.push(
+        ...items.map((deposit) => (
+          <DepositCard
+            key={deposit.id}
+            deposit={deposit}
+            onClick={() => navigate(`/deposits/${deposit.id}/detail`)}
+          />
+        )),
+      );
+    }
     return elements;
   };
 
