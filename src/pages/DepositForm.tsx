@@ -258,7 +258,7 @@ export default function DepositForm() {
   }
 
   return (
-    <Container size="sm" pt="md" pb={{ base: 110, sm: 16 }}>
+    <Container size="sm" pt="md" pb={{ base: 80, sm: 16 }}>
       <Stack gap="md">
         <Group>
           <Button
