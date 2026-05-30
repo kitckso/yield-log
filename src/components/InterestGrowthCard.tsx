@@ -1,5 +1,6 @@
 import { Card, Text } from "@mantine/core";
 import { LineChart } from "@mantine/charts";
+import dayjs from "dayjs";
 
 interface GrowthItem {
   month: string;
@@ -12,6 +13,9 @@ interface InterestGrowthCardProps {
 
 export default function InterestGrowthCard({ growthData }: InterestGrowthCardProps) {
   if (growthData.length <= 1) return null;
+
+  const todayMonth = dayjs().format("YYYY-MM");
+  const hasToday = growthData.some((d) => d.month === todayMonth);
 
   return (
     <Card padding="lg" radius="lg" withBorder>
@@ -27,6 +31,18 @@ export default function InterestGrowthCard({ growthData }: InterestGrowthCardPro
         gridAxis="x"
         withDots={false}
         curveType="linear"
+        {...(hasToday
+          ? {
+              referenceLines: [
+                {
+                  x: todayMonth,
+                  label: "今天",
+                  color: "blue.5",
+                  strokeDasharray: "6 4",
+                },
+              ],
+            }
+          : {})}
         yAxisProps={{
           tickFormatter: (v: number) => {
             if (v >= 100_000_000) return `$${(v / 100_000_000).toFixed(1)}億`;
