@@ -31,7 +31,9 @@ export default function MaturityTimelineCard({
     const today = dayjs().startOf("day");
     const target = dayjs(d.end_date).startOf("day");
     const daysDiff = target.diff(today, "day");
+    const isYesterday = daysDiff === -1;
     const isToday = daysDiff === 0;
+    const isTomorrow = daysDiff === 1;
     const matured = daysDiff < 0;
     return (
       <Group
@@ -64,9 +66,13 @@ export default function MaturityTimelineCard({
           <Text size="xs" c="dimmed">
             {isToday
               ? "今日到期"
-              : matured
-                ? `${Math.abs(daysDiff)} 天前到期`
-                : `${daysDiff} 天後到期`}
+              : isYesterday
+                ? "昨日到期"
+                : isTomorrow
+                  ? "明天到期"
+                  : matured
+                    ? `${Math.abs(daysDiff)} 天前到期`
+                    : `${daysDiff} 天後到期`}
           </Text>
         </Stack>
         <Stack gap={0} align="end">

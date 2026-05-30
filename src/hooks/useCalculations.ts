@@ -70,7 +70,12 @@ export function formatCurrency(amount: number): string {
 }
 
 export function formatDate(dateStr: string): string {
-  return dayjs(dateStr, "YYYY-MM-DD", true).format("YYYY年MM月DD日");
+  const date = dayjs(dateStr, "YYYY-MM-DD", true);
+  const today = dayjs().startOf("day");
+  if (date.isSame(today, "day")) return "今天";
+  if (date.isSame(today.add(1, "day"), "day")) return "明天";
+  if (date.isSame(today.subtract(1, "day"), "day")) return "昨天";
+  return date.format("YYYY年MM月DD日");
 }
 
 export function getErrorMessage(err: unknown): string {
