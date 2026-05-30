@@ -68,6 +68,7 @@ export interface HomePageData {
   pendingInterest: number;
   totalReceivedInterest: number;
   avgRate: number;
+  interestPerDay: number;
   bankDistribution: BankDistributionItem[];
   termDistribution: TermBucket[];
   growthData: GrowthItem[];
@@ -123,6 +124,13 @@ export function useHomePageData(
     const weighted = activeDeposits.reduce((sum, d) => sum + d.interest_rate * d.amount, 0);
     const total = activeDeposits.reduce((sum, d) => sum + d.amount, 0);
     return weighted / total;
+  }, [activeDeposits]);
+
+  const interestPerDay = useMemo(() => {
+    if (activeDeposits.length === 0) return 0;
+    return activeDeposits.reduce((sum, d) => {
+      return sum + (d.amount * (d.interest_rate / 100)) / 365;
+    }, 0);
   }, [activeDeposits]);
 
   const bankDistribution = useMemo(() => {
@@ -304,6 +312,7 @@ export function useHomePageData(
     pendingInterest,
     totalReceivedInterest,
     avgRate,
+    interestPerDay,
     bankDistribution,
     termDistribution,
     growthData,

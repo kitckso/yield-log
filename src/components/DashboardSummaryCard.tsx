@@ -5,6 +5,7 @@ interface DashboardSummaryCardProps {
   activeAmount: number;
   activeCount: number;
   avgRate: number;
+  interestPerDay: number;
   pendingInterest: number;
   totalReceivedInterest: number;
   maturedCount: number;
@@ -15,6 +16,7 @@ export default function DashboardSummaryCard({
   activeAmount,
   activeCount,
   avgRate,
+  interestPerDay,
   pendingInterest,
   totalReceivedInterest,
   maturedCount,
@@ -50,6 +52,11 @@ export default function DashboardSummaryCard({
             </>
           )}
         </Group>
+        {activeCount > 0 && (
+          <Text size="sm" fw={600} c="green.7" mt={4}>
+            每日利息 {formatCurrency(interestPerDay)}
+          </Text>
+        )}
         <SimpleGrid cols={2} mt="xs">
           <Stack gap={0}>
             <Text size="xs" c="dimmed">

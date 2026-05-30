@@ -76,6 +76,7 @@ export default function HomePage() {
                 activeAmount={data.activeAmount}
                 activeCount={data.activeDeposits.length}
                 avgRate={data.avgRate}
+                interestPerDay={data.interestPerDay}
                 pendingInterest={data.pendingInterest}
                 totalReceivedInterest={data.totalReceivedInterest}
                 maturedCount={data.maturedDeposits.length}
