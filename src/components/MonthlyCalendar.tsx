@@ -1,6 +1,17 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, Group, Stack, Text, Title, ActionIcon, Button, Collapse } from "@mantine/core";
+import {
+  Badge,
+  Card,
+  Group,
+  Stack,
+  Text,
+  Title,
+  ActionIcon,
+  Button,
+  Collapse,
+  Divider,
+} from "@mantine/core";
 import {
   IconChevronLeft,
   IconChevronRight,
@@ -8,7 +19,7 @@ import {
   IconChevronUp,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { formatCurrency, formatDate, isMatured } from "../hooks/useCalculations";
+import { formatCurrency, isMatured } from "../hooks/useCalculations";
 import type { DepositWithBank } from "../types";
 
 interface MonthlyCalendarProps {
@@ -86,7 +97,7 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
     return (
       <Card
         key={m.month}
-        padding="sm"
+        padding={0}
         radius="lg"
         withBorder
         style={
@@ -94,28 +105,44 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
         }
       >
         {/* Clickable header: month label + totals + chevron */}
-        <Stack gap={2} style={{ cursor: "pointer" }} onClick={() => toggleMonth(m.month)}>
-          {/* Top row: month label + desktop totals + chevron */}
+        <Stack
+          gap={6}
+          p="md"
+          style={{
+            cursor: "pointer",
+            borderRadius: 8,
+            backgroundColor: isExpanded ? "var(--mantine-color-gray-0)" : "transparent",
+            transition: "background-color 0.2s",
+          }}
+          onClick={() => toggleMonth(m.month)}
+        >
+          {/* Top row: month label + deposit count + desktop totals + chevron */}
           <Group justify="space-between" wrap="nowrap">
-            <Group gap="md" wrap="nowrap">
-              <Text fw={700} size="sm" c={isCurrent ? "blue" : undefined} miw={32}>
+            <Group gap="xs" wrap="nowrap">
+              <Text fw={800} size="md" c={isCurrent ? "blue" : undefined} miw={36}>
                 {m.label}
               </Text>
-              <Group gap={4} wrap="nowrap" visibleFrom="xs">
-                <Text size="xs" c="dimmed" fw={500}>
-                  本金
-                </Text>
-                <Text size="sm" fw={700}>
-                  {formatCurrency(m.totalAmount)}
-                </Text>
-              </Group>
-              <Group gap={4} wrap="nowrap" visibleFrom="xs">
-                <Text size="xs" c="dimmed" fw={500}>
-                  利息
-                </Text>
-                <Text size="sm" fw={700} c="green">
-                  {formatCurrency(m.totalInterest)}
-                </Text>
+              <Text size="xs" c="dimmed">
+                · {m.deposits.length} 筆
+              </Text>
+              <Group gap={8} wrap="nowrap" visibleFrom="xs" ml="xs">
+                <Group gap={4} wrap="nowrap">
+                  <Text size="xs" c="dimmed" fw={500}>
+                    本金
+                  </Text>
+                  <Text size="sm" fw={700}>
+                    {formatCurrency(m.totalAmount)}
+                  </Text>
+                </Group>
+                <Divider orientation="vertical" size="sm" />
+                <Group gap={4} wrap="nowrap">
+                  <Text size="xs" c="dimmed" fw={500}>
+                    利息
+                  </Text>
+                  <Text size="sm" fw={700} c="green">
+                    {formatCurrency(m.totalInterest)}
+                  </Text>
+                </Group>
               </Group>
             </Group>
             <ActionIcon variant="subtle" size="sm">
@@ -124,7 +151,7 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
           </Group>
 
           {/* Mobile: totals on their own row */}
-          <Group justify="space-between" wrap="nowrap" hiddenFrom="xs">
+          <Group justify="space-between" wrap="nowrap" gap="xs" hiddenFrom="xs">
             <Group gap={4}>
               <Text size="xs" c="dimmed" fw={500}>
                 本金
@@ -133,6 +160,7 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
                 {formatCurrency(m.totalAmount)}
               </Text>
             </Group>
+            <Divider orientation="vertical" size="sm" />
             <Group gap={4}>
               <Text size="xs" c="dimmed" fw={500}>
                 利息
@@ -145,7 +173,7 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
         </Stack>
 
         <Collapse in={isExpanded}>
-          <Stack gap="xs" mt="sm">
+          <Stack gap="xs" p="md" pt="xs">
             {m.deposits.map((d) => {
               const matured = isMatured(d.end_date);
               return (
@@ -153,48 +181,40 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
                   key={d.id}
                   onClick={() => navigate(`/deposits/${d.id}/detail`)}
                   style={{
-                    padding: "4px 8px",
+                    borderLeft: `4px solid ${
+                      matured ? "var(--mantine-color-gray-4)" : "var(--mantine-color-teal-5)"
+                    }`,
+                    padding: "8px 12px",
                     borderRadius: 6,
-                    backgroundColor: matured ? "var(--mantine-color-gray-0)" : undefined,
                     opacity: matured ? 0.6 : 1,
                     cursor: "pointer",
                     transition: "background-color 0.15s",
                   }}
                   onMouseEnter={(e) =>
-                    (e.currentTarget.style.backgroundColor = "var(--mantine-color-gray-1)")
+                    (e.currentTarget.style.backgroundColor = "var(--mantine-color-gray-0)")
                   }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.backgroundColor = matured
-                      ? "var(--mantine-color-gray-0)"
-                      : "transparent")
-                  }
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                 >
-                  <Group justify="space-between" mb={4}>
-                    <Text size="xs" c="dimmed">
-                      {formatDate(d.end_date)}
-                    </Text>
-                    <Text size="sm" fw={500}>
-                      {d.bank_name}
+                  <Group justify="space-between" wrap="nowrap" mb={4}>
+                    <Group gap={6} wrap="nowrap">
+                      <Text size="sm" fw={700}>
+                        {dayjs(d.end_date).format("D日")}
+                      </Text>
+                      <Badge size="sm" variant="light" color="gray" radius="sm" fw={500}>
+                        {d.bank_name}
+                      </Badge>
+                    </Group>
+                    <Text size="xs" c="green" fw={500}>
+                      {d.interest_rate}%
                     </Text>
                   </Group>
-                  <Group justify="space-between">
-                    <Text size="sm" fw={600}>
+                  <Group justify="space-between" wrap="nowrap">
+                    <Text size="sm" fw={700}>
                       {formatCurrency(d.amount)}
                     </Text>
-                    {matured ? (
-                      <Text size="xs" c="dimmed">
-                        利息 {formatCurrency(d.interest)}
-                      </Text>
-                    ) : (
-                      <Group gap={4}>
-                        <Text size="xs" c="green" fw={500}>
-                          {d.interest_rate}%
-                        </Text>
-                        <Text size="xs" c="dimmed">
-                          利息 {formatCurrency(d.interest)}
-                        </Text>
-                      </Group>
-                    )}
+                    <Text size="xs" c="dimmed">
+                      利息 {formatCurrency(d.interest)}
+                    </Text>
                   </Group>
                 </div>
               );
