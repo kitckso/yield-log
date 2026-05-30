@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Card, Group, Stack, Text, Title, ActionIcon, Button } from "@mantine/core";
+import { Card, Group, Stack, Text, Title, ActionIcon, Button, Collapse } from "@mantine/core";
 import {
   IconChevronLeft,
   IconChevronRight,
@@ -26,8 +26,21 @@ interface MonthGroup {
 
 export default function MonthlyCalendar({ deposits, year, onYearChange }: MonthlyCalendarProps) {
   const [showPast, setShowPast] = useState(false);
+  const [expandedMonths, setExpandedMonths] = useState<Set<number>>(new Set());
   const currentMonth = dayjs().month();
   const isCurrentYear = year === dayjs().year();
+
+  const toggleMonth = (month: number) => {
+    setExpandedMonths((prev) => {
+      const next = new Set(prev);
+      if (next.has(month)) {
+        next.delete(month);
+      } else {
+        next.add(month);
+      }
+      return next;
+    });
+  };
 
   const months = useMemo(() => {
     const groups: MonthGroup[] = [];
@@ -54,19 +67,18 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
   const hasPrevYear = deposits.some((d) => d.end_date.startsWith(String(year - 1)));
   const hasNextYear = deposits.some((d) => d.end_date.startsWith(String(year + 1)));
 
-  const renderEmptyMonth = (m: MonthGroup) => (
-    <div key={m.month} style={{ padding: "4px 0", textAlign: "center" }}>
-      <Text size="xs" c="dimmed">
-        {m.label} — 暫無記錄
-      </Text>
-    </div>
-  );
-
   const renderMonth = (m: MonthGroup) => {
     const isCurrent = isCurrentYear && m.month === currentMonth;
+    const isExpanded = expandedMonths.has(m.month);
 
     if (m.deposits.length === 0) {
-      return renderEmptyMonth(m);
+      return (
+        <div key={m.month} style={{ padding: "4px 0", textAlign: "center" }}>
+          <Text size="xs" c="dimmed">
+            {m.label} — 暫無記錄
+          </Text>
+        </div>
+      );
     }
 
     return (
@@ -79,70 +91,103 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
           isCurrent ? { borderColor: "var(--mantine-color-blue-5)", borderWidth: 2 } : undefined
         }
       >
-        <Text fw={700} size="sm" mb="xs" c={isCurrent ? "blue" : undefined}>
-          {m.label}
-        </Text>
+        {/* Clickable header: month label + totals + chevron */}
+        <Stack gap={2} style={{ cursor: "pointer" }} onClick={() => toggleMonth(m.month)}>
+          {/* Top row: month label + desktop totals + chevron */}
+          <Group justify="space-between" wrap="nowrap">
+            <Group gap="md" wrap="nowrap">
+              <Text fw={700} size="sm" c={isCurrent ? "blue" : undefined} miw={32}>
+                {m.label}
+              </Text>
+              <Group gap={4} wrap="nowrap" visibleFrom="xs">
+                <Text size="xs" c="dimmed" fw={500}>
+                  本金
+                </Text>
+                <Text size="sm" fw={700}>
+                  {formatCurrency(m.totalAmount)}
+                </Text>
+              </Group>
+              <Group gap={4} wrap="nowrap" visibleFrom="xs">
+                <Text size="xs" c="dimmed" fw={500}>
+                  利息
+                </Text>
+                <Text size="sm" fw={700} c="green">
+                  {formatCurrency(m.totalInterest)}
+                </Text>
+              </Group>
+            </Group>
+            <ActionIcon variant="subtle" size="sm">
+              {isExpanded ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
+            </ActionIcon>
+          </Group>
 
-        <Card padding="xs" radius="md" bg="gray.0" mb="xs">
-          <Group justify="space-between">
-            <Text size="xs" fw={600}>
-              合計
-            </Text>
-            <Stack gap={0} align="end">
-              <Text size="xs" fw={600}>
+          {/* Mobile: totals on their own row */}
+          <Group justify="space-between" wrap="nowrap" hiddenFrom="xs">
+            <Group gap={4}>
+              <Text size="xs" c="dimmed" fw={500}>
+                本金
+              </Text>
+              <Text size="sm" fw={700}>
                 {formatCurrency(m.totalAmount)}
               </Text>
-              <Text size="xs" c="green" fw={600}>
+            </Group>
+            <Group gap={4}>
+              <Text size="xs" c="dimmed" fw={500}>
+                利息
+              </Text>
+              <Text size="sm" fw={700} c="green">
                 {formatCurrency(m.totalInterest)}
               </Text>
-            </Stack>
+            </Group>
           </Group>
-        </Card>
+        </Stack>
 
-        <Stack gap="xs">
-          {m.deposits.map((d) => {
-            const matured = isMatured(d.end_date);
-            return (
-              <div
-                key={d.id}
-                style={{
-                  padding: "4px 8px",
-                  borderRadius: 6,
-                  backgroundColor: matured ? "var(--mantine-color-gray-0)" : undefined,
-                  opacity: matured ? 0.6 : 1,
-                }}
-              >
-                <Group justify="space-between" mb={4}>
-                  <Text size="xs" c="dimmed">
-                    {formatDate(d.end_date)}
-                  </Text>
-                  <Text size="sm" fw={500}>
-                    {d.bank_name}
-                  </Text>
-                </Group>
-                <Group justify="space-between">
-                  <Text size="sm" fw={600}>
-                    {formatCurrency(d.amount)}
-                  </Text>
-                  {matured ? (
+        <Collapse in={isExpanded}>
+          <Stack gap="xs" mt="sm">
+            {m.deposits.map((d) => {
+              const matured = isMatured(d.end_date);
+              return (
+                <div
+                  key={d.id}
+                  style={{
+                    padding: "4px 8px",
+                    borderRadius: 6,
+                    backgroundColor: matured ? "var(--mantine-color-gray-0)" : undefined,
+                    opacity: matured ? 0.6 : 1,
+                  }}
+                >
+                  <Group justify="space-between" mb={4}>
                     <Text size="xs" c="dimmed">
-                      利息 {formatCurrency(d.interest)}
+                      {formatDate(d.end_date)}
                     </Text>
-                  ) : (
-                    <Group gap={4}>
-                      <Text size="xs" c="green" fw={500}>
-                        {d.interest_rate}%
-                      </Text>
+                    <Text size="sm" fw={500}>
+                      {d.bank_name}
+                    </Text>
+                  </Group>
+                  <Group justify="space-between">
+                    <Text size="sm" fw={600}>
+                      {formatCurrency(d.amount)}
+                    </Text>
+                    {matured ? (
                       <Text size="xs" c="dimmed">
                         利息 {formatCurrency(d.interest)}
                       </Text>
-                    </Group>
-                  )}
-                </Group>
-              </div>
-            );
-          })}
-        </Stack>
+                    ) : (
+                      <Group gap={4}>
+                        <Text size="xs" c="green" fw={500}>
+                          {d.interest_rate}%
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          利息 {formatCurrency(d.interest)}
+                        </Text>
+                      </Group>
+                    )}
+                  </Group>
+                </div>
+              );
+            })}
+          </Stack>
+        </Collapse>
       </Card>
     );
   };
