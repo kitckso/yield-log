@@ -88,7 +88,7 @@ export default function DepositDetail() {
           <Button
             variant="subtle"
             leftSection={<IconArrowLeft size={20} />}
-            onClick={() => navigate("/deposits")}
+            onClick={() => navigate(-1)}
           >
             返回
           </Button>

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, Group, Stack, Text, Title, ActionIcon, Button, Collapse } from "@mantine/core";
 import {
   IconChevronLeft,
@@ -25,6 +26,7 @@ interface MonthGroup {
 }
 
 export default function MonthlyCalendar({ deposits, year, onYearChange }: MonthlyCalendarProps) {
+  const navigate = useNavigate();
   const [showPast, setShowPast] = useState(false);
   const [expandedMonths, setExpandedMonths] = useState<Set<number>>(new Set());
   const currentMonth = dayjs().month();
@@ -149,12 +151,23 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
               return (
                 <div
                   key={d.id}
+                  onClick={() => navigate(`/deposits/${d.id}/detail`)}
                   style={{
                     padding: "4px 8px",
                     borderRadius: 6,
                     backgroundColor: matured ? "var(--mantine-color-gray-0)" : undefined,
                     opacity: matured ? 0.6 : 1,
+                    cursor: "pointer",
+                    transition: "background-color 0.15s",
                   }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.backgroundColor = "var(--mantine-color-gray-1)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.backgroundColor = matured
+                      ? "var(--mantine-color-gray-0)"
+                      : "transparent")
+                  }
                 >
                   <Group justify="space-between" mb={4}>
                     <Text size="xs" c="dimmed">
