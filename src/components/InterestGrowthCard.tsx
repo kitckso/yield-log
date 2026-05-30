@@ -1,6 +1,7 @@
-import { Card, Text } from "@mantine/core";
+import { Card, Group, Text } from "@mantine/core";
 import { LineChart } from "@mantine/charts";
 import dayjs from "dayjs";
+import { formatCurrency } from "../hooks/useCalculations";
 
 interface GrowthItem {
   month: string;
@@ -15,7 +16,8 @@ export default function InterestGrowthCard({ growthData }: InterestGrowthCardPro
   if (growthData.length <= 1) return null;
 
   const todayMonth = dayjs().format("YYYY-MM");
-  const hasToday = growthData.some((d) => d.month === todayMonth);
+  const todayEntry = growthData.find((d) => d.month === todayMonth);
+  const hasToday = !!todayEntry;
 
   return (
     <Card padding="lg" radius="lg" withBorder>
@@ -54,6 +56,21 @@ export default function InterestGrowthCard({ growthData }: InterestGrowthCardPro
           `$${v.toLocaleString("en-HK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
         }
       />
+      {hasToday && (
+        <Group
+          justify="space-between"
+          mt="sm"
+          pt="sm"
+          style={{ borderTop: "1px solid var(--mantine-color-gray-3)" }}
+        >
+          <Text size="sm" c="dimmed">
+            今日累計利息
+          </Text>
+          <Text size="sm" fw={600} c="green.7">
+            {formatCurrency(todayEntry.累計利息)}
+          </Text>
+        </Group>
+      )}
     </Card>
   );
 }
