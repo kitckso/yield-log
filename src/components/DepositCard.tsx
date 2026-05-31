@@ -1,6 +1,6 @@
-import { Card, Text, Group, Badge, Stack } from "@mantine/core";
-import { IconPercentage, IconCalendarCheck, IconCalendar } from "@tabler/icons-react";
-import { isMatured, formatDate, formatCurrency } from "../hooks/useCalculations";
+import { Card, Text, Group, Badge } from "@mantine/core";
+import dayjs from "dayjs";
+import { isMatured, formatCurrency, formatDate } from "../hooks/useCalculations";
 import type { DepositWithBank } from "../types";
 
 interface DepositCardProps {
@@ -10,6 +10,7 @@ interface DepositCardProps {
 
 export default function DepositCard({ deposit, onClick }: DepositCardProps) {
   const matured = isMatured(deposit.end_date);
+  const endDay = dayjs(deposit.end_date).format("D日");
 
   const periodLabel =
     deposit.period_unit === "months"
@@ -31,50 +32,42 @@ export default function DepositCard({ deposit, onClick }: DepositCardProps) {
       }}
       onClick={onClick}
     >
-      <Group justify="space-between" mb="xs">
-        <Stack gap={4}>
-          <Text fw={600}>{deposit.bank_name}</Text>
-          <Group gap={4}>
-            <Text size="xs" c="dimmed">
-              {periodLabel} 定期存款
-            </Text>
-            <IconCalendar size={14} color="var(--mantine-color-gray-6)" />
-            <Text size="xs" c="dimmed">
-              {formatDate(deposit.start_date)}
-            </Text>
-          </Group>
-        </Stack>
-        <Badge color={matured ? "gray" : "green"} variant="light">
+      <Group justify="space-between" wrap="nowrap" mb="xs">
+        <Group gap={6} wrap="nowrap">
+          <Text fw={800} size="md">
+            {endDay}
+          </Text>
+          <Badge size="sm" variant="light" color="gray" radius="sm" fw={500}>
+            {deposit.bank_name}
+          </Badge>
+        </Group>
+        <Badge color={matured ? "gray" : "green"} variant="light" size="sm">
           {matured ? "已期滿" : "進行中"}
         </Badge>
       </Group>
 
-      <Text fw={700} style={{ fontSize: "28px", lineHeight: "32px" }} mb="sm">
+      <Text fw={700} style={{ fontSize: "28px", lineHeight: "32px" }} mb={4}>
         {formatCurrency(deposit.amount)}
+      </Text>
+
+      <Text size="xs" c="dimmed" mb="sm">
+        {periodLabel} 定期存款 · 開戶 {formatDate(deposit.start_date)}
       </Text>
 
       <Group
         justify="space-between"
+        wrap="nowrap"
         pt="sm"
-        style={{ borderTop: "1px solid var(--mantine-color-gray-3)" }}
+        style={{ borderTop: "1px solid var(--mantine-color-gray-2)" }}
       >
-        <Group gap="xs">
-          <IconPercentage size={18} color="var(--mantine-color-blue-6)" />
-          <Text fw={600}>{deposit.interest_rate}%</Text>
-          <Text size="sm" c="dimmed" ml="xs">
-            利息 {formatCurrency(deposit.interest)}
-          </Text>
-        </Group>
-        <Group gap="xs">
-          {matured ? (
-            <IconCalendarCheck size={18} color="var(--mantine-color-gray-6)" />
-          ) : (
-            <IconCalendar size={18} color="var(--mantine-color-gray-6)" />
-          )}
+        <Group gap={4} wrap="nowrap">
           <Text size="sm" c="dimmed">
-            {formatDate(deposit.end_date)}
+            {deposit.interest_rate}%
           </Text>
         </Group>
+        <Text fw={700} size="sm" c="green">
+          利息 {formatCurrency(deposit.interest)}
+        </Text>
       </Group>
     </Card>
   );
