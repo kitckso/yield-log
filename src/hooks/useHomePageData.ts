@@ -134,6 +134,7 @@ export function useHomePageData(
   }, [activeDeposits]);
 
   const bankDistribution = useMemo(() => {
+    if (bankMap.size === 0) return [];
     const source = scope === "active" ? activeDeposits : deposits;
     const grouped = new Map<string, number>();
     source.forEach((d) => {
@@ -263,6 +264,7 @@ export function useHomePageData(
   );
 
   const bankStats = useMemo(() => {
+    if (bankMap.size === 0) return [];
     const grouped = new Map<
       string,
       {
