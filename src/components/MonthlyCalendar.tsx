@@ -59,6 +59,53 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
   const yearTotalAmount = months.reduce((s, m) => s + m.totalAmount, 0);
   const yearTotalInterest = months.reduce((s, m) => s + m.totalInterest, 0);
 
+  // Projected total interest by Dec 31 = "全年利息" + rollover additions
+  // from active deposits that will mature before year-end.
+  const projectedDec31Interest = useMemo(() => {
+    if (!isCurrentYear) return null;
+    const yearEnd = dayjs().year(year).endOf("year");
+    let rolloverTotal = 0;
+
+    deposits.forEach((d) => {
+      // Only active deposits maturing by Dec 31
+      if (isMatured(d.end_date)) return;
+      const end = dayjs(d.end_date);
+      if (end.isAfter(yearEnd)) return;
+
+      let currentEnd = end;
+      for (;;) {
+        let nextEnd: dayjs.Dayjs;
+        let termDays = 0;
+        switch (d.period_unit) {
+          case "days":
+            nextEnd = currentEnd.add(d.period_value, "day");
+            termDays = d.period_value;
+            break;
+          case "weeks":
+            nextEnd = currentEnd.add(d.period_value * 7, "day");
+            termDays = d.period_value * 7;
+            break;
+          case "months":
+            nextEnd = currentEnd.add(d.period_value, "month");
+            termDays = nextEnd.diff(currentEnd, "day");
+            break;
+          case "years":
+            nextEnd = currentEnd.add(d.period_value, "year");
+            termDays = nextEnd.diff(currentEnd, "day");
+            break;
+          default:
+            nextEnd = currentEnd.add(d.period_value, "month");
+            termDays = nextEnd.diff(currentEnd, "day");
+        }
+        if (nextEnd.isAfter(yearEnd)) break;
+        rolloverTotal += d.amount * (d.interest_rate / 100) * (termDays / 365);
+        currentEnd = nextEnd;
+      }
+    });
+
+    return Math.round((yearTotalInterest + rolloverTotal) * 100) / 100;
+  }, [deposits, year, isCurrentYear, yearTotalInterest]);
+
   const hasPrevYear = deposits.some((d) => d.end_date.startsWith(String(year - 1)));
   const hasNextYear = deposits.some((d) => d.end_date.startsWith(String(year + 1)));
 
@@ -155,6 +202,16 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
               {formatCurrency(yearTotalInterest)}
             </Text>
           </div>
+          {projectedDec31Interest !== null && (
+            <div>
+              <Text size="xs" c="dimmed" ta="center">
+                預估至 12月31日
+              </Text>
+              <Text fw={700} size="lg" c="orange.7" ta="center">
+                {formatCurrency(projectedDec31Interest)}
+              </Text>
+            </div>
+          )}
         </Group>
       </Card>
 
