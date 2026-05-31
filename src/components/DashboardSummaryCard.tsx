@@ -53,9 +53,14 @@ export default function DashboardSummaryCard({
           )}
         </Group>
         {activeCount > 0 && (
-          <Text size="sm" fw={600} c="green.7" mt={4}>
-            每日利息 {formatCurrency(interestPerDay)}
-          </Text>
+          <Group gap="lg" mt={4}>
+            <Text size="sm" fw={600} c="green.7">
+              每日利息 {formatCurrency(interestPerDay)}
+            </Text>
+            <Text size="sm" fw={600} c="green.7">
+              每月利息 {formatCurrency(interestPerDay * 30)}
+            </Text>
+          </Group>
         )}
         <SimpleGrid cols={2} mt="xs">
           <Stack gap={0}>
