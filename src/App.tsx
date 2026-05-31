@@ -11,6 +11,7 @@ import DepositForm from "./pages/DepositForm";
 import DepositDetail from "./pages/DepositDetail";
 import BankManagement from "./pages/BankManagement";
 import Settings from "./pages/Settings";
+import PwaUpdater from "./components/PwaUpdater";
 
 export default function App() {
   const { getSession } = useAuthStore();
@@ -20,26 +21,29 @@ export default function App() {
   }, [getSession]);
 
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <AppLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<HomePage />} />
-        <Route path="deposits" element={<DepositList />} />
-        <Route path="deposits/new" element={<DepositForm />} />
-        <Route path="deposits/:id/detail" element={<DepositDetail />} />
-        <Route path="deposits/:id" element={<DepositForm />} />
-        <Route path="banks" element={<BankManagement />} />
-        <Route path="settings" element={<Settings />} />
-      </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <>
+      <PwaUpdater />
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<HomePage />} />
+          <Route path="deposits" element={<DepositList />} />
+          <Route path="deposits/new" element={<DepositForm />} />
+          <Route path="deposits/:id/detail" element={<DepositDetail />} />
+          <Route path="deposits/:id" element={<DepositForm />} />
+          <Route path="banks" element={<BankManagement />} />
+          <Route path="settings" element={<Settings />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
   );
 }
