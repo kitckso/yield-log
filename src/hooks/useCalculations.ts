@@ -75,7 +75,8 @@ export function formatDate(dateStr: string): string {
   if (date.isSame(today, "day")) return "今天";
   if (date.isSame(today.add(1, "day"), "day")) return "明天";
   if (date.isSame(today.subtract(1, "day"), "day")) return "昨天";
-  return date.format("YYYY年MM月DD日");
+  const weekdays = "日一二三四五六";
+  return `${date.format("YYYY年MM月DD日")}(${weekdays[date.day()]})`;
 }
 
 export function getErrorMessage(err: unknown): string {
