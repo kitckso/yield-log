@@ -38,7 +38,7 @@ export default function BottomNav() {
         left: 0,
         right: 0,
         height: "64px",
-        backgroundColor: "white",
+        backgroundColor: "var(--mantine-color-body)",
         borderTop: "1px solid var(--mantine-color-gray-3)",
         display: "flex",
         justifyContent: "space-around",
@@ -53,19 +53,7 @@ export default function BottomNav() {
           <button
             key={item.path}
             onClick={() => navigate(item.path)}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "4px",
-              padding: "8px 16px",
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
-              color: active ? "var(--mantine-color-blue-6)" : "var(--mantine-color-gray-6)",
-              transition: "all 0.2s",
-            }}
+            className={`bottom-nav-btn${active ? " active" : ""}`}
           >
             {item.icon}
             <span

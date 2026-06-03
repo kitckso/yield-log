@@ -1,7 +1,24 @@
 import { useRef, useState } from "react";
-import { Container, Title, Text, Stack, Card, Button, Group, Divider, Slider } from "@mantine/core";
+import {
+  Container,
+  Title,
+  Text,
+  Stack,
+  Card,
+  Button,
+  Group,
+  Divider,
+  Slider,
+  SegmentedControl,
+} from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconDownload, IconUpload, IconAlertTriangle, IconTextSize } from "@tabler/icons-react";
+import {
+  IconDownload,
+  IconUpload,
+  IconAlertTriangle,
+  IconTextSize,
+  IconDeviceDesktop,
+} from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { useNavigate } from "react-router-dom";
 import { version } from "../../package.json";
@@ -9,7 +26,7 @@ import UserMenu from "../components/UserMenu";
 import { useDepositsStore } from "../store/deposits";
 import { useBanksStore } from "../store/banks";
 import { useAuthStore } from "../store/auth";
-import { useAppStore } from "../store/app";
+import { useAppStore, type ColorScheme } from "../store/app";
 import { supabase } from "../lib/supabase";
 import { getErrorMessage } from "../hooks/useCalculations";
 
@@ -20,6 +37,8 @@ export default function Settings() {
   const user = useAuthStore((s) => s.user);
   const fontSizeLevel = useAppStore((s) => s.fontSizeLevel);
   const setFontSizeLevel = useAppStore((s) => s.setFontSizeLevel);
+  const colorScheme = useAppStore((s) => s.colorScheme);
+  const setColorScheme = useAppStore((s) => s.setColorScheme);
 
   const handleExport = () => {
     const deposits = useDepositsStore.getState().deposits;
@@ -175,6 +194,28 @@ export default function Settings() {
                 { value: 5, label: "最大" },
               ]}
               styles={{ markLabel: { fontSize: "var(--mantine-font-size-xs)" } }}
+            />
+          </Stack>
+        </Card>
+
+        <Card padding="lg" radius="lg" withBorder>
+          <Stack gap="md">
+            <Group gap="xs">
+              <IconDeviceDesktop size={20} />
+              <Text fw={600}>主題</Text>
+            </Group>
+            <Text size="sm" c="dimmed">
+              選擇深色或淺色主題，或跟隨系統設定
+            </Text>
+            <SegmentedControl
+              value={colorScheme}
+              onChange={(v) => setColorScheme(v as ColorScheme)}
+              data={[
+                { value: "light", label: "淺色" },
+                { value: "dark", label: "深色" },
+                { value: "system", label: "系統" },
+              ]}
+              fullWidth
             />
           </Stack>
         </Card>

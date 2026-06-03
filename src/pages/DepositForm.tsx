@@ -183,7 +183,11 @@ export default function DepositForm() {
       !startDate ||
       !endDate
     ) {
-      alert("請填寫所有欄位");
+      notifications.show({
+        title: "欄位不足",
+        message: "請填寫所有欄位",
+        color: "yellow",
+      });
       return;
     }
 

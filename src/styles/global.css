@@ -62,8 +62,8 @@
   height: 100dvh;
   position: sticky;
   top: 0;
-  background-color: white;
-  border-right: 1px solid var(--mantine-color-gray-3);
+  background-color: light-dark(white, var(--mantine-color-dark-8));
+  border-right: 1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
   display: flex;
   flex-direction: column;
   padding: 16px;
@@ -88,7 +88,7 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  color: var(--mantine-color-gray-7);
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-4));
   font-size: 15px;
   transition: all 0.15s;
   width: 100%;
@@ -96,12 +96,12 @@
 }
 
 .sidebar-link:hover {
-  background-color: var(--mantine-color-gray-0);
+  background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
 }
 
 .sidebar-link.active {
-  background-color: var(--mantine-color-blue-0);
-  color: var(--mantine-color-blue-6);
+  background-color: light-dark(var(--mantine-color-blue-0), var(--mantine-color-blue-9));
+  color: light-dark(var(--mantine-color-blue-6), var(--mantine-color-blue-2));
   font-weight: 600;
 }
 
@@ -121,12 +121,12 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--mantine-color-gray-5);
+  color: light-dark(var(--mantine-color-gray-5), var(--mantine-color-gray-6));
   padding: 4px;
 }
 
 .sidebar-logout-btn:hover {
-  color: var(--mantine-color-red-6);
+  color: light-dark(var(--mantine-color-red-6), var(--mantine-color-red-4));
 }
 
 /* ========= Layouts ========= */
@@ -135,7 +135,7 @@
   min-height: 100dvh;
   max-width: 1200px;
   margin: 0 auto;
-  background-color: var(--mantine-color-gray-0);
+  background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-8));
 }
 
 .app-layout-desktop .app-content {
@@ -147,7 +147,7 @@
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  background-color: var(--mantine-color-gray-0);
+  background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-8));
 }
 
 .app-layout-mobile .app-content {
@@ -174,5 +174,27 @@
 
 /* ========= Calendar month card hover ========= */
 .month-card-hover:hover {
-  background-color: var(--mantine-color-gray-0) !important;
+  background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6)) !important;
+}
+
+/* ========= Bottom Nav ========= */
+.bottom-nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.bottom-nav-btn.active {
+  color: light-dark(var(--mantine-color-blue-6), var(--mantine-color-blue-2));
+}
+
+.bottom-nav-btn:not(.active) {
+  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-gray-5));
 }

@@ -26,7 +26,7 @@ export default function DepositCard({ deposit, onClick }: DepositCardProps) {
       padding="md"
       radius="lg"
       style={{
-        backgroundColor: "white",
+        backgroundColor: "var(--mantine-color-body)",
         border: "1px solid var(--mantine-color-gray-3)",
         cursor: "pointer",
       }}

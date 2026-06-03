@@ -6,6 +6,7 @@ import { ModalsProvider } from "@mantine/modals";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { theme } from "./theme";
+import { ThemeProvider } from "./components/ThemeProvider";
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
 import "@mantine/charts/styles.css";
@@ -14,13 +15,15 @@ import "./styles/global.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <MantineProvider theme={theme}>
-      <ModalsProvider>
-        <Notifications position="top-center" />
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
-      </ModalsProvider>
+    <MantineProvider theme={theme} defaultColorScheme="auto">
+      <ThemeProvider>
+        <ModalsProvider>
+          <Notifications position="top-center" />
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </ModalsProvider>
+      </ThemeProvider>
     </MantineProvider>
   </StrictMode>,
 );
