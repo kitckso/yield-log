@@ -207,7 +207,7 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
               <Text size="xs" c="dimmed" ta="center">
                 預估至 12月31日
               </Text>
-              <Text fw={700} size="lg" c="orange.7" ta="center">
+              <Text fw={700} size="lg" c="dimmed" ta="center">
                 {formatCurrency(projectedDec31Interest)}
               </Text>
             </div>
@@ -275,7 +275,7 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
                       {d.bank_name}
                     </Badge>
                   </Group>
-                  <Text size="xs" c="green" fw={500}>
+                  <Text size="xs" c="dimmed">
                     {d.interest_rate}%
                   </Text>
                 </Group>
@@ -283,9 +283,14 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
                   <Text size="sm" fw={700}>
                     {formatCurrency(d.amount)}
                   </Text>
-                  <Text size="xs" c="dimmed">
-                    利息 {formatCurrency(d.interest)}
-                  </Text>
+                  <Group gap={4} wrap="nowrap">
+                    <Text size="xs" c="dimmed">
+                      利息
+                    </Text>
+                    <Text size="xs" c="green" fw={700}>
+                      {formatCurrency(d.interest)}
+                    </Text>
+                  </Group>
                 </Group>
               </div>
             );

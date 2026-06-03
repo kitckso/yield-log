@@ -65,9 +65,14 @@ export default function DepositCard({ deposit, onClick }: DepositCardProps) {
             {deposit.interest_rate}%
           </Text>
         </Group>
-        <Text fw={700} size="sm" c="green">
-          利息 {formatCurrency(deposit.interest)}
-        </Text>
+        <Group gap={4} wrap="nowrap">
+          <Text size="sm" c="dimmed">
+            利息
+          </Text>
+          <Text fw={700} size="sm" c="green">
+            {formatCurrency(deposit.interest)}
+          </Text>
+        </Group>
       </Group>
     </Card>
   );
