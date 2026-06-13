@@ -45,8 +45,8 @@ const WEEKDAYS = ["一", "二", "三", "四", "五", "六", "日"];
 
 const CELL_GAP = 2;
 const LABEL_COL = 18;
-const SIDE_PADDING = 8;
-const TARGET_CELL = 14;
+const SIDE_PADDING = 0;
+const TARGET_CELL = 22;
 const TOTAL_WEEKS = 53;
 
 function useElementWidth<T extends HTMLElement>(): [React.RefObject<T | null>, number] {
@@ -102,14 +102,49 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
     return Math.max(7, Math.floor(usable / (TARGET_CELL + CELL_GAP)));
   }, [containerWidth]);
 
-  useEffect(() => {
-    setPageIndex(0);
-  }, [year, mode]);
-
   const totalPages = Math.ceil(TOTAL_WEEKS / columnsPerPage);
   const clampedPageIndex = Math.min(pageIndex, Math.max(0, totalPages - 1));
   const startWeek = clampedPageIndex * columnsPerPage;
   const pageColCount = Math.min(columnsPerPage, TOTAL_WEEKS - startWeek);
+
+  // Default to the page containing today on initial mount (after layout measurement)
+  const hasInitialized = useRef(false);
+  useEffect(() => {
+    if (hasInitialized.current) return;
+    if (containerWidth <= 0) return; // wait for actual layout measurement
+    const todayMonday = today.subtract((today.day() + 6) % 7, "day");
+    const weekOffset = todayMonday.diff(firstMonday, "day") / 7;
+    if (weekOffset > 0) {
+      const page = Math.floor(weekOffset / columnsPerPage);
+      if (page > 0 && page < totalPages) {
+        setPageIndex(page);
+      }
+    }
+    hasInitialized.current = true;
+  }, [columnsPerPage, containerWidth, today, firstMonday, totalPages]);
+
+  // Jump to today's page when mode changes
+  const prevModeRef = useRef(mode);
+  useEffect(() => {
+    if (prevModeRef.current !== mode) {
+      prevModeRef.current = mode;
+      if (containerWidth > 0) {
+        const todayMonday = today.subtract((today.day() + 6) % 7, "day");
+        const weekOffset = todayMonday.diff(firstMonday, "day") / 7;
+        if (weekOffset > 0) {
+          const page = Math.floor(weekOffset / columnsPerPage);
+          if (page > 0 && page < totalPages) {
+            setPageIndex(page);
+          }
+        }
+      }
+    }
+  }, [mode, containerWidth, today, firstMonday, columnsPerPage, totalPages]);
+
+  // Reset to page 0 when year changes
+  useEffect(() => {
+    setPageIndex(0);
+  }, [year]);
 
   const allCells = useMemo(() => computeHeatmap(deposits, year, mode), [deposits, year, mode]);
 
