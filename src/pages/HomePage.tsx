@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Container, Title, Text, Stack, Group, Skeleton, Button, SimpleGrid } from "@mantine/core";
 import UserMenu from "../components/UserMenu";
 import DashboardSummaryCard from "../components/DashboardSummaryCard";
+import MaturityHeatmapCard from "../components/MaturityHeatmapCard";
 import MaturityTimelineCard from "../components/MaturityTimelineCard";
 import BankDistributionCard from "../components/BankDistributionCard";
 import TermDistributionCard from "../components/TermDistributionCard";
@@ -12,6 +13,7 @@ import YearSummaryCard from "../components/YearSummaryCard";
 import BankStatsCard from "../components/BankStatsCard";
 import { IconCoin, IconBuildingBank } from "@tabler/icons-react";
 import { useBanksStore } from "../store/banks";
+import { useDepositsStore } from "../store/deposits";
 import { useHomePageData } from "../hooks/useHomePageData";
 
 export default function HomePage() {
@@ -23,6 +25,7 @@ export default function HomePage() {
   const [maturityGroupBy, setMaturityGroupBy] = useState<"amount" | "interest">("amount");
 
   const data = useHomePageData(groupBy, scope, yearGroupMode, maturityGroupBy);
+  const { deposits } = useDepositsStore();
 
   return (
     <div>
@@ -89,6 +92,8 @@ export default function HomePage() {
                 bankMap={data.bankMap}
                 onNavigate={(id) => navigate(`/deposits/${id}/detail`)}
               />
+
+              <MaturityHeatmapCard deposits={deposits} />
 
               <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
                 <BankDistributionCard
