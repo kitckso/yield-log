@@ -49,8 +49,8 @@ export default function DepositForm() {
 
   const [bankId, setBankId] = useState<string | null>(null);
   const [amount, setAmount] = useState<number | string>("");
-  const [periodValue, setPeriodValue] = useState<number | string>(3);
-  const [periodUnit, setPeriodUnit] = useState<string | null>("months");
+  const [periodValue, setPeriodValue] = useState<number | string>("");
+  const [periodUnit, setPeriodUnit] = useState<string | null>(null);
   const [interestRate, setInterestRate] = useState<number | string>("");
   const [interest, setInterest] = useState<number | string>(0);
   const [startDate, setStartDate] = useState<Date | null>(null);
@@ -96,12 +96,6 @@ export default function DepositForm() {
   useEffect(() => {
     void fetchBanks();
   }, [fetchBanks]);
-
-  useEffect(() => {
-    if (!isEditing && banks.length > 0 && !bankId) {
-      setBankId(banks[0].id);
-    }
-  }, [banks, isEditing, bankId]);
 
   useEffect(() => {
     if (isEditing && id) {
@@ -242,8 +236,8 @@ export default function DepositForm() {
 
   const resetForm = () => {
     setAmount("");
-    setPeriodValue(3);
-    setPeriodUnit("months");
+    setPeriodValue("");
+    setPeriodUnit(null);
     setInterestRate("");
     setInterest(0);
     setFloorInterest(0);
@@ -313,8 +307,20 @@ export default function DepositForm() {
         )}
 
         <Group grow>
-          <NumberInput label="存期" value={periodValue} onChange={setPeriodValue} min={1} />
-          <Select label="單位" data={periodUnits} value={periodUnit} onChange={setPeriodUnit} />
+          <NumberInput
+            label="存期"
+            value={periodValue}
+            onChange={setPeriodValue}
+            min={1}
+            required
+          />
+          <Select
+            label="單位"
+            data={periodUnits}
+            value={periodUnit}
+            onChange={setPeriodUnit}
+            required
+          />
         </Group>
         {!isEditing && recentPeriods.length > 0 && (
           <Group gap={4}>
@@ -376,6 +382,7 @@ export default function DepositForm() {
           onChange={handleInterestChange}
           decimalScale={2}
           fixedDecimalScale
+          required
         />
         {!interestManuallyEdited && floorInterest !== Number(interest) && Number(interest) > 0 && (
           <Group gap={4}>
