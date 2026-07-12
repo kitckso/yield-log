@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Badge,
@@ -34,8 +34,10 @@ interface MonthGroup {
 export default function MonthlyCalendar({ deposits, year, onYearChange }: MonthlyCalendarProps) {
   const navigate = useNavigate();
   const [selectedMonth, setSelectedMonth] = useState<MonthGroup | null>(null);
-  const currentMonth = dayjs().month();
-  const isCurrentYear = year === dayjs().year();
+  const today = dayjs();
+  const currentMonth = today.month();
+  const currentYear = today.year();
+  const isCurrentYear = year === currentYear;
 
   const months = useMemo(() => {
     const groups: MonthGroup[] = [];
@@ -109,53 +111,170 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
   const hasPrevYear = deposits.some((d) => d.end_date.startsWith(String(year - 1)));
   const hasNextYear = deposits.some((d) => d.end_date.startsWith(String(year + 1)));
 
+  const currentMonthId = `calendar-month-${year}-${currentMonth}`;
+
+  useEffect(() => {
+    if (deposits.length === 0) return;
+    const el = document.getElementById(currentMonthId);
+    if (!el) return;
+    const timer = setTimeout(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [currentMonthId, deposits.length]);
+
+  const isPastMonth = (m: MonthGroup) =>
+    year < currentYear || (year === currentYear && m.month < currentMonth);
+
+  const splitCurrentMonth = (m: MonthGroup) => {
+    const todayStart = dayjs().startOf("day");
+    const passed = m.deposits.filter((d) => dayjs(d.end_date).isBefore(todayStart));
+    const future = m.deposits.filter((d) => !dayjs(d.end_date).isBefore(todayStart));
+    const passedAmount = passed.reduce((s, d) => s + d.amount, 0);
+    const passedInterest = passed.reduce((s, d) => s + d.interest, 0);
+    const futureAmount = future.reduce((s, d) => s + d.amount, 0);
+    const futureInterest = future.reduce((s, d) => s + d.interest, 0);
+    return { passed, future, passedAmount, passedInterest, futureAmount, futureInterest };
+  };
+
   const renderMonth = (m: MonthGroup) => {
     const isCurrent = isCurrentYear && m.month === currentMonth;
+    const isPast = isPastMonth(m);
     const hasDeposits = m.deposits.length > 0;
+    const dimmed = isPast && hasDeposits;
+    const empty = !hasDeposits;
+
+    const currentSplit = isCurrent && hasDeposits ? splitCurrentMonth(m) : null;
 
     return (
       <Card
         key={m.month}
+        id={isCurrent ? currentMonthId : undefined}
         padding="md"
         radius="lg"
         withBorder
         className={hasDeposits ? "month-card-hover" : undefined}
         style={{
           ...(isCurrent ? { borderColor: "var(--mantine-color-blue-5)", borderWidth: 2 } : {}),
+          ...(empty ? { opacity: 0.55 } : {}),
           cursor: hasDeposits ? "pointer" : "default",
           transition: "background-color 0.15s, box-shadow 0.15s",
         }}
         onClick={hasDeposits ? () => setSelectedMonth(m) : undefined}
       >
-        {" "}
         <Group justify="space-between" wrap="nowrap" mb={4}>
           <Group gap="xs" wrap="nowrap">
-            <Text fw={800} size="md" c={isCurrent ? "blue" : undefined} miw={36}>
+            <Text
+              fw={empty ? 600 : 800}
+              size="md"
+              c={isCurrent ? "blue" : empty ? "dimmed" : dimmed ? "gray" : undefined}
+              miw={36}
+            >
               {m.label}
             </Text>
             <Text size="xs" c="dimmed">
-              · {m.deposits.length} 筆
+              {empty ? "· —" : `· ${m.deposits.length} 筆`}
             </Text>
           </Group>
         </Group>
-        <Stack gap={4}>
-          <Group gap={4}>
-            <Text size="xs" c="dimmed" fw={500}>
-              本金
-            </Text>
-            <Text size="sm" fw={700}>
-              {formatCurrency(m.totalAmount)}
-            </Text>
-          </Group>
-          <Group gap={4}>
-            <Text size="xs" c="dimmed" fw={500}>
-              利息
-            </Text>
-            <Text size="sm" fw={700} c="green">
-              {formatCurrency(m.totalInterest)}
-            </Text>
-          </Group>
-        </Stack>
+
+        {currentSplit ? (
+          <Stack gap={2}>
+            <Group gap="xs" align="center">
+              <Text size="xs" c="gray" fw={600}>
+                已期滿
+              </Text>
+              <Text size="xs" c="gray">
+                · {currentSplit.passed.length} 筆
+              </Text>
+            </Group>
+            <Group gap={4}>
+              <Text size="xs" c="dimmed" fw={500}>
+                本金
+              </Text>
+              <Text size="sm" c="dimmed" fw={600}>
+                {formatCurrency(currentSplit.passedAmount)}
+              </Text>
+            </Group>
+            <Group gap={4}>
+              <Text size="xs" c="dimmed" fw={500}>
+                利息
+              </Text>
+              <Text size="xs" c="gray" fw={600}>
+                {formatCurrency(currentSplit.passedInterest)}
+              </Text>
+            </Group>
+            <div
+              style={{
+                height: 1,
+                background: "light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4))",
+                margin: "4px 0",
+              }}
+            />
+            <Group gap="xs" align="center">
+              <Text size="xs" c="teal" fw={600}>
+                未到期
+              </Text>
+              <Text size="xs" c="dimmed">
+                · {currentSplit.future.length} 筆
+              </Text>
+            </Group>
+            <Group gap={4}>
+              <Text size="xs" c="dimmed" fw={500}>
+                本金
+              </Text>
+              <Text size="sm" fw={700}>
+                {formatCurrency(currentSplit.futureAmount)}
+              </Text>
+            </Group>
+            <Group gap={4}>
+              <Text size="xs" c="dimmed" fw={500}>
+                利息
+              </Text>
+              <Text size="sm" fw={700} c="green">
+                {formatCurrency(currentSplit.futureInterest)}
+              </Text>
+            </Group>
+          </Stack>
+        ) : empty ? (
+          <Stack gap={4}>
+            <Group gap={4}>
+              <Text size="xs" c="dimmed" fw={500}>
+                本金
+              </Text>
+              <Text size="sm" c="dimmed" fw={500}>
+                —
+              </Text>
+            </Group>
+            <Group gap={4}>
+              <Text size="xs" c="dimmed" fw={500}>
+                利息
+              </Text>
+              <Text size="sm" c="dimmed" fw={500}>
+                —
+              </Text>
+            </Group>
+          </Stack>
+        ) : (
+          <Stack gap={4}>
+            <Group gap={4}>
+              <Text size="xs" c="dimmed" fw={500}>
+                本金
+              </Text>
+              <Text size="sm" fw={dimmed ? 600 : 700} c={dimmed ? "dimmed" : undefined}>
+                {formatCurrency(m.totalAmount)}
+              </Text>
+            </Group>
+            <Group gap={4}>
+              <Text size="xs" c="dimmed" fw={500}>
+                利息
+              </Text>
+              <Text size="sm" fw={dimmed ? 600 : 700} c={dimmed ? "gray" : "green"}>
+                {formatCurrency(m.totalInterest)}
+              </Text>
+            </Group>
+          </Stack>
+        )}
       </Card>
     );
   };
