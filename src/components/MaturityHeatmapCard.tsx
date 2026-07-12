@@ -34,14 +34,14 @@ interface DayCell {
 }
 
 const LEVEL_COLORS: Record<Level, string> = {
-  0: "var(--mantine-color-gray-2)",
-  1: "var(--mantine-color-orange-1)",
-  2: "var(--mantine-color-orange-3)",
-  3: "var(--mantine-color-orange-6)",
-  4: "var(--mantine-color-orange-8)",
+  0: "light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-4))",
+  1: "light-dark(var(--mantine-color-orange-1), var(--mantine-color-orange-8))",
+  2: "light-dark(var(--mantine-color-orange-3), var(--mantine-color-orange-6))",
+  3: "light-dark(var(--mantine-color-orange-6), var(--mantine-color-orange-4))",
+  4: "light-dark(var(--mantine-color-orange-8), var(--mantine-color-orange-2))",
 };
 
-const WEEKDAYS = ["一", "二", "三", "四", "五", "六", "日"];
+const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
 
 const CELL_GAP = 2;
 const LABEL_COL = 18;
@@ -79,10 +79,7 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
 
   const yearStart = useMemo(() => dayjs(`${year}-01-01`, "YYYY-MM-DD", true), [year]);
   const yearEnd = useMemo(() => dayjs(`${year}-12-31`, "YYYY-MM-DD", true), [year]);
-  const firstMonday = useMemo(
-    () => yearStart.subtract((yearStart.day() + 6) % 7, "day"),
-    [yearStart],
-  );
+  const firstSunday = useMemo(() => yearStart.subtract(yearStart.day(), "day"), [yearStart]);
 
   const availableYears = useMemo(() => {
     const years = new Set<number>();
@@ -112,8 +109,8 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
   useEffect(() => {
     if (hasInitialized.current) return;
     if (containerWidth <= 0) return; // wait for actual layout measurement
-    const todayMonday = today.subtract((today.day() + 6) % 7, "day");
-    const weekOffset = todayMonday.diff(firstMonday, "day") / 7;
+    const todaySunday = today.subtract(today.day(), "day");
+    const weekOffset = todaySunday.diff(firstSunday, "day") / 7;
     if (weekOffset > 0) {
       const page = Math.floor(weekOffset / columnsPerPage);
       if (page > 0 && page < totalPages) {
@@ -121,7 +118,7 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
       }
     }
     hasInitialized.current = true;
-  }, [columnsPerPage, containerWidth, today, firstMonday, totalPages]);
+  }, [columnsPerPage, containerWidth, today, firstSunday, totalPages]);
 
   // Jump to today's page when mode changes
   const prevModeRef = useRef(mode);
@@ -129,8 +126,8 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
     if (prevModeRef.current !== mode) {
       prevModeRef.current = mode;
       if (containerWidth > 0) {
-        const todayMonday = today.subtract((today.day() + 6) % 7, "day");
-        const weekOffset = todayMonday.diff(firstMonday, "day") / 7;
+        const todaySunday = today.subtract(today.day(), "day");
+        const weekOffset = todaySunday.diff(firstSunday, "day") / 7;
         if (weekOffset > 0) {
           const page = Math.floor(weekOffset / columnsPerPage);
           if (page > 0 && page < totalPages) {
@@ -139,7 +136,7 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
         }
       }
     }
-  }, [mode, containerWidth, today, firstMonday, columnsPerPage, totalPages]);
+  }, [mode, containerWidth, today, firstSunday, columnsPerPage, totalPages]);
 
   // Reset to page 0 when year changes
   useEffect(() => {
@@ -155,7 +152,7 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
     for (let r = 0; r < 7; r++) {
       const row: DayCell[] = [];
       for (let c = 0; c < pageColCount; c++) {
-        const date = firstMonday.add((startWeek + c) * 7 + r, "day");
+        const date = firstSunday.add((startWeek + c) * 7 + r, "day");
         const dateStr = date.format("YYYY-MM-DD");
         const inYear = mode !== "day" || date.year() === year;
         const key = bucketKey(date, mode);
@@ -171,13 +168,13 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
       result.push(row);
     }
     return result;
-  }, [allCells, year, mode, firstMonday, startWeek, pageColCount, today]);
+  }, [allCells, year, mode, firstSunday, startWeek, pageColCount, today]);
 
   const monthLabels = useMemo(() => {
     const labels: { col: number; label: string }[] = [];
     let lastMonth = -1;
     for (let col = 0; col < pageColCount; col++) {
-      const date = firstMonday.add((startWeek + col) * 7, "day");
+      const date = firstSunday.add((startWeek + col) * 7, "day");
       if (date.year() !== year) continue;
       const m = date.month();
       if (m !== lastMonth) {
@@ -186,18 +183,18 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
       }
     }
     return labels;
-  }, [year, firstMonday, startWeek, pageColCount]);
+  }, [year, firstSunday, startWeek, pageColCount]);
 
   const pageRangeLabel = useMemo(() => {
-    let startDate = firstMonday.add(startWeek * 7, "day");
-    let endDate = firstMonday.add((startWeek + pageColCount - 1) * 7 + 6, "day");
+    let startDate = firstSunday.add(startWeek * 7, "day");
+    let endDate = firstSunday.add((startWeek + pageColCount - 1) * 7 + 6, "day");
     if (startDate.isBefore(yearStart)) startDate = yearStart;
     if (endDate.isAfter(yearEnd)) endDate = yearEnd;
     const startLabel = startDate.format("M月");
     const endLabel = endDate.format("M月");
     if (startLabel === endLabel) return startLabel;
     return `${startLabel} - ${endLabel}`;
-  }, [firstMonday, startWeek, pageColCount, yearStart, yearEnd]);
+  }, [firstSunday, startWeek, pageColCount, yearStart, yearEnd]);
 
   const periodLabelText = useMemo(() => {
     if (mode === "day") return "天";
@@ -245,12 +242,12 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
 
   const cellTooltip = (cell: DayCell) => {
     if (mode === "day") {
-      return `${dayjs(cell.date).format("YYYY年M月D日")} (${WEEKDAYS[(dayjs(cell.date).day() + 6) % 7]})\n${formatCurrency(cell.amount)}  ·  ${cell.count} 筆`;
+      return `${dayjs(cell.date).format("YYYY年M月D日")} (${WEEKDAYS[dayjs(cell.date).day()]})\n${formatCurrency(cell.amount)}  ·  ${cell.count} 筆`;
     }
     if (mode === "week") {
-      const monday = dayjs(cell.date).subtract((dayjs(cell.date).day() + 6) % 7, "day");
-      const sunday = monday.add(6, "day");
-      return `${monday.format("M月D日")} - ${sunday.format("M月D日")}\n${formatCurrency(cell.amount)}  ·  ${cell.count} 筆`;
+      const sunday = dayjs(cell.date).subtract(dayjs(cell.date).day(), "day");
+      const saturday = sunday.add(6, "day");
+      return `${sunday.format("M月D日")} - ${saturday.format("M月D日")}\n${formatCurrency(cell.amount)}  ·  ${cell.count} 筆`;
     }
     return `${dayjs(cell.date).format("YYYY年M月")}\n${formatCurrency(cell.amount)}  ·  ${cell.count} 筆`;
   };
@@ -377,7 +374,7 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
                   );
                 })}
                 {grid.flatMap((rowCells, row) =>
-                  rowCells.map((cell, col) => {
+                  rowCells.flatMap((cell, col) => {
                     const bg = LEVEL_COLORS[cell.level];
                     const hasData = cell.amount > 0;
                     const showToday = cell.isToday;
@@ -402,19 +399,45 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
                         ? "inset 0 0 0 2px var(--mantine-color-blue-7)"
                         : undefined,
                     };
-                    if (!hasData) {
-                      return <div key={cell.date} style={style} />;
+                    // Detect month boundary: render separator between cells
+                    const cellDate = dayjs(cell.date, "YYYY-MM-DD", true);
+                    const prevDate = cellDate.subtract(1, "day");
+                    const isMonthStart = row > 0 && cellDate.month() !== prevDate.month();
+                    const sepStyle: React.CSSProperties = {
+                      gridColumn: col + 1,
+                      gridRow: row + 2,
+                      alignSelf: "start",
+                      height: mode === "day" ? CELL_GAP : 2,
+                      width: "100%",
+                      marginTop: mode === "day" ? `-${CELL_GAP}px` : "-1px",
+                      background:
+                        "light-dark(var(--mantine-color-violet-5), var(--mantine-color-violet-4))",
+                      pointerEvents: "none",
+                    };
+                    const elements: React.ReactNode[] = [];
+                    if (isMonthStart) {
+                      elements.push(<div key={`sep-${cell.date}`} style={sepStyle} />);
                     }
-                    return (
-                      <Tooltip key={cell.date} label={cellTooltip(cell)} withArrow openDelay={150}>
-                        <div
-                          style={style}
-                          onClick={() => setSelectedDate(cell.date)}
-                          onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.4)")}
-                          onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-                        />
-                      </Tooltip>
-                    );
+                    if (!hasData) {
+                      elements.push(<div key={cell.date} style={style} />);
+                    } else {
+                      elements.push(
+                        <Tooltip
+                          key={cell.date}
+                          label={cellTooltip(cell)}
+                          withArrow
+                          openDelay={150}
+                        >
+                          <div
+                            style={style}
+                            onClick={() => setSelectedDate(cell.date)}
+                            onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.4)")}
+                            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                          />
+                        </Tooltip>,
+                      );
+                    }
+                    return elements;
                   }),
                 )}
               </div>
@@ -482,9 +505,9 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
           const selected = dayjs(selectedDate, "YYYY-MM-DD", true);
           if (mode === "day") return `${selected.format("YYYY年M月D日")} 到期記錄`;
           if (mode === "week") {
-            const monday = selected.subtract((selected.day() + 6) % 7, "day");
-            const sunday = monday.add(6, "day");
-            return `${monday.format("M月D日")} - ${sunday.format("M月D日")} 到期記錄`;
+            const sunday = selected.subtract(selected.day(), "day");
+            const saturday = sunday.add(6, "day");
+            return `${sunday.format("M月D日")} - ${saturday.format("M月D日")} 到期記錄`;
           }
           return `${selected.format("YYYY年M月")} 到期記錄`;
         })()}
