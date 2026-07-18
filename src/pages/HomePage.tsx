@@ -29,7 +29,7 @@ export default function HomePage() {
 
   return (
     <div>
-      <Container size="sm" pt="md" pb={{ base: 80, sm: 16 }}>
+      <Container size="lg" pt="md" pb={{ base: 80, sm: 16 }}>
         <Stack gap="md">
           <Group justify="space-between">
             <div>

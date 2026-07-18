@@ -1,18 +1,8 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import {
-  ActionIcon,
-  Card,
-  Group,
-  SegmentedControl,
-  SimpleGrid,
-  Stack,
-  Text,
-  Tooltip,
-} from "@mantine/core";
-import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Card, Group, SegmentedControl, SimpleGrid, Stack, Text, Tooltip } from "@mantine/core";
 import dayjs from "dayjs";
 import { formatCurrency } from "../hooks/useCalculations";
-import { computeHeatmap, bucketKey, type HeatmapMode } from "../lib/heatmap";
+import { computeHeatmap, bucketKey, type HeatmapMode, type HeatmapCell } from "../lib/heatmap";
 import DepositListModal from "./DepositListModal";
 import type { DepositWithBank } from "../types";
 
@@ -38,44 +28,27 @@ const LEVEL_COLORS: Record<Level, string> = {
   4: "light-dark(var(--mantine-color-orange-8), var(--mantine-color-orange-2))",
 };
 
+const CURRENT_BORDER = "2px solid var(--mantine-color-blue-6)";
+const EMPTY_OPACITY = 0.5;
+
 const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
 
-const CELL_GAP = 2;
-const LABEL_COL = 18;
-const SIDE_PADDING = 0;
-const TARGET_CELL = 22;
-const TOTAL_WEEKS = 53;
-
-function useElementWidth<T extends HTMLElement>(): [React.RefObject<T | null>, number] {
-  const ref = useRef<T>(null);
-  const [width, setWidth] = useState(0);
-
-  useLayoutEffect(() => {
-    if (!ref.current) return;
-    setWidth(ref.current.clientWidth);
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (entry) setWidth(entry.contentRect.width);
-    });
-    observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, []);
-
-  return [ref, width];
-}
+const DAY_CELL_SIZE = 14;
+const DAY_CELL_GAP = 2;
+const LABEL_COL = 14;
+const MONTH_LABEL_HEIGHT = 14;
+const WEEK_LABEL_COL = 28;
+const WEEKS_PER_YEAR = 53;
 
 export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardProps) {
   const [year, setYear] = useState<number>(dayjs().year());
   const [mode, setMode] = useState<HeatmapMode>("day");
-  const [pageIndex, setPageIndex] = useState(0);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [containerRef, containerWidth] = useElementWidth<HTMLDivElement>();
+  const dayScrollRef = useRef<HTMLDivElement>(null);
 
   const today = useMemo(() => dayjs().startOf("day"), []);
-
   const yearStart = useMemo(() => dayjs(`${year}-01-01`, "YYYY-MM-DD", true), [year]);
-  const yearEnd = useMemo(() => dayjs(`${year}-12-31`, "YYYY-MM-DD", true), [year]);
-  const firstSunday = useMemo(() => yearStart.subtract(yearStart.day(), "day"), [yearStart]);
+  const weekStart = useMemo(() => yearStart.subtract(yearStart.day(), "day"), [yearStart]);
 
   const availableYears = useMemo(() => {
     const years = new Set<number>();
@@ -89,66 +62,15 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
     [deposits, year],
   );
 
-  const columnsPerPage = useMemo(() => {
-    if (containerWidth <= 0) return 26;
-    const usable = containerWidth - LABEL_COL - SIDE_PADDING * 2;
-    return Math.max(7, Math.floor(usable / (TARGET_CELL + CELL_GAP)));
-  }, [containerWidth]);
-
-  const totalPages = Math.ceil(TOTAL_WEEKS / columnsPerPage);
-  const clampedPageIndex = Math.min(pageIndex, Math.max(0, totalPages - 1));
-  const startWeek = clampedPageIndex * columnsPerPage;
-  const pageColCount = Math.min(columnsPerPage, TOTAL_WEEKS - startWeek);
-
-  // Default to the page containing today on initial mount (after layout measurement)
-  const hasInitialized = useRef(false);
-  useEffect(() => {
-    if (hasInitialized.current) return;
-    if (containerWidth <= 0) return; // wait for actual layout measurement
-    const todaySunday = today.subtract(today.day(), "day");
-    const weekOffset = todaySunday.diff(firstSunday, "day") / 7;
-    if (weekOffset > 0) {
-      const page = Math.floor(weekOffset / columnsPerPage);
-      if (page > 0 && page < totalPages) {
-        setPageIndex(page);
-      }
-    }
-    hasInitialized.current = true;
-  }, [columnsPerPage, containerWidth, today, firstSunday, totalPages]);
-
-  // Jump to today's page when mode changes
-  const prevModeRef = useRef(mode);
-  useEffect(() => {
-    if (prevModeRef.current !== mode) {
-      prevModeRef.current = mode;
-      if (containerWidth > 0) {
-        const todaySunday = today.subtract(today.day(), "day");
-        const weekOffset = todaySunday.diff(firstSunday, "day") / 7;
-        if (weekOffset > 0) {
-          const page = Math.floor(weekOffset / columnsPerPage);
-          if (page > 0 && page < totalPages) {
-            setPageIndex(page);
-          }
-        }
-      }
-    }
-  }, [mode, containerWidth, today, firstSunday, columnsPerPage, totalPages]);
-
-  // Reset to page 0 when year changes
-  useEffect(() => {
-    setPageIndex(0);
-  }, [year]);
-
   const allCells = useMemo(() => computeHeatmap(deposits, year, mode), [deposits, year, mode]);
 
-  const grid = useMemo(() => {
+  const dayGrid = useMemo<DayCell[][]>(() => {
     const cellMap = new Map(allCells.map((c) => [c.key, c]));
     const result: DayCell[][] = [];
-
     for (let r = 0; r < 7; r++) {
       const row: DayCell[] = [];
-      for (let c = 0; c < pageColCount; c++) {
-        const date = firstSunday.add((startWeek + c) * 7 + r, "day");
+      for (let c = 0; c < WEEKS_PER_YEAR; c++) {
+        const date = weekStart.add(c * 7 + r, "day");
         const dateStr = date.format("YYYY-MM-DD");
         const inYear = mode !== "day" || date.year() === year;
         const key = bucketKey(date, mode);
@@ -164,13 +86,13 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
       result.push(row);
     }
     return result;
-  }, [allCells, year, mode, firstSunday, startWeek, pageColCount, today]);
+  }, [allCells, year, mode, weekStart, today]);
 
   const monthLabels = useMemo(() => {
     const labels: { col: number; label: string }[] = [];
     let lastMonth = -1;
-    for (let col = 0; col < pageColCount; col++) {
-      const date = firstSunday.add((startWeek + col) * 7, "day");
+    for (let col = 0; col < WEEKS_PER_YEAR; col++) {
+      const date = weekStart.add(col * 7, "day");
       if (date.year() !== year) continue;
       const m = date.month();
       if (m !== lastMonth) {
@@ -179,18 +101,7 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
       }
     }
     return labels;
-  }, [year, firstSunday, startWeek, pageColCount]);
-
-  const pageRangeLabel = useMemo(() => {
-    let startDate = firstSunday.add(startWeek * 7, "day");
-    let endDate = firstSunday.add((startWeek + pageColCount - 1) * 7 + 6, "day");
-    if (startDate.isBefore(yearStart)) startDate = yearStart;
-    if (endDate.isAfter(yearEnd)) endDate = yearEnd;
-    const startLabel = startDate.format("M月");
-    const endLabel = endDate.format("M月");
-    if (startLabel === endLabel) return startLabel;
-    return `${startLabel} - ${endLabel}`;
-  }, [firstSunday, startWeek, pageColCount, yearStart, yearEnd]);
+  }, [weekStart, year]);
 
   const periodLabelText = useMemo(() => {
     if (mode === "day") return "天";
@@ -248,7 +159,246 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
     return `${dayjs(cell.date).format("YYYY年M月")}\n${formatCurrency(cell.amount)}  ·  ${cell.count} 筆`;
   };
 
-  const cellSize = TARGET_CELL;
+  useEffect(() => {
+    if (mode !== "day") return;
+    if (today.year() !== year) return;
+    const container = dayScrollRef.current;
+    if (!container) return;
+    const daysSinceStart = today.diff(weekStart, "day");
+    if (daysSinceStart < 0) return;
+    const todayCol = Math.floor(daysSinceStart / 7);
+    const todayX = LABEL_COL + todayCol * (DAY_CELL_SIZE + DAY_CELL_GAP);
+    const visibleWidth = container.clientWidth;
+    const target = Math.max(0, todayX - visibleWidth / 2 + DAY_CELL_SIZE / 2);
+    container.scrollLeft = target;
+  }, [mode, year, today, weekStart]);
+
+  function renderDayGrid() {
+    return (
+      <div
+        ref={dayScrollRef}
+        style={{
+          overflowX: "auto",
+          overflowY: "hidden",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            gap: DAY_CELL_GAP,
+            width: "fit-content",
+          }}
+        >
+          <Stack gap={DAY_CELL_GAP} style={{ width: LABEL_COL, flexShrink: 0 }}>
+            <div style={{ height: MONTH_LABEL_HEIGHT }} />
+            {WEEKDAYS.map((w) => (
+              <div
+                key={w}
+                style={{
+                  height: DAY_CELL_SIZE,
+                  fontSize: 9,
+                  color: "var(--mantine-color-dimmed)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {w}
+              </div>
+            ))}
+          </Stack>
+          <div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: `repeat(${WEEKS_PER_YEAR}, ${DAY_CELL_SIZE}px)`,
+                columnGap: DAY_CELL_GAP,
+                height: MONTH_LABEL_HEIGHT,
+              }}
+            >
+              {monthLabels.map((m, i) => {
+                const next = monthLabels[i + 1];
+                const span = next ? next.col - m.col : WEEKS_PER_YEAR - m.col;
+                return (
+                  <div
+                    key={`${m.col}-${m.label}`}
+                    style={{
+                      gridColumn: `${m.col + 1} / span ${span}`,
+                      fontSize: 9,
+                      color: "var(--mantine-color-dimmed)",
+                      fontWeight: 500,
+                      display: "flex",
+                      alignItems: "flex-end",
+                      paddingBottom: 1,
+                    }}
+                  >
+                    {m.label}
+                  </div>
+                );
+              })}
+            </div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: `repeat(${WEEKS_PER_YEAR}, ${DAY_CELL_SIZE}px)`,
+                gridTemplateRows: `repeat(7, ${DAY_CELL_SIZE}px)`,
+                columnGap: DAY_CELL_GAP,
+                rowGap: DAY_CELL_GAP,
+              }}
+            >
+              {dayGrid.flatMap((rowCells, row) =>
+                rowCells.map((cell, col) => {
+                  const bg = LEVEL_COLORS[cell.level];
+                  const hasData = cell.amount > 0;
+                  const style: React.CSSProperties = {
+                    gridColumn: col + 1,
+                    gridRow: row + 1,
+                    width: DAY_CELL_SIZE,
+                    height: DAY_CELL_SIZE,
+                    backgroundColor: bg,
+                    borderRadius: 3,
+                    cursor: hasData ? "pointer" : "default",
+                    transition: "transform 0.1s",
+                    outline: cell.isToday ? "1.5px solid var(--mantine-color-blue-6)" : undefined,
+                    outlineOffset: cell.isToday ? -1 : undefined,
+                    opacity: hasData ? 1 : EMPTY_OPACITY,
+                  };
+                  if (!hasData) {
+                    return <div key={cell.date} style={style} />;
+                  }
+                  return (
+                    <Tooltip key={cell.date} label={cellTooltip(cell)} withArrow openDelay={150}>
+                      <div
+                        style={style}
+                        onClick={() => setSelectedDate(cell.date)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setSelectedDate(cell.date);
+                          }
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        aria-label={cellTooltip(cell)}
+                        onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.4)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                      />
+                    </Tooltip>
+                  );
+                }),
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function renderWeekList() {
+    const monthGroups = new Map<string, HeatmapCell[]>();
+    allCells.forEach((cell) => {
+      const monthKey = dayjs(cell.periodStart, "YYYY-MM-DD", true).format("M月");
+      if (!monthGroups.has(monthKey)) monthGroups.set(monthKey, []);
+      monthGroups.get(monthKey)!.push(cell);
+    });
+    return (
+      <Stack gap={5}>
+        {Array.from(monthGroups.entries()).map(([monthLabel, cells]) => (
+          <Group key={monthLabel} gap="xs" wrap="nowrap" align="center">
+            <Text size="xs" w={WEEK_LABEL_COL} c="dimmed" ta="right">
+              {monthLabel}
+            </Text>
+            <div style={{ display: "flex", gap: 4, flex: 1 }}>
+              {cells.map((cell) => {
+                const hasData = cell.amount > 0;
+                const start = dayjs(cell.periodStart);
+                const end = dayjs(cell.periodEnd);
+                const tooltipLabel = hasData
+                  ? `${start.format("M/D")} - ${end.format("M/D")}\n${formatCurrency(cell.amount)} · ${cell.count} 筆`
+                  : `${start.format("M/D")} - ${end.format("M/D")}\n無到期`;
+                return (
+                  <Tooltip key={cell.key} label={tooltipLabel} withArrow openDelay={150}>
+                    <div
+                      onClick={hasData ? () => setSelectedDate(cell.periodStart) : undefined}
+                      onKeyDown={(e) => {
+                        if (hasData && (e.key === "Enter" || e.key === " ")) {
+                          e.preventDefault();
+                          setSelectedDate(cell.periodStart);
+                        }
+                      }}
+                      role={hasData ? "button" : undefined}
+                      tabIndex={hasData ? 0 : undefined}
+                      aria-label={hasData ? tooltipLabel : undefined}
+                      style={{
+                        flex: 1,
+                        height: 22,
+                        borderRadius: 3,
+                        background: LEVEL_COLORS[cell.level],
+                        cursor: hasData ? "pointer" : "default",
+                        opacity: hasData ? 1 : EMPTY_OPACITY,
+                        boxSizing: "border-box",
+                        border: cell.isCurrent ? CURRENT_BORDER : "2px solid transparent",
+                      }}
+                    />
+                  </Tooltip>
+                );
+              })}
+            </div>
+          </Group>
+        ))}
+      </Stack>
+    );
+  }
+
+  function renderMonthGrid() {
+    return (
+      <SimpleGrid cols={{ base: 2, xs: 3, sm: 4 }} spacing="xs">
+        {allCells.map((cell) => {
+          const date = dayjs(cell.periodStart);
+          const hasData = cell.amount > 0;
+          return (
+            <Card
+              key={cell.key}
+              padding="sm"
+              radius="md"
+              withBorder
+              onClick={hasData ? () => setSelectedDate(cell.periodStart) : undefined}
+              onKeyDown={(e) => {
+                if (hasData && (e.key === "Enter" || e.key === " ")) {
+                  e.preventDefault();
+                  setSelectedDate(cell.periodStart);
+                }
+              }}
+              role={hasData ? "button" : undefined}
+              tabIndex={hasData ? 0 : undefined}
+              aria-label={
+                hasData
+                  ? `${date.format("YYYY年M月")} ${formatCurrency(cell.amount)} ${cell.count} 筆`
+                  : undefined
+              }
+              style={{
+                cursor: hasData ? "pointer" : "default",
+                background: LEVEL_COLORS[cell.level],
+                opacity: hasData ? 1 : EMPTY_OPACITY,
+                borderColor: cell.isCurrent ? "var(--mantine-color-blue-5)" : undefined,
+                borderWidth: cell.isCurrent ? 2 : 1,
+              }}
+            >
+              <Text size="xs" fw={600} c={hasData ? undefined : "dimmed"}>
+                {date.format("M月")}
+              </Text>
+              <Text size="sm" fw={700} mt={2} style={{ wordBreak: "break-all" }}>
+                {hasData ? formatCurrency(cell.amount) : "—"}
+              </Text>
+              <Text size="xs" c={hasData ? "dimmed" : undefined} mt={2}>
+                {cell.count} 筆
+              </Text>
+            </Card>
+          );
+        })}
+      </SimpleGrid>
+    );
+  }
 
   return (
     <Card padding="lg" radius="lg" withBorder>
@@ -267,40 +417,13 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
           />
         </Group>
 
-        <Group justify="space-between" wrap="wrap" gap="xs">
-          <SegmentedControl
-            size="xs"
-            value={String(year)}
-            onChange={(v) => setYear(Number(v))}
-            data={availableYears.map((y) => ({ label: `${y}`, value: String(y) }))}
-            styles={{ root: { minWidth: 140 } }}
-          />
-          {totalPages > 1 && (
-            <Group gap={4} wrap="nowrap">
-              <ActionIcon
-                variant="subtle"
-                size="sm"
-                disabled={clampedPageIndex === 0}
-                onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
-                aria-label="上一段"
-              >
-                <IconChevronLeft size={16} />
-              </ActionIcon>
-              <Text size="xs" c="dimmed" style={{ minWidth: 110, textAlign: "center" }}>
-                {pageRangeLabel}
-              </Text>
-              <ActionIcon
-                variant="subtle"
-                size="sm"
-                disabled={clampedPageIndex >= totalPages - 1}
-                onClick={() => setPageIndex((p) => Math.min(totalPages - 1, p + 1))}
-                aria-label="下一段"
-              >
-                <IconChevronRight size={16} />
-              </ActionIcon>
-            </Group>
-          )}
-        </Group>
+        <SegmentedControl
+          size="xs"
+          value={String(year)}
+          onChange={(v) => setYear(Number(v))}
+          data={availableYears.map((y) => ({ label: `${y}`, value: String(y) }))}
+          styles={{ root: { minWidth: 140 } }}
+        />
 
         {!yearHasData ? (
           <Stack align="center" py="lg" gap={4}>
@@ -311,134 +434,12 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
               切換至有資料的年份查看
             </Text>
           </Stack>
+        ) : mode === "day" ? (
+          renderDayGrid()
+        ) : mode === "week" ? (
+          renderWeekList()
         ) : (
-          <div ref={containerRef} style={{ overflow: "hidden" }}>
-            <div
-              style={{
-                display: "flex",
-                gap: CELL_GAP,
-                width: "fit-content",
-                maxWidth: "100%",
-              }}
-            >
-              <Stack gap={mode === "day" ? CELL_GAP : 0} style={{ width: LABEL_COL }}>
-                <div style={{ height: 14 }} />
-                {WEEKDAYS.map((w) => (
-                  <div
-                    key={w}
-                    style={{
-                      height: cellSize,
-                      fontSize: 9,
-                      color: "var(--mantine-color-dimmed)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    {w}
-                  </div>
-                ))}
-              </Stack>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: `repeat(${pageColCount}, ${cellSize}px)`,
-                  gridTemplateRows: `14px repeat(7, ${cellSize}px)`,
-                  columnGap: CELL_GAP,
-                  rowGap: mode === "day" ? CELL_GAP : 0,
-                }}
-              >
-                {monthLabels.map((m, i) => {
-                  const next = monthLabels[i + 1];
-                  const span = next ? next.col - m.col : pageColCount - m.col;
-                  return (
-                    <div
-                      key={`${m.col}-${m.label}`}
-                      style={{
-                        gridColumn: `${m.col + 1} / span ${span}`,
-                        gridRow: 1,
-                        fontSize: 10,
-                        color: "var(--mantine-color-dimmed)",
-                        fontWeight: 500,
-                        display: "flex",
-                        alignItems: "flex-end",
-                        paddingBottom: 1,
-                      }}
-                    >
-                      {m.label}
-                    </div>
-                  );
-                })}
-                {grid.flatMap((rowCells, row) =>
-                  rowCells.flatMap((cell, col) => {
-                    const bg = LEVEL_COLORS[cell.level];
-                    const hasData = cell.amount > 0;
-                    const showToday = cell.isToday;
-                    const isAggregated = mode !== "day";
-                    const radius = isAggregated
-                      ? row === 0
-                        ? "2px 2px 0 0"
-                        : row === 6
-                          ? "0 0 2px 2px"
-                          : 0
-                      : 2;
-                    const style: React.CSSProperties = {
-                      gridColumn: col + 1,
-                      gridRow: row + 2,
-                      width: cellSize,
-                      height: cellSize,
-                      backgroundColor: bg,
-                      borderRadius: radius,
-                      cursor: hasData ? "pointer" : "default",
-                      transition: "transform 0.1s",
-                      boxShadow: showToday
-                        ? "inset 0 0 0 2px var(--mantine-color-blue-7)"
-                        : undefined,
-                    };
-                    // Detect month boundary: render separator between cells
-                    const cellDate = dayjs(cell.date, "YYYY-MM-DD", true);
-                    const prevDate = cellDate.subtract(1, "day");
-                    const isMonthStart = row > 0 && cellDate.month() !== prevDate.month();
-                    const sepStyle: React.CSSProperties = {
-                      gridColumn: col + 1,
-                      gridRow: row + 2,
-                      alignSelf: "start",
-                      height: mode === "day" ? CELL_GAP : 2,
-                      width: "100%",
-                      marginTop: mode === "day" ? `-${CELL_GAP}px` : "-1px",
-                      background:
-                        "light-dark(var(--mantine-color-violet-5), var(--mantine-color-violet-4))",
-                      pointerEvents: "none",
-                    };
-                    const elements: React.ReactNode[] = [];
-                    if (isMonthStart) {
-                      elements.push(<div key={`sep-${cell.date}`} style={sepStyle} />);
-                    }
-                    if (!hasData) {
-                      elements.push(<div key={cell.date} style={style} />);
-                    } else {
-                      elements.push(
-                        <Tooltip
-                          key={cell.date}
-                          label={cellTooltip(cell)}
-                          withArrow
-                          openDelay={150}
-                        >
-                          <div
-                            style={style}
-                            onClick={() => setSelectedDate(cell.date)}
-                            onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.4)")}
-                            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-                          />
-                        </Tooltip>,
-                      );
-                    }
-                    return elements;
-                  }),
-                )}
-              </div>
-            </div>
-          </div>
+          renderMonthGrid()
         )}
 
         {yearHasData && (
