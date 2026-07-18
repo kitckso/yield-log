@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Card, Text, Stack, Group, Badge, Divider, Button } from "@mantine/core";
-import { formatCurrency } from "../hooks/useCalculations";
+import { formatCurrency, formatRelativeDays } from "../hooks/useCalculations";
 import type { DepositWithBank } from "../types";
 import dayjs from "dayjs";
 
@@ -12,6 +12,16 @@ interface MaturityTimelineCardProps {
 }
 
 const INITIAL_SHOW = 5;
+
+function groupByMonth(items: DepositWithBank[]): [string, DepositWithBank[]][] {
+  const groups = new Map<string, DepositWithBank[]>();
+  for (const d of items) {
+    const key = dayjs(d.end_date, "YYYY-MM-DD", true).format("YYYY年M月");
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(d);
+  }
+  return Array.from(groups.entries());
+}
 
 export default function MaturityTimelineCard({
   upcoming,
@@ -26,6 +36,8 @@ export default function MaturityTimelineCard({
   const displayRecent = showAll ? recentlyMatured : recentlyMatured.slice(0, INITIAL_SHOW);
   const displayUpcoming = showAll ? upcoming : upcoming.slice(0, INITIAL_SHOW);
   const hasMore = recentlyMatured.length > INITIAL_SHOW || upcoming.length > INITIAL_SHOW;
+
+  const futureGroups = groupByMonth(displayUpcoming);
 
   function renderItem(d: DepositWithBank) {
     const today = dayjs().startOf("day");
@@ -71,8 +83,8 @@ export default function MaturityTimelineCard({
                 : isTomorrow
                   ? "明天到期"
                   : matured
-                    ? `${Math.abs(daysDiff)} 天前到期`
-                    : `${daysDiff} 天後到期`}
+                    ? `${formatRelativeDays(daysDiff)}前到期`
+                    : `${formatRelativeDays(daysDiff)}後到期`}
           </Text>
         </Stack>
         <Stack gap={0} align="end">
@@ -87,15 +99,27 @@ export default function MaturityTimelineCard({
     );
   }
 
+  function renderGroup([month, items]: [string, DepositWithBank[]], isFirst: boolean) {
+    return (
+      <Stack gap="xs" key={month}>
+        {!isFirst && <Divider label={month} labelPosition="center" pt={4} pb={2} />}
+        {items.map(renderItem)}
+      </Stack>
+    );
+  }
+
+  const hasPast = displayRecent.length > 0;
+  const hasFuture = futureGroups.length > 0;
+
   return (
     <Card padding="lg" radius="lg" withBorder>
       <Text fw={600} mb="md">
         到期動態
       </Text>
       <Stack gap="sm">
-        {displayRecent.length > 0 && displayRecent.map(renderItem)}
-        {displayRecent.length > 0 && displayUpcoming.length > 0 && <Divider />}
-        {displayUpcoming.length > 0 && displayUpcoming.map(renderItem)}
+        {displayRecent.map(renderItem)}
+        {hasPast && hasFuture && <Divider />}
+        {futureGroups.map((g, i) => renderGroup(g, i === 0))}
         {hasMore && (
           <Button variant="subtle" size="compact-sm" fullWidth onClick={() => setShowAll(!showAll)}>
             {showAll ? "收起" : `顯示全部 (${recentlyMatured.length + upcoming.length})`}

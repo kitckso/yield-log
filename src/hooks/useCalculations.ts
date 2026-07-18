@@ -79,6 +79,18 @@ export function formatDate(dateStr: string): string {
   return `${date.format("YYYY年MM月DD日")}(${weekdays[date.day()]})`;
 }
 
+export function formatRelativeDays(days: number): string {
+  const abs = Math.abs(days);
+  const years = Math.floor(abs / 365);
+  const months = Math.floor((abs % 365) / 30);
+  const remDays = abs % 30;
+  const parts: string[] = [];
+  if (years > 0) parts.push(`${years}年`);
+  if (months > 0) parts.push(`${months}月`);
+  if (remDays > 0 || parts.length === 0) parts.push(`${remDays}天`);
+  return parts.join("");
+}
+
 export function getErrorMessage(err: unknown): string {
   if (typeof err === "object" && err !== null) {
     const e = err as Record<string, unknown>;
