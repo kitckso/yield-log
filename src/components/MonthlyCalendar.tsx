@@ -1,20 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  Badge,
-  Card,
-  Group,
-  Stack,
-  Text,
-  Title,
-  ActionIcon,
-  SimpleGrid,
-  Modal,
-  ScrollArea,
-} from "@mantine/core";
+import { Card, Group, Stack, Text, Title, ActionIcon, SimpleGrid } from "@mantine/core";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { formatCurrency, isMatured } from "../hooks/useCalculations";
+import DepositListModal from "./DepositListModal";
 import type { DepositWithBank } from "../types";
 
 interface MonthlyCalendarProps {
@@ -32,7 +21,6 @@ interface MonthGroup {
 }
 
 export default function MonthlyCalendar({ deposits, year, onYearChange }: MonthlyCalendarProps) {
-  const navigate = useNavigate();
   const [selectedMonth, setSelectedMonth] = useState<MonthGroup | null>(null);
   const today = dayjs();
   const currentMonth = today.month();
@@ -338,7 +326,7 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
         {months.map(renderMonth)}
       </SimpleGrid>
 
-      <Modal
+      <DepositListModal
         opened={!!selectedMonth}
         onClose={() => setSelectedMonth(null)}
         title={
@@ -346,76 +334,8 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
             ? `${selectedMonth.label} 到期記錄（${selectedMonth.deposits.length} 筆）`
             : ""
         }
-        radius="lg"
-        size="sm"
-        scrollAreaComponent={ScrollArea.Autosize}
-        centered
-        styles={{
-          content: {
-            maxHeight: "calc(100dvh - var(--modal-y-offset, 5dvh) - 140px)",
-            overflow: "hidden",
-          },
-          body: {
-            maxHeight: "calc(100dvh - var(--modal-y-offset, 5dvh) - 200px)",
-          },
-        }}
-      >
-        <Stack gap="xs">
-          {modalDeposits.map((d) => {
-            const matured = isMatured(d.end_date);
-            return (
-              <div
-                key={d.id}
-                onClick={() => {
-                  navigate(`/deposits/${d.id}/detail`);
-                  setSelectedMonth(null);
-                }}
-                style={{
-                  borderLeft: `4px solid ${
-                    matured ? "var(--mantine-color-gray-4)" : "var(--mantine-color-teal-5)"
-                  }`,
-                  padding: "8px 12px",
-                  borderRadius: 6,
-                  opacity: matured ? 0.6 : 1,
-                  cursor: "pointer",
-                  transition: "background-color 0.15s",
-                }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.backgroundColor = "var(--mantine-color-gray-0)")
-                }
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-              >
-                <Group justify="space-between" wrap="nowrap" mb={4}>
-                  <Group gap={6} wrap="nowrap">
-                    <Text size="sm" fw={700}>
-                      {dayjs(d.end_date).format("D日")}
-                    </Text>
-                    <Badge size="sm" variant="light" color="gray" radius="sm" fw={500}>
-                      {d.bank_name}
-                    </Badge>
-                  </Group>
-                  <Text size="xs" c="dimmed">
-                    {d.interest_rate}%
-                  </Text>
-                </Group>
-                <Group justify="space-between" wrap="nowrap">
-                  <Text size="sm" fw={700}>
-                    {formatCurrency(d.amount)}
-                  </Text>
-                  <Group gap={4} wrap="nowrap">
-                    <Text size="xs" c="dimmed">
-                      利息
-                    </Text>
-                    <Text size="xs" c="green" fw={700}>
-                      {formatCurrency(d.interest)}
-                    </Text>
-                  </Group>
-                </Group>
-              </div>
-            );
-          })}
-        </Stack>
-      </Modal>
+        deposits={modalDeposits}
+      />
     </Stack>
   );
 }
