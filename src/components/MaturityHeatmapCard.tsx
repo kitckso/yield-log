@@ -138,7 +138,7 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
         const end = dayjs(d.end_date, "YYYY-MM-DD", true);
         if (mode === "day") return end.isSame(selected, "day");
         if (mode === "week") {
-          const start = selected.subtract((selected.day() + 6) % 7, "day");
+          const start = selected.subtract(selected.day(), "day");
           const weekEnd = start.add(6, "day");
           return !end.isBefore(start) && !end.isAfter(weekEnd) && end.year() === year;
         }

@@ -16,7 +16,7 @@ export interface HeatmapCell {
 
 export function bucketKey(d: dayjs.Dayjs, mode: HeatmapMode): string {
   if (mode === "day") return d.format("YYYY-MM-DD");
-  if (mode === "week") return d.subtract((d.day() + 6) % 7, "day").format("YYYY-MM-DD");
+  if (mode === "week") return d.subtract(d.day(), "day").format("YYYY-MM-DD");
   return d.format("YYYY-MM");
 }
 
@@ -69,11 +69,11 @@ export function computeHeatmap(
   const cells: HeatmapCell[] = [];
 
   if (mode === "day" || mode === "week") {
-    const firstMonday = yearStart.subtract((yearStart.day() + 6) % 7, "day");
-    const lastWeekMonday = yearEnd.subtract((yearEnd.day() + 6) % 7, "day");
+    const firstSunday = yearStart.subtract(yearStart.day(), "day");
+    const lastWeekSunday = yearEnd.subtract(yearEnd.day(), "day");
     const seen = new Set<string>();
-    let cursor = firstMonday;
-    while (cursor.isSame(lastWeekMonday) || cursor.isBefore(lastWeekMonday)) {
+    let cursor = firstSunday;
+    while (cursor.isSame(lastWeekSunday) || cursor.isBefore(lastWeekSunday)) {
       if (mode === "day") {
         for (let row = 0; row < 7; row++) {
           const date = cursor.add(row, "day");
