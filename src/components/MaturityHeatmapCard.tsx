@@ -28,7 +28,8 @@ const LEVEL_COLORS: Record<Level, string> = {
   4: "light-dark(var(--mantine-color-orange-8), var(--mantine-color-orange-2))",
 };
 
-const CURRENT_BORDER = "2px solid var(--mantine-color-blue-6)";
+const CURRENT_COLOR = "light-dark(var(--mantine-color-blue-6), var(--mantine-color-blue-2))";
+const CURRENT_BORDER = `2px solid ${CURRENT_COLOR}`;
 const EMPTY_OPACITY = 0.5;
 
 const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
@@ -259,9 +260,9 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
                     borderRadius: 3,
                     cursor: hasData ? "pointer" : "default",
                     transition: "transform 0.1s",
-                    outline: cell.isToday ? "1.5px solid var(--mantine-color-blue-6)" : undefined,
-                    outlineOffset: cell.isToday ? -1 : undefined,
-                    opacity: hasData ? 1 : EMPTY_OPACITY,
+                    outline: cell.isToday ? CURRENT_BORDER : undefined,
+                    outlineOffset: cell.isToday ? -2 : undefined,
+                    opacity: hasData || cell.isToday ? 1 : EMPTY_OPACITY,
                   };
                   if (!hasData) {
                     return <div key={cell.date} style={style} />;
@@ -335,7 +336,7 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
                         borderRadius: 3,
                         background: LEVEL_COLORS[cell.level],
                         cursor: hasData ? "pointer" : "default",
-                        opacity: hasData ? 1 : EMPTY_OPACITY,
+                        opacity: hasData || cell.isCurrent ? 1 : EMPTY_OPACITY,
                         boxSizing: "border-box",
                         border: cell.isCurrent ? CURRENT_BORDER : "2px solid transparent",
                       }}
@@ -379,8 +380,8 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
               style={{
                 cursor: hasData ? "pointer" : "default",
                 background: LEVEL_COLORS[cell.level],
-                opacity: hasData ? 1 : EMPTY_OPACITY,
-                borderColor: cell.isCurrent ? "var(--mantine-color-blue-5)" : undefined,
+                opacity: hasData || cell.isCurrent ? 1 : EMPTY_OPACITY,
+                borderColor: cell.isCurrent ? CURRENT_COLOR : undefined,
                 borderWidth: cell.isCurrent ? 2 : 1,
               }}
             >
