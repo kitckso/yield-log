@@ -299,7 +299,12 @@ export default function DepositForm() {
         {!isEditing && recentAmounts.length > 0 && (
           <Group gap={4}>
             {recentAmounts.map((v) => (
-              <Button key={v} size="compact-xs" variant="light" onClick={() => setAmount(v)}>
+              <Button
+                key={v}
+                size="compact-xs"
+                variant={amount === v ? "filled" : "light"}
+                onClick={() => setAmount(v)}
+              >
                 {v.toLocaleString("en-HK")}
               </Button>
             ))}
@@ -328,7 +333,7 @@ export default function DepositForm() {
               <Button
                 key={`${p.value}-${p.unit}`}
                 size="compact-xs"
-                variant="light"
+                variant={periodValue === p.value && periodUnit === p.unit ? "filled" : "light"}
                 onClick={() => {
                   setPeriodValue(p.value);
                   setPeriodUnit(p.unit);
@@ -352,7 +357,12 @@ export default function DepositForm() {
         {!isEditing && recentRates.length > 0 && (
           <Group gap={4}>
             {recentRates.map((v) => (
-              <Button key={v} size="compact-xs" variant="light" onClick={() => setInterestRate(v)}>
+              <Button
+                key={v}
+                size="compact-xs"
+                variant={interestRate === v ? "filled" : "light"}
+                onClick={() => setInterestRate(v)}
+              >
                 {v}%
               </Button>
             ))}
