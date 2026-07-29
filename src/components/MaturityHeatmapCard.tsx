@@ -298,6 +298,7 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
   function renderWeekList() {
     const monthGroups = new Map<string, HeatmapCell[]>();
     allCells.forEach((cell) => {
+      if (dayjs(cell.periodStart, "YYYY-MM-DD", true).year() !== year) return;
       const monthKey = dayjs(cell.periodStart, "YYYY-MM-DD", true).format("M月");
       if (!monthGroups.has(monthKey)) monthGroups.set(monthKey, []);
       monthGroups.get(monthKey)!.push(cell);
