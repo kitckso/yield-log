@@ -49,6 +49,7 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
 
   const today = useMemo(() => dayjs().startOf("day"), []);
   const yearStart = useMemo(() => dayjs(`${year}-01-01`, "YYYY-MM-DD", true), [year]);
+  const yearEnd = useMemo(() => dayjs(`${year}-12-31`, "YYYY-MM-DD", true), [year]);
   const weekStart = useMemo(() => yearStart.subtract(yearStart.day(), "day"), [yearStart]);
 
   const availableYears = useMemo(() => {
@@ -141,12 +142,14 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
         if (mode === "week") {
           const start = selected.subtract(selected.day(), "day");
           const weekEnd = start.add(6, "day");
-          return !end.isBefore(start) && !end.isAfter(weekEnd) && end.year() === year;
+          const clampedStart = start.isBefore(yearStart) ? yearStart : start;
+          const clampedEnd = weekEnd.isAfter(yearEnd) ? yearEnd : weekEnd;
+          return !end.isBefore(clampedStart) && !end.isAfter(clampedEnd);
         }
         return end.year() === selected.year() && end.month() === selected.month();
       })
       .sort((a, b) => a.end_date.localeCompare(b.end_date));
-  }, [selectedDate, deposits, mode, year]);
+  }, [selectedDate, deposits, mode, yearStart, yearEnd]);
 
   const cellTooltip = (cell: DayCell) => {
     if (mode === "day") {
@@ -340,8 +343,20 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
                         opacity: hasData || cell.isCurrent ? 1 : EMPTY_OPACITY,
                         boxSizing: "border-box",
                         border: cell.isCurrent ? CURRENT_BORDER : "2px solid transparent",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 9,
+                        fontWeight: 600,
+                        color:
+                          "light-dark(var(--mantine-color-dark-9), var(--mantine-color-dark-1))",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        minWidth: 0,
                       }}
-                    />
+                    >
+                      {`${start.format("D")}-${end.format("D")}`}
+                    </div>
                   </Tooltip>
                 );
               })}
@@ -375,7 +390,7 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
               tabIndex={hasData ? 0 : undefined}
               aria-label={
                 hasData
-                  ? `${date.format("YYYY年M月")} ${formatCurrency(cell.amount)} ${cell.count} 筆`
+                  ? `${date.format("YYYY年M月")} 到期 ${formatCurrency(cell.amount)}，利息 ${formatCurrency(cell.interest)}，${cell.count} 筆`
                   : undefined
               }
               style={{
@@ -392,7 +407,16 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
               <Text size="sm" fw={700} mt={2} style={{ wordBreak: "break-all" }}>
                 {hasData ? formatCurrency(cell.amount) : "—"}
               </Text>
-              <Text size="xs" c={hasData ? "dimmed" : undefined} mt={2}>
+              <Text
+                size="xs"
+                mt={2}
+                fw={600}
+                c={hasData ? undefined : "dimmed"}
+                style={{ wordBreak: "break-all" }}
+              >
+                {hasData ? `利息 ${formatCurrency(cell.interest)}` : "—"}
+              </Text>
+              <Text size="xs" mt={2} fw={700}>
                 {cell.count} 筆
               </Text>
             </Card>
@@ -506,7 +530,9 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
           if (mode === "week") {
             const sunday = selected.subtract(selected.day(), "day");
             const saturday = sunday.add(6, "day");
-            return `${sunday.format("M月D日")} - ${saturday.format("M月D日")} 到期記錄`;
+            const from = sunday.isBefore(yearStart) ? yearStart : sunday;
+            const to = saturday.isAfter(yearEnd) ? yearEnd : saturday;
+            return `${from.format("M月D日")} - ${to.format("M月D日")} 到期記錄`;
           }
           return `${selected.format("YYYY年M月")} 到期記錄`;
         })()}

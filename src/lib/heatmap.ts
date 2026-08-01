@@ -9,6 +9,7 @@ export interface HeatmapCell {
   periodEnd: string;
   amount: number;
   count: number;
+  interest: number;
   level: 0 | 1 | 2 | 3 | 4;
   isCurrent: boolean;
   isFuture: boolean;
@@ -55,14 +56,15 @@ export function computeHeatmap(
   const today = dayjs().startOf("day");
   const now = dayjs();
 
-  const buckets = new Map<string, { amount: number; count: number }>();
+  const buckets = new Map<string, { amount: number; count: number; interest: number }>();
   deposits.forEach((d) => {
     const end = dayjs(d.end_date, "YYYY-MM-DD", true);
     if (end.isBefore(yearStart) || end.isAfter(yearEnd)) return;
     const key = bucketKey(end, mode);
-    const entry = buckets.get(key) ?? { amount: 0, count: 0 };
+    const entry = buckets.get(key) ?? { amount: 0, count: 0, interest: 0 };
     entry.amount += d.amount;
     entry.count += 1;
+    entry.interest += d.interest;
     buckets.set(key, entry);
   });
 
@@ -88,6 +90,7 @@ export function computeHeatmap(
             periodEnd: key,
             amount: bucket?.amount ?? 0,
             count: bucket?.count ?? 0,
+            interest: bucket?.interest ?? 0,
             level: 0,
             isCurrent: date.isSame(today, "day"),
             isFuture: date.isAfter(today, "day"),
@@ -96,16 +99,19 @@ export function computeHeatmap(
       } else {
         const key = cursor.format("YYYY-MM-DD");
         const weekEnd = cursor.add(6, "day");
+        const start = cursor.isBefore(yearStart) ? yearStart : cursor;
+        const end = weekEnd.isAfter(yearEnd) ? yearEnd : weekEnd;
         const bucket = buckets.get(key);
         cells.push({
           key,
-          periodStart: key,
-          periodEnd: weekEnd.format("YYYY-MM-DD"),
+          periodStart: start.format("YYYY-MM-DD"),
+          periodEnd: end.format("YYYY-MM-DD"),
           amount: bucket?.amount ?? 0,
           count: bucket?.count ?? 0,
+          interest: bucket?.interest ?? 0,
           level: 0,
-          isCurrent: !today.isBefore(cursor) && !today.isAfter(weekEnd),
-          isFuture: cursor.isAfter(today, "day"),
+          isCurrent: !today.isBefore(start) && !today.isAfter(end),
+          isFuture: start.isAfter(today, "day"),
         });
       }
       cursor = cursor.add(7, "day");
@@ -121,6 +127,7 @@ export function computeHeatmap(
         periodEnd: monthDate.endOf("month").format("YYYY-MM-DD"),
         amount: bucket?.amount ?? 0,
         count: bucket?.count ?? 0,
+        interest: bucket?.interest ?? 0,
         level: 0,
         isCurrent: monthDate.isSame(now, "month") && monthDate.year() === year,
         isFuture: monthDate.isAfter(now.startOf("month")),
