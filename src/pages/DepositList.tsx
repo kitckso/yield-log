@@ -21,7 +21,15 @@ import MonthlyCalendar from "../components/MonthlyCalendar";
 import { useDepositsStore } from "../store/deposits";
 import { useBanksStore } from "../store/banks";
 import DepositCard from "../components/DepositCard";
-import { isMatured } from "../hooks/useCalculations";
+import {
+  SORT_OPTIONS,
+  buildListUrlParams,
+  filterAndSortDeposits,
+  groupByMonthField,
+  isDateSort as isDateSortKey,
+  parseListUrlState,
+  sortFieldFor,
+} from "../lib/depositList";
 
 export default function DepositList() {
   const navigate = useNavigate();
@@ -37,34 +45,21 @@ export default function DepositList() {
     void fetchBanks();
   }, [fetchBanks]);
 
-  const [statusFilter, setStatusFilter] = useState<string>(searchParams.get("status") ?? "active");
-  const [bankFilter, setBankFilter] = useState<string | null>(searchParams.get("bankId") ?? null);
-  const [sortBy, setSortBy] = useState<string>(searchParams.get("sort") ?? "end_asc");
-  const [viewMode, setViewMode] = useState<string>(searchParams.get("view") ?? "list");
-  const yearParam = searchParams.get("year");
-  const [calendarYear, setCalendarYear] = useState<number>(
-    yearParam ? Number(yearParam) : dayjs().year(),
-  );
+  const initial = parseListUrlState(searchParams);
 
-  const sortOptions = [
-    { value: "end_asc", label: "到期日 ↑" },
-    { value: "end_desc", label: "到期日 ↓" },
-    { value: "start_asc", label: "開戶日 ↑" },
-    { value: "start_desc", label: "開戶日 ↓" },
-    { value: "amount_asc", label: "金額 ↑" },
-    { value: "amount_desc", label: "金額 ↓" },
-    { value: "rate_asc", label: "利率 ↑" },
-    { value: "rate_desc", label: "利率 ↓" },
-  ];
+  const [statusFilter, setStatusFilter] = useState<string>(initial.statusFilter);
+  const [bankFilter, setBankFilter] = useState<string | null>(initial.bankFilter);
+  const [sortBy, setSortBy] = useState<string>(initial.sortBy);
+  const [viewMode, setViewMode] = useState<string>(initial.viewMode);
+  const [calendarYear, setCalendarYear] = useState<number>(initial.calendarYear);
+
+  const sortOptions = SORT_OPTIONS;
 
   useEffect(() => {
-    const params = new URLSearchParams();
-    if (statusFilter !== "active") params.set("status", statusFilter);
-    if (bankFilter) params.set("bankId", bankFilter);
-    if (sortBy !== "end_asc") params.set("sort", sortBy);
-    if (viewMode !== "list") params.set("view", viewMode);
-    if (viewMode === "calendar" && calendarYear !== dayjs().year())
-      params.set("year", String(calendarYear));
+    const params = buildListUrlParams(
+      { statusFilter, bankFilter, sortBy, viewMode, calendarYear },
+      dayjs().year(),
+    );
     setSearchParams(params, { replace: true });
   }, [statusFilter, bankFilter, sortBy, viewMode, calendarYear, setSearchParams]);
 
@@ -72,36 +67,12 @@ export default function DepositList() {
     window.scrollTo(0, 0);
   }, [searchParams]);
 
-  const filteredDeposits = useMemo(() => {
-    const filtered = deposits.filter((d) => {
-      if (statusFilter === "active" && isMatured(d.end_date)) return false;
-      if (statusFilter === "matured" && !isMatured(d.end_date)) return false;
-      if (bankFilter && d.bank_id !== bankFilter) return false;
-      return true;
-    });
-    return filtered.sort((a, b) => {
-      switch (sortBy) {
-        case "start_asc":
-          return a.start_date.localeCompare(b.start_date);
-        case "end_asc":
-          return a.end_date.localeCompare(b.end_date);
-        case "end_desc":
-          return b.end_date.localeCompare(a.end_date);
-        case "amount_desc":
-          return b.amount - a.amount;
-        case "amount_asc":
-          return a.amount - b.amount;
-        case "rate_desc":
-          return b.interest_rate - a.interest_rate;
-        case "rate_asc":
-          return a.interest_rate - b.interest_rate;
-        default:
-          return b.start_date.localeCompare(a.start_date);
-      }
-    });
-  }, [deposits, statusFilter, bankFilter, sortBy]);
+  const filteredDeposits = useMemo(
+    () => filterAndSortDeposits(deposits, { statusFilter, bankFilter, sortBy }),
+    [deposits, statusFilter, bankFilter, sortBy],
+  );
 
-  const isDateSort = sortBy.startsWith("start_") || sortBy.startsWith("end_");
+  const isDateSort = isDateSortKey(sortBy);
 
   const renderList = () => {
     if (filteredDeposits.length === 0) {
@@ -122,32 +93,21 @@ export default function DepositList() {
       ));
     }
 
-    const sortField = sortBy.startsWith("start_") ? "start_date" : "end_date";
-    const getMonthKey = (d: (typeof filteredDeposits)[number]) =>
-      dayjs(d[sortField]).format("YYYY年M月");
-
-    const grouped = new Map<string, (typeof filteredDeposits)[number][]>();
-    filteredDeposits.forEach((d) => {
-      const key = getMonthKey(d);
-      if (!grouped.has(key)) grouped.set(key, []);
-      grouped.get(key)!.push(d);
-    });
-
+    const monthGroups = groupByMonthField(filteredDeposits, sortFieldFor(sortBy));
     const elements: React.ReactNode[] = [];
     const fmt = (n: number) => `$${n.toLocaleString("en-HK")}`;
-    for (const [month, items] of grouped) {
-      const total = items.reduce((s, d) => s + d.amount, 0);
+    for (const group of monthGroups) {
       elements.push(
         <Divider
-          key={`sep-${month}`}
-          label={`${month}  ·  ${fmt(total)}`}
+          key={`sep-${group.key}`}
+          label={`${group.key}  ·  ${fmt(group.totalAmount)}`}
           labelPosition="center"
           pt="sm"
           pb="xs"
         />,
       );
       elements.push(
-        ...items.map((deposit) => (
+        ...group.deposits.map((deposit) => (
           <DepositCard
             key={deposit.id}
             deposit={deposit}

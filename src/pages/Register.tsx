@@ -14,6 +14,7 @@ import {
 } from "@mantine/core";
 import { IconLock } from "@tabler/icons-react";
 import { useAuthStore } from "../store/auth";
+import { isRegistrationEnabled, validateRegistration } from "../lib/depositForm";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -24,20 +25,13 @@ export default function Register() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const registrationEnabled = import.meta.env.VITE_ENABLE_REGISTRATION === "true";
+  const registrationEnabled = isRegistrationEnabled();
 
   const handleSubmit = async () => {
     setError("");
-    if (!email || !password || !confirmPassword) {
-      setError("請填寫所有欄位");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError("密碼不一致");
-      return;
-    }
-    if (password.length < 6) {
-      setError("密碼長度至少 6 個字元");
+    const invalid = validateRegistration(email, password, confirmPassword);
+    if (invalid) {
+      setError(invalid);
       return;
     }
     setLoading(true);

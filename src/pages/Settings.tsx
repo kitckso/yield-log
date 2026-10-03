@@ -29,6 +29,12 @@ import { useAuthStore } from "../store/auth";
 import { useAppStore, type ColorScheme } from "../store/app";
 import { supabase } from "../lib/supabase";
 import { getErrorMessage } from "../hooks/useCalculations";
+import {
+  buildExportFilename,
+  buildExportPayload,
+  parseImportPayload,
+  permissionError,
+} from "../lib/settings";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -43,12 +49,12 @@ export default function Settings() {
   const handleExport = () => {
     const deposits = useDepositsStore.getState().deposits;
     const banks = useBanksStore.getState().banks;
-    const data = { version: "1.0", exportedAt: new Date().toISOString(), banks, deposits };
+    const data = buildExportPayload(banks, deposits);
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `yieldlog-export-${new Date().toISOString().split("T")[0]}.json`;
+    a.download = buildExportFilename();
     a.click();
     URL.revokeObjectURL(url);
     notifications.show({
@@ -75,50 +81,34 @@ export default function Settings() {
         setImporting(true);
         try {
           const text = await file.text();
-          const data = JSON.parse(text);
+          const parsed = parseImportPayload(text, user!.id);
 
-          if (data.version !== "1.0") {
+          if (!parsed.ok) {
             notifications.show({
               title: "匯入失敗",
-              message: "不支援的檔案格式",
+              message: parsed.error,
               color: "red",
             });
             return;
           }
 
+          const { banks: banksToWrite, deposits: depositsToWrite } = parsed;
           const userId = user!.id;
 
           await supabase.from("fixed_deposits").delete().eq("user_id", userId);
           await supabase.from("banks").delete().eq("user_id", userId);
 
-          if (data.banks?.length) {
-            const { error } = await supabase.from("banks").upsert(
-              data.banks.map((b: { id: string; name: string }) => ({
-                id: b.id,
-                user_id: userId,
-                name: b.name,
-              })),
-              { onConflict: "id" },
-            );
+          if (banksToWrite.length) {
+            const { error } = await supabase
+              .from("banks")
+              .upsert(banksToWrite, { onConflict: "id" });
             if (error) throw error;
           }
 
-          if (data.deposits?.length) {
-            const { error } = await supabase.from("fixed_deposits").upsert(
-              data.deposits.map((d: Record<string, unknown>) => ({
-                id: d.id,
-                user_id: userId,
-                bank_id: d.bank_id,
-                amount: d.amount,
-                period_value: d.period_value,
-                period_unit: d.period_unit,
-                interest_rate: d.interest_rate,
-                interest: d.interest,
-                start_date: d.start_date,
-                end_date: d.end_date,
-              })),
-              { onConflict: "id" },
-            );
+          if (depositsToWrite.length) {
+            const { error } = await supabase
+              .from("fixed_deposits")
+              .upsert(depositsToWrite, { onConflict: "id" });
             if (error) throw error;
           }
 
@@ -137,9 +127,10 @@ export default function Settings() {
             message: "請檢查檔案格式是否正確",
             color: "red",
           });
+        } finally {
+          setImporting(false);
+          if (fileRef.current) fileRef.current.value = "";
         }
-        setImporting(false);
-        if (fileRef.current) fileRef.current.value = "";
       },
     });
   };
@@ -302,9 +293,7 @@ export default function Settings() {
                         useDepositsStore.getState().deposits.length > 0 ||
                         useBanksStore.getState().banks.length > 0
                       ) {
-                        const e = new Error("No permission");
-                        (e as any).code = "42501";
-                        throw e;
+                        throw permissionError();
                       }
 
                       notifications.show({

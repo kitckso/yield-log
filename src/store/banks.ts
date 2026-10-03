@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { supabase } from "../lib/supabase";
+import { permissionError } from "../lib/settings";
 import type { Bank } from "../types";
 
 const STALE_TIME = 5 * 60 * 1000;
@@ -61,9 +62,7 @@ export const useBanksStore = create<BanksState>((set, get) => ({
     const { data, error } = await supabase.from("banks").delete().eq("id", id).select();
     if (error) throw error;
     if (!data || data.length === 0) {
-      const e = new Error("No permission");
-      (e as any).code = "42501";
-      throw e;
+      throw permissionError();
     }
     set({ banks: get().banks.filter((b) => b.id !== id) });
   },

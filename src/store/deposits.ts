@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { supabase } from "../lib/supabase";
+import { permissionError } from "../lib/settings";
 import type { DepositWithBank } from "../types";
 
 const STALE_TIME = 5 * 60 * 1000;
@@ -81,9 +82,7 @@ export const useDepositsStore = create<DepositsState>((set, get) => ({
     const { data, error } = await supabase.from("fixed_deposits").delete().eq("id", id).select();
     if (error) throw error;
     if (!data || data.length === 0) {
-      const e = new Error("No permission");
-      (e as any).code = "42501";
-      throw e;
+      throw permissionError();
     }
     set({ deposits: get().deposits.filter((d) => d.id !== id) });
   },

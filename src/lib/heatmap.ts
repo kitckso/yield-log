@@ -31,6 +31,56 @@ function quantile(sorted: number[], q: number): number {
   return sorted[base];
 }
 
+/**
+ * The Sunday that starts the week containing `d`, clamped to the year bounds.
+ * Weeks that hang off either end of the year are trimmed so a cell never
+ * reaches into a neighbouring year.
+ */
+export function weekWindowClamped(
+  d: dayjs.Dayjs,
+  yearStart: dayjs.Dayjs,
+  yearEnd: dayjs.Dayjs,
+): { start: dayjs.Dayjs; end: dayjs.Dayjs } {
+  const sunday = d.subtract(d.day(), "day");
+  const saturday = sunday.add(6, "day");
+  return {
+    start: sunday.isBefore(yearStart) ? yearStart : sunday,
+    end: saturday.isAfter(yearEnd) ? yearEnd : saturday,
+  };
+}
+
+/** Deposits maturing inside the period that `selected` refers to. */
+export function depositsInPeriod(
+  deposits: DepositWithBank[],
+  selected: dayjs.Dayjs,
+  mode: HeatmapMode,
+  yearStart: dayjs.Dayjs,
+  yearEnd: dayjs.Dayjs,
+): DepositWithBank[] {
+  return deposits
+    .filter((d) => {
+      const end = dayjs(d.end_date, "YYYY-MM-DD", true);
+      if (mode === "day") return end.isSame(selected, "day");
+      if (mode === "week") {
+        const { start, end: windowEnd } = weekWindowClamped(selected, yearStart, yearEnd);
+        return !end.isBefore(start) && !end.isAfter(windowEnd);
+      }
+      return end.year() === selected.year() && end.month() === selected.month();
+    })
+    .sort((a, b) => a.end_date.localeCompare(b.end_date));
+}
+
+/** Years that have at least one deposit, always including the current year. */
+export function availableYears(
+  deposits: DepositWithBank[],
+  currentYear: number = dayjs().year(),
+): number[] {
+  const years = new Set<number>();
+  deposits.forEach((d) => years.add(Number(d.end_date.slice(0, 4))));
+  years.add(currentYear);
+  return Array.from(years).sort((a, b) => a - b);
+}
+
 export function computeLevels(values: number[]): (0 | 1 | 2 | 3 | 4)[] {
   const sorted = values.filter((v) => v > 0).sort((a, b) => a - b);
   if (sorted.length === 0) return values.map(() => 0);

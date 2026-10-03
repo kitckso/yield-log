@@ -18,13 +18,18 @@ import { DateInput } from "@mantine/dates";
 import { useAuthStore } from "../store/auth";
 import { useBanksStore } from "../store/banks";
 import { useDepositsStore } from "../store/deposits";
+import { getErrorMessage } from "../hooks/useCalculations";
 import {
-  calculateInterest,
-  calculateInterestRounded,
-  calculateEndDate,
-  getErrorMessage,
-} from "../hooks/useCalculations";
-import dayjs from "dayjs";
+  buildDepositDraft,
+  calcEndDateFor,
+  calcInterestFor,
+  formatPeriodLabel,
+  parseRenewParams,
+  recentAmounts,
+  recentPeriods,
+  recentRates,
+  shouldOfferFloorAlternative,
+} from "../lib/depositForm";
 
 const periodUnits = [
   { value: "days", label: "日" },
@@ -58,40 +63,9 @@ export default function DepositForm() {
   const [interestManuallyEdited, setInterestManuallyEdited] = useState(false);
   const [endDateManuallyEdited, setEndDateManuallyEdited] = useState(false);
 
-  const recentCutoff = dayjs().subtract(6, "month").format("YYYY-MM-DD");
-  const recentAmounts = useMemo(() => {
-    const recent = deposits.filter((d) => d.start_date >= recentCutoff);
-    const freq = new Map<number, number>();
-    recent.forEach((d) => freq.set(d.amount, (freq.get(d.amount) ?? 0) + 1));
-    return [...freq.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([v]) => v);
-  }, [deposits, recentCutoff]);
-  const recentRates = useMemo(() => {
-    const recent = deposits.filter((d) => d.start_date >= recentCutoff);
-    const freq = new Map<number, number>();
-    recent.forEach((d) => freq.set(d.interest_rate, (freq.get(d.interest_rate) ?? 0) + 1));
-    return [...freq.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([v]) => v);
-  }, [deposits, recentCutoff]);
-  const recentPeriods = useMemo(() => {
-    const recent = deposits.filter((d) => d.start_date >= recentCutoff);
-    const freq = new Map<string, { value: number; unit: string; count: number }>();
-    recent.forEach((d) => {
-      const key = `${d.period_value}-${d.period_unit}`;
-      const entry = freq.get(key) ?? { value: d.period_value, unit: d.period_unit, count: 0 };
-      entry.count += 1;
-      freq.set(key, entry);
-    });
-    return [...freq.values()].sort((a, b) => b.count - a.count).slice(0, 5);
-  }, [deposits, recentCutoff]);
-  const periodLabel = (v: number, u: string) => {
-    const labels: Record<string, string> = { days: "日", weeks: "週", months: "個月", years: "年" };
-    return `${v}${labels[u] ?? u}`;
-  };
+  const recentAmountSuggestions = useMemo(() => recentAmounts(deposits), [deposits]);
+  const recentRateSuggestions = useMemo(() => recentRates(deposits), [deposits]);
+  const recentPeriodSuggestions = useMemo(() => recentPeriods(deposits), [deposits]);
 
   useEffect(() => {
     void fetchBanks();
@@ -112,16 +86,12 @@ export default function DepositForm() {
       }
       setFormLoading(false);
     } else if (isRenew) {
-      const bankIdParam = searchParams.get("bankId");
-      const amountParam = searchParams.get("amount");
-      const periodValueParam = searchParams.get("periodValue");
-      const periodUnitParam = searchParams.get("periodUnit");
-      const interestRateParam = searchParams.get("interestRate");
-      if (bankIdParam) setBankId(bankIdParam);
-      if (amountParam) setAmount(Number(amountParam));
-      if (periodValueParam) setPeriodValue(Number(periodValueParam));
-      if (periodUnitParam) setPeriodUnit(periodUnitParam);
-      if (interestRateParam) setInterestRate(Number(interestRateParam));
+      const renew = parseRenewParams(searchParams);
+      if (renew.bankId) setBankId(renew.bankId);
+      if (renew.amount !== undefined) setAmount(renew.amount);
+      if (renew.periodValue !== undefined) setPeriodValue(renew.periodValue);
+      if (renew.periodUnit) setPeriodUnit(renew.periodUnit);
+      if (renew.interestRate !== undefined) setInterestRate(renew.interestRate);
       setStartDate(new Date());
       setFormLoading(false);
     } else {
@@ -133,12 +103,7 @@ export default function DepositForm() {
   // Auto-calc end date
   useEffect(() => {
     if (startDate && periodValue && periodUnit && !endDateManuallyEdited) {
-      const end = calculateEndDate(
-        startDate.toLocaleDateString("en-CA"),
-        Number(periodValue),
-        periodUnit,
-      );
-      setEndDate(new Date(end));
+      setEndDate(calcEndDateFor(startDate, periodValue, periodUnit));
     }
   }, [startDate, periodValue, periodUnit, endDateManuallyEdited]);
 
@@ -146,13 +111,13 @@ export default function DepositForm() {
   const [floorInterest, setFloorInterest] = useState<number>(0);
   useEffect(() => {
     if (startDate && endDate && amount && interestRate && !interestManuallyEdited) {
-      const a = Number(amount);
-      const r = Number(interestRate);
-      const s = startDate.toLocaleDateString("en-CA");
-      const e = endDate.toLocaleDateString("en-CA");
-      const floor = calculateInterest(a, r, s, e);
-      const round = calculateInterestRounded(a, r, s, e);
-      setInterest(round);
+      const { interest: rounded, floorInterest: floor } = calcInterestFor(
+        amount,
+        interestRate,
+        startDate,
+        endDate,
+      );
+      setInterest(rounded);
       setFloorInterest(floor);
     }
   }, [amount, interestRate, startDate, endDate, interestManuallyEdited]);
@@ -168,15 +133,12 @@ export default function DepositForm() {
   };
 
   const handleSubmit = async (stay?: boolean) => {
-    if (
-      !bankId ||
-      !amount ||
-      !periodValue ||
-      !periodUnit ||
-      !interestRate ||
-      !startDate ||
-      !endDate
-    ) {
+    const depositData = buildDepositDraft(
+      { bankId, amount, periodValue, periodUnit, interestRate, startDate, endDate },
+      interest,
+      user!.id,
+    );
+    if (!depositData) {
       notifications.show({
         title: "欄位不足",
         message: "請填寫所有欄位",
@@ -186,18 +148,6 @@ export default function DepositForm() {
     }
 
     setLoading(true);
-
-    const depositData = {
-      user_id: user!.id,
-      bank_id: bankId,
-      amount: Number(amount),
-      period_value: Number(periodValue),
-      period_unit: periodUnit as "days" | "weeks" | "months" | "years",
-      interest_rate: Number(interestRate),
-      interest: Number(interest),
-      start_date: startDate.toLocaleDateString("en-CA"),
-      end_date: endDate.toLocaleDateString("en-CA"),
-    };
 
     try {
       if (isEditing && id) {
@@ -296,9 +246,9 @@ export default function DepositForm() {
           min={0}
           required
         />
-        {!isEditing && recentAmounts.length > 0 && (
+        {!isEditing && recentAmountSuggestions.length > 0 && (
           <Group gap={4}>
-            {recentAmounts.map((v) => (
+            {recentAmountSuggestions.map((v) => (
               <Button
                 key={v}
                 size="compact-xs"
@@ -327,9 +277,9 @@ export default function DepositForm() {
             required
           />
         </Group>
-        {!isEditing && recentPeriods.length > 0 && (
+        {!isEditing && recentPeriodSuggestions.length > 0 && (
           <Group gap={4}>
-            {recentPeriods.map((p) => (
+            {recentPeriodSuggestions.map((p) => (
               <Button
                 key={`${p.value}-${p.unit}`}
                 size="compact-xs"
@@ -339,7 +289,7 @@ export default function DepositForm() {
                   setPeriodUnit(p.unit);
                 }}
               >
-                {periodLabel(p.value, p.unit)}
+                {formatPeriodLabel(p.value, p.unit)}
               </Button>
             ))}
           </Group>
@@ -354,9 +304,9 @@ export default function DepositForm() {
           decimalScale={2}
           required
         />
-        {!isEditing && recentRates.length > 0 && (
+        {!isEditing && recentRateSuggestions.length > 0 && (
           <Group gap={4}>
-            {recentRates.map((v) => (
+            {recentRateSuggestions.map((v) => (
               <Button
                 key={v}
                 size="compact-xs"
@@ -394,7 +344,7 @@ export default function DepositForm() {
           fixedDecimalScale
           required
         />
-        {!interestManuallyEdited && floorInterest !== Number(interest) && Number(interest) > 0 && (
+        {shouldOfferFloorAlternative(interest, floorInterest, interestManuallyEdited) && (
           <Group gap={4}>
             <Button
               size="compact-xs"

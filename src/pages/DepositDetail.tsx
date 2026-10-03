@@ -17,6 +17,7 @@ import { IconArrowLeft, IconTrash, IconEdit, IconRefresh } from "@tabler/icons-r
 import { modals } from "@mantine/modals";
 import { useDepositsStore } from "../store/deposits";
 import { isMatured, formatCurrency, formatDate, getErrorMessage } from "../hooks/useCalculations";
+import { buildRenewUrl, formatPeriodLabel } from "../lib/depositForm";
 import type { DepositWithBank } from "../types";
 
 export default function DepositDetail() {
@@ -72,14 +73,7 @@ export default function DepositDetail() {
   }
 
   const matured = isMatured(deposit.end_date);
-  const periodLabel =
-    deposit.period_unit === "months"
-      ? `${deposit.period_value}個月`
-      : deposit.period_unit === "days"
-        ? `${deposit.period_value}日`
-        : deposit.period_unit === "weeks"
-          ? `${deposit.period_value}週`
-          : `${deposit.period_value}年`;
+  const periodLabel = formatPeriodLabel(deposit.period_value, deposit.period_unit);
 
   return (
     <Container size="sm" pt="md" pb={{ base: 80, sm: 16 }}>
@@ -157,11 +151,7 @@ export default function DepositDetail() {
         {matured && (
           <Button
             leftSection={<IconRefresh size={18} />}
-            onClick={() =>
-              navigate(
-                `/deposits/new?renew=1&bankId=${deposit.bank_id}&amount=${deposit.amount}&periodValue=${deposit.period_value}&periodUnit=${deposit.period_unit}&interestRate=${deposit.interest_rate}`,
-              )
-            }
+            onClick={() => navigate(buildRenewUrl(deposit))}
             fullWidth
           >
             續存

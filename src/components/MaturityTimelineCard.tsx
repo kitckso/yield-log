@@ -1,26 +1,19 @@
 import { useState } from "react";
 import { Card, Text, Stack, Group, Badge, Divider, Button } from "@mantine/core";
-import { formatCurrency, formatRelativeDays } from "../hooks/useCalculations";
+import { formatCurrency } from "../hooks/useCalculations";
+import {
+  classifyMaturity,
+  groupByMonth,
+  shouldRenderTimeline,
+  truncateForDisplay,
+} from "../lib/maturityTimeline";
 import type { DepositWithBank } from "../types";
-import dayjs from "dayjs";
 
 interface MaturityTimelineCardProps {
   upcoming: DepositWithBank[];
   recentlyMatured: DepositWithBank[];
   bankMap: Map<string, string>;
   onNavigate: (id: string) => void;
-}
-
-const INITIAL_SHOW = 5;
-
-function groupByMonth(items: DepositWithBank[]): [string, DepositWithBank[]][] {
-  const groups = new Map<string, DepositWithBank[]>();
-  for (const d of items) {
-    const key = dayjs(d.end_date, "YYYY-MM-DD", true).format("YYYY年M月");
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key)!.push(d);
-  }
-  return Array.from(groups.entries());
 }
 
 export default function MaturityTimelineCard({
@@ -31,29 +24,25 @@ export default function MaturityTimelineCard({
 }: MaturityTimelineCardProps) {
   const [showAll, setShowAll] = useState(false);
 
-  if (upcoming.length === 0 && recentlyMatured.length === 0) return null;
+  if (!shouldRenderTimeline(recentlyMatured, upcoming)) return null;
 
-  const displayRecent = showAll ? recentlyMatured : recentlyMatured.slice(0, INITIAL_SHOW);
-  const displayUpcoming = showAll ? upcoming : upcoming.slice(0, INITIAL_SHOW);
-  const hasMore = recentlyMatured.length > INITIAL_SHOW || upcoming.length > INITIAL_SHOW;
+  const {
+    recent: displayRecent,
+    upcoming: displayUpcoming,
+    hasMore,
+  } = truncateForDisplay(recentlyMatured, upcoming, showAll);
 
   const futureGroups = groupByMonth(displayUpcoming);
 
   function renderItem(d: DepositWithBank) {
-    const today = dayjs().startOf("day");
-    const target = dayjs(d.end_date).startOf("day");
-    const daysDiff = target.diff(today, "day");
-    const isYesterday = daysDiff === -1;
-    const isToday = daysDiff === 0;
-    const isTomorrow = daysDiff === 1;
-    const matured = daysDiff < 0;
+    const { isToday, matured, dimmed, label } = classifyMaturity(d.end_date);
     return (
       <Group
         key={d.id}
         justify="space-between"
         style={{ cursor: "pointer" }}
         onClick={() => onNavigate(d.id)}
-        {...(!isToday && matured ? { opacity: 0.65 } : {})}
+        {...(dimmed ? { opacity: 0.65 } : {})}
       >
         <Stack gap={2}>
           <Group gap={6}>
@@ -76,15 +65,7 @@ export default function MaturityTimelineCard({
             )}
           </Group>
           <Text size="xs" c="dimmed">
-            {isToday
-              ? "今日到期"
-              : isYesterday
-                ? "昨日到期"
-                : isTomorrow
-                  ? "明天到期"
-                  : matured
-                    ? `${formatRelativeDays(daysDiff)}前到期`
-                    : `${formatRelativeDays(daysDiff)}後到期`}
+            {label}
           </Text>
         </Stack>
         <Stack gap={0} align="end">

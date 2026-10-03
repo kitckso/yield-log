@@ -2,7 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import { Card, Group, Stack, Text, Title, ActionIcon, SimpleGrid } from "@mantine/core";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { formatCurrency, isMatured } from "../hooks/useCalculations";
+import { formatCurrency } from "../hooks/useCalculations";
+import {
+  buildMonthGroups,
+  hasDepositsInYear,
+  isPastMonth,
+  projectDec31Interest,
+  splitMonthByToday,
+  sumYearTotals,
+} from "../lib/calendar";
 import DepositListModal from "./DepositListModal";
 import type { DepositWithBank } from "../types";
 
@@ -12,13 +20,7 @@ interface MonthlyCalendarProps {
   onYearChange: (year: number) => void;
 }
 
-interface MonthGroup {
-  month: number;
-  label: string;
-  deposits: DepositWithBank[];
-  totalAmount: number;
-  totalInterest: number;
-}
+type MonthGroup = ReturnType<typeof buildMonthGroups>[number];
 
 export default function MonthlyCalendar({ deposits, year, onYearChange }: MonthlyCalendarProps) {
   const [selectedMonth, setSelectedMonth] = useState<MonthGroup | null>(null);
@@ -27,77 +29,19 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
   const currentYear = today.year();
   const isCurrentYear = year === currentYear;
 
-  const months = useMemo(() => {
-    const groups: MonthGroup[] = [];
-    for (let m = 0; m < 12; m++) {
-      const date = dayjs().year(year).month(m);
-      const key = date.format("YYYY-MM");
-      const monthDeposits = deposits
-        .filter((d) => d.end_date.startsWith(key))
-        .sort((a, b) => a.end_date.localeCompare(b.end_date));
-      groups.push({
-        month: m,
-        label: date.format("M月"),
-        deposits: monthDeposits,
-        totalAmount: monthDeposits.reduce((s, d) => s + d.amount, 0),
-        totalInterest: monthDeposits.reduce((s, d) => s + d.interest, 0),
-      });
-    }
-    return groups;
-  }, [deposits, year]);
+  const months = useMemo(() => buildMonthGroups(deposits, year), [deposits, year]);
 
-  const yearTotalAmount = months.reduce((s, m) => s + m.totalAmount, 0);
-  const yearTotalInterest = months.reduce((s, m) => s + m.totalInterest, 0);
+  const { yearTotalAmount, yearTotalInterest } = useMemo(() => sumYearTotals(months), [months]);
 
   // Projected total interest by Dec 31 = "全年利息" + rollover additions
   // from active deposits that will mature before year-end.
-  const projectedDec31Interest = useMemo(() => {
-    if (!isCurrentYear) return null;
-    const yearEnd = dayjs().year(year).endOf("year");
-    let rolloverTotal = 0;
+  const projectedDec31Interest = useMemo(
+    () => projectDec31Interest(deposits, year, yearTotalInterest, currentYear),
+    [deposits, year, yearTotalInterest, currentYear],
+  );
 
-    deposits.forEach((d) => {
-      // Only active deposits maturing by Dec 31
-      if (isMatured(d.end_date)) return;
-      const end = dayjs(d.end_date);
-      if (end.isAfter(yearEnd)) return;
-
-      let currentEnd = end;
-      for (;;) {
-        let nextEnd: dayjs.Dayjs;
-        let termDays = 0;
-        switch (d.period_unit) {
-          case "days":
-            nextEnd = currentEnd.add(d.period_value, "day");
-            termDays = d.period_value;
-            break;
-          case "weeks":
-            nextEnd = currentEnd.add(d.period_value * 7, "day");
-            termDays = d.period_value * 7;
-            break;
-          case "months":
-            nextEnd = currentEnd.add(d.period_value, "month");
-            termDays = nextEnd.diff(currentEnd, "day");
-            break;
-          case "years":
-            nextEnd = currentEnd.add(d.period_value, "year");
-            termDays = nextEnd.diff(currentEnd, "day");
-            break;
-          default:
-            nextEnd = currentEnd.add(d.period_value, "month");
-            termDays = nextEnd.diff(currentEnd, "day");
-        }
-        if (nextEnd.isAfter(yearEnd)) break;
-        rolloverTotal += d.amount * (d.interest_rate / 100) * (termDays / 365);
-        currentEnd = nextEnd;
-      }
-    });
-
-    return Math.round((yearTotalInterest + rolloverTotal) * 100) / 100;
-  }, [deposits, year, isCurrentYear, yearTotalInterest]);
-
-  const hasPrevYear = deposits.some((d) => d.end_date.startsWith(String(year - 1)));
-  const hasNextYear = deposits.some((d) => d.end_date.startsWith(String(year + 1)));
+  const hasPrevYear = useMemo(() => hasDepositsInYear(deposits, year - 1), [deposits, year]);
+  const hasNextYear = useMemo(() => hasDepositsInYear(deposits, year + 1), [deposits, year]);
 
   const currentMonthId = `calendar-month-${year}-${currentMonth}`;
 
@@ -111,23 +55,13 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
     return () => clearTimeout(timer);
   }, [currentMonthId, deposits.length]);
 
-  const isPastMonth = (m: MonthGroup) =>
-    year < currentYear || (year === currentYear && m.month < currentMonth);
+  const monthIsPast = (m: MonthGroup) => isPastMonth(year, m.month, currentYear, currentMonth);
 
-  const splitCurrentMonth = (m: MonthGroup) => {
-    const todayStart = dayjs().startOf("day");
-    const passed = m.deposits.filter((d) => dayjs(d.end_date).isBefore(todayStart));
-    const future = m.deposits.filter((d) => !dayjs(d.end_date).isBefore(todayStart));
-    const passedAmount = passed.reduce((s, d) => s + d.amount, 0);
-    const passedInterest = passed.reduce((s, d) => s + d.interest, 0);
-    const futureAmount = future.reduce((s, d) => s + d.amount, 0);
-    const futureInterest = future.reduce((s, d) => s + d.interest, 0);
-    return { passed, future, passedAmount, passedInterest, futureAmount, futureInterest };
-  };
+  const splitCurrentMonth = (m: MonthGroup) => splitMonthByToday(m.deposits);
 
   const renderMonth = (m: MonthGroup) => {
     const isCurrent = isCurrentYear && m.month === currentMonth;
-    const isPast = isPastMonth(m);
+    const isPast = monthIsPast(m);
     const hasDeposits = m.deposits.length > 0;
     const dimmed = isPast && hasDeposits;
     const empty = !hasDeposits;

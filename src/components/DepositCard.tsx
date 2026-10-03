@@ -1,6 +1,7 @@
 import { Card, Text, Group, Badge } from "@mantine/core";
 import dayjs from "dayjs";
 import { isMatured, formatCurrency, formatDate } from "../hooks/useCalculations";
+import { formatPeriodLabel } from "../lib/depositForm";
 import type { DepositWithBank } from "../types";
 
 interface DepositCardProps {
@@ -12,14 +13,7 @@ export default function DepositCard({ deposit, onClick }: DepositCardProps) {
   const matured = isMatured(deposit.end_date);
   const endDay = dayjs(deposit.end_date).format("D日");
 
-  const periodLabel =
-    deposit.period_unit === "months"
-      ? `${deposit.period_value}個月`
-      : deposit.period_unit === "days"
-        ? `${deposit.period_value}日`
-        : deposit.period_unit === "weeks"
-          ? `${deposit.period_value}週`
-          : `${deposit.period_value}年`;
+  const periodLabel = formatPeriodLabel(deposit.period_value, deposit.period_unit);
 
   return (
     <Card

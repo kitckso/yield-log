@@ -1,0 +1,142 @@
+import dayjs from "dayjs";
+import { isMatured } from "../hooks/useCalculations";
+import type { DepositWithBank } from "../types";
+
+export interface MonthGroup {
+  month: number;
+  label: string;
+  deposits: DepositWithBank[];
+  totalAmount: number;
+  totalInterest: number;
+}
+
+export interface MonthSplit {
+  passed: DepositWithBank[];
+  future: DepositWithBank[];
+  passedAmount: number;
+  passedInterest: number;
+  futureAmount: number;
+  futureInterest: number;
+}
+
+export function buildMonthGroups(deposits: DepositWithBank[], year: number): MonthGroup[] {
+  const groups: MonthGroup[] = [];
+  for (let m = 0; m < 12; m++) {
+    const date = dayjs().year(year).month(m);
+    const key = date.format("YYYY-MM");
+    const monthDeposits = deposits
+      .filter((d) => d.end_date.startsWith(key))
+      .sort((a, b) => a.end_date.localeCompare(b.end_date));
+    groups.push({
+      month: m,
+      label: date.format("M月"),
+      deposits: monthDeposits,
+      totalAmount: monthDeposits.reduce((s, d) => s + d.amount, 0),
+      totalInterest: monthDeposits.reduce((s, d) => s + d.interest, 0),
+    });
+  }
+  return groups;
+}
+
+export function sumYearTotals(months: MonthGroup[]): {
+  yearTotalAmount: number;
+  yearTotalInterest: number;
+} {
+  return {
+    yearTotalAmount: months.reduce((s, m) => s + m.totalAmount, 0),
+    yearTotalInterest: months.reduce((s, m) => s + m.totalInterest, 0),
+  };
+}
+
+/**
+ * Advances a deposit by one term and returns the maturity date plus the number
+ * of days that term covers. Months and years use actual elapsed days so the
+ * rollover interest stays consistent with month lengths and leap years.
+ */
+function advanceTerm(
+  currentEnd: dayjs.Dayjs,
+  periodValue: number,
+  periodUnit: DepositWithBank["period_unit"],
+): { nextEnd: dayjs.Dayjs; termDays: number } {
+  switch (periodUnit) {
+    case "days":
+      return { nextEnd: currentEnd.add(periodValue, "day"), termDays: periodValue };
+    case "weeks":
+      return {
+        nextEnd: currentEnd.add(periodValue * 7, "day"),
+        termDays: periodValue * 7,
+      };
+    case "months":
+      return { nextEnd: currentEnd.add(periodValue, "month"), termDays: 0 };
+    case "years":
+      return { nextEnd: currentEnd.add(periodValue, "year"), termDays: 0 };
+    default:
+      return { nextEnd: currentEnd.add(periodValue, "month"), termDays: 0 };
+  }
+}
+
+/**
+ * Total interest projected to Dec 31 of `year`: interest already maturing that
+ * year plus every rollover cycle of an active deposit that matures again before
+ * year end. Returns null when `year` is not the current year, since the
+ * projection is only meaningful going forward.
+ */
+export function projectDec31Interest(
+  deposits: DepositWithBank[],
+  year: number,
+  yearTotalInterest: number,
+  currentYear: number = dayjs().year(),
+): number | null {
+  if (year !== currentYear) return null;
+
+  const yearEnd = dayjs().year(year).endOf("year");
+  let rolloverTotal = 0;
+
+  deposits.forEach((d) => {
+    if (isMatured(d.end_date)) return;
+    const end = dayjs(d.end_date);
+    if (end.isAfter(yearEnd)) return;
+
+    let currentEnd = end;
+    for (;;) {
+      const { nextEnd, termDays: fixedDays } = advanceTerm(
+        currentEnd,
+        d.period_value,
+        d.period_unit,
+      );
+      const termDays = fixedDays || nextEnd.diff(currentEnd, "day");
+      if (nextEnd.isAfter(yearEnd)) break;
+      rolloverTotal += d.amount * (d.interest_rate / 100) * (termDays / 365);
+      currentEnd = nextEnd;
+    }
+  });
+
+  return Math.round((yearTotalInterest + rolloverTotal) * 100) / 100;
+}
+
+export function splitMonthByToday(deposits: DepositWithBank[]): MonthSplit {
+  const todayStart = dayjs().startOf("day");
+  const passed = deposits.filter((d) => dayjs(d.end_date).isBefore(todayStart));
+  const future = deposits.filter((d) => !dayjs(d.end_date).isBefore(todayStart));
+  return {
+    passed,
+    future,
+    passedAmount: passed.reduce((s, d) => s + d.amount, 0),
+    passedInterest: passed.reduce((s, d) => s + d.interest, 0),
+    futureAmount: future.reduce((s, d) => s + d.amount, 0),
+    futureInterest: future.reduce((s, d) => s + d.interest, 0),
+  };
+}
+
+export function isPastMonth(
+  year: number,
+  month: number,
+  currentYear: number,
+  currentMonth: number,
+) {
+  return year < currentYear || (year === currentYear && month < currentMonth);
+}
+
+export function hasDepositsInYear(deposits: DepositWithBank[], year: number): boolean {
+  return deposits.some((d) => d.end_date.startsWith(String(year)));
+}

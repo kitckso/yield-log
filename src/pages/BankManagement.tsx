@@ -18,6 +18,7 @@ import { modals } from "@mantine/modals";
 import { useDisclosure } from "@mantine/hooks";
 import { useBanksStore } from "../store/banks";
 import { getErrorMessage } from "../hooks/useCalculations";
+import { normalizeBankName } from "../lib/depositForm";
 import UserMenu from "../components/UserMenu";
 import BankItem from "../components/BankItem";
 
@@ -34,13 +35,14 @@ export default function BankManagement() {
   }, [fetchBanks]);
 
   const handleAdd = async () => {
-    if (!newBankName.trim()) return;
+    const name = normalizeBankName(newBankName);
+    if (!name) return;
     try {
-      await addBank(newBankName.trim());
+      await addBank(name);
       setNewBankName("");
       notifications.show({
         title: "已新增",
-        message: `銀行「${newBankName.trim()}」已成功新增`,
+        message: `銀行「${name}」已成功新增`,
         color: "green",
       });
     } catch (e) {
@@ -59,9 +61,10 @@ export default function BankManagement() {
   };
 
   const handleUpdate = async () => {
-    if (!editingId || !editingName.trim()) return;
+    const name = normalizeBankName(editingName);
+    if (!editingId || !name) return;
     try {
-      await updateBank(editingId, editingName.trim());
+      await updateBank(editingId, name);
       closeModal();
       setEditingId(null);
       setEditingName("");

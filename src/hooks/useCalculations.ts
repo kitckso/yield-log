@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import customParseFormat from "dayjs/plugin/customParseFormat";
+import { hasPermissionError } from "../lib/settings";
 
 dayjs.extend(isSameOrBefore);
 dayjs.extend(customParseFormat);
@@ -92,11 +93,8 @@ export function formatRelativeDays(days: number): string {
 }
 
 export function getErrorMessage(err: unknown): string {
-  if (typeof err === "object" && err !== null) {
-    const e = err as Record<string, unknown>;
-    if (e.code === "42501" || e.status === 406) {
-      return "沒有權限，訪客帳戶無法執行此操作";
-    }
+  if (hasPermissionError(err)) {
+    return "沒有權限，訪客帳戶無法執行此操作";
   }
   return "操作失敗，請稍後再試";
 }

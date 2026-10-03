@@ -2,7 +2,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Card, Group, SegmentedControl, SimpleGrid, Stack, Text, Tooltip } from "@mantine/core";
 import dayjs from "dayjs";
 import { formatCurrency } from "../hooks/useCalculations";
-import { computeHeatmap, bucketKey, type HeatmapMode, type HeatmapCell } from "../lib/heatmap";
+import {
+  computeHeatmap,
+  bucketKey,
+  availableYears as availableHeatmapYears,
+  depositsInPeriod,
+  weekWindowClamped,
+  type HeatmapMode,
+  type HeatmapCell,
+} from "../lib/heatmap";
 import DepositListModal from "./DepositListModal";
 import type { DepositWithBank } from "../types";
 
@@ -52,12 +60,7 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
   const yearEnd = useMemo(() => dayjs(`${year}-12-31`, "YYYY-MM-DD", true), [year]);
   const weekStart = useMemo(() => yearStart.subtract(yearStart.day(), "day"), [yearStart]);
 
-  const availableYears = useMemo(() => {
-    const years = new Set<number>();
-    deposits.forEach((d) => years.add(Number(d.end_date.slice(0, 4))));
-    years.add(dayjs().year());
-    return Array.from(years).sort((a, b) => a - b);
-  }, [deposits]);
+  const availableYears = useMemo(() => availableHeatmapYears(deposits), [deposits]);
 
   const yearHasData = useMemo(
     () => deposits.some((d) => d.end_date.startsWith(`${year}-`)),
@@ -134,21 +137,13 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
 
   const selectedDeposits = useMemo(() => {
     if (!selectedDate) return [];
-    const selected = dayjs(selectedDate, "YYYY-MM-DD", true);
-    return deposits
-      .filter((d) => {
-        const end = dayjs(d.end_date, "YYYY-MM-DD", true);
-        if (mode === "day") return end.isSame(selected, "day");
-        if (mode === "week") {
-          const start = selected.subtract(selected.day(), "day");
-          const weekEnd = start.add(6, "day");
-          const clampedStart = start.isBefore(yearStart) ? yearStart : start;
-          const clampedEnd = weekEnd.isAfter(yearEnd) ? yearEnd : weekEnd;
-          return !end.isBefore(clampedStart) && !end.isAfter(clampedEnd);
-        }
-        return end.year() === selected.year() && end.month() === selected.month();
-      })
-      .sort((a, b) => a.end_date.localeCompare(b.end_date));
+    return depositsInPeriod(
+      deposits,
+      dayjs(selectedDate, "YYYY-MM-DD", true),
+      mode,
+      yearStart,
+      yearEnd,
+    );
   }, [selectedDate, deposits, mode, yearStart, yearEnd]);
 
   const cellTooltip = (cell: DayCell) => {
@@ -528,11 +523,8 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
           const selected = dayjs(selectedDate, "YYYY-MM-DD", true);
           if (mode === "day") return `${selected.format("YYYY年M月D日")} 到期記錄`;
           if (mode === "week") {
-            const sunday = selected.subtract(selected.day(), "day");
-            const saturday = sunday.add(6, "day");
-            const from = sunday.isBefore(yearStart) ? yearStart : sunday;
-            const to = saturday.isAfter(yearEnd) ? yearEnd : saturday;
-            return `${from.format("M月D日")} - ${to.format("M月D日")} 到期記錄`;
+            const { start, end } = weekWindowClamped(selected, yearStart, yearEnd);
+            return `${start.format("M月D日")} - ${end.format("M月D日")} 到期記錄`;
           }
           return `${selected.format("YYYY年M月")} 到期記錄`;
         })()}
