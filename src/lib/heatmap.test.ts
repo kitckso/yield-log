@@ -5,7 +5,10 @@ import {
   bucketKey,
   computeHeatmap,
   computeLevels,
+  computeThresholds,
   depositsInPeriod,
+  levelFor,
+  pooledThresholds,
   weekWindowClamped,
 } from "./heatmap";
 import type { DepositWithBank } from "../types";
@@ -58,13 +61,13 @@ describe("computeLevels", () => {
   it("assigns higher levels to larger values", () => {
     const levels = computeLevels([10, 50, 100, 1000]);
     expect(levels[0]).toBe(1);
-    expect(levels[levels.length - 1]).toBe(4);
+    expect(levels[levels.length - 1]).toBe(3);
   });
 });
 
 describe("computeHeatmap", () => {
   it("produces 12 cells in month mode", () => {
-    const cells = computeHeatmap([], 2024, "month");
+    const cells = computeHeatmap([], 2024, "month", null);
     expect(cells).toHaveLength(12);
     expect(cells[0].key).toBe("2024-01");
     expect(cells[11].key).toBe("2024-12");
@@ -72,7 +75,7 @@ describe("computeHeatmap", () => {
   });
 
   it("covers all days of the year in day mode", () => {
-    const cells = computeHeatmap([], 2024, "day");
+    const cells = computeHeatmap([], 2024, "day", null);
     expect(cells).toHaveLength(366); // 2024 is a leap year
     expect(cells[0].key).toBe("2024-01-01");
     expect(cells[cells.length - 1].key).toBe("2024-12-31");
@@ -84,7 +87,7 @@ describe("computeHeatmap", () => {
       deposit({ id: "2", amount: 3000, interest: 60, end_date: "2024-03-20" }),
       deposit({ id: "3", amount: 9999, end_date: "2025-01-15" }), // out of range
     ];
-    const cells = computeHeatmap(deposits, 2024, "month");
+    const cells = computeHeatmap(deposits, 2024, "month", null);
     const march = cells.find((c) => c.key === "2024-03");
     expect(march?.amount).toBe(8000);
     expect(march?.count).toBe(2);
@@ -94,7 +97,7 @@ describe("computeHeatmap", () => {
 
   it("buckets by week in week mode", () => {
     const deposits = [deposit({ end_date: "2024-03-13" })]; // Wednesday
-    const cells = computeHeatmap(deposits, 2024, "week");
+    const cells = computeHeatmap(deposits, 2024, "week", null);
     const week = cells.find((c) => c.key === "2024-03-10");
     expect(week?.count).toBe(1);
     expect(week?.periodStart).toBe("2024-03-10");
@@ -102,8 +105,89 @@ describe("computeHeatmap", () => {
   });
 
   it("marks future cells", () => {
-    const future = computeHeatmap([], dayjs().year() + 1, "month");
+    const future = computeHeatmap([], dayjs().year() + 1, "month", null);
     expect(future.every((c) => c.isFuture)).toBe(true);
+  });
+});
+
+describe("computeThresholds", () => {
+  it("returns null when nothing has an amount", () => {
+    expect(computeThresholds([0, 0, 0])).toBeNull();
+  });
+
+  it("ignores zero values when picking the cut-points", () => {
+    expect(computeThresholds([0, 100, 200, 300, 400])).toEqual({ q1: 200, q2: 300 });
+  });
+
+  it("spreads the bands out when most values repeat", () => {
+    // Over the raw array both cut-points land on 100K, leaving band 2 empty and
+    // the legend showing the same number twice.
+    const tied = [...Array(12)].map(() => 100000).concat(400000);
+    const t = computeThresholds(tied)!;
+    expect(t.q2).toBeGreaterThan(t.q1);
+    expect(levelFor(100000, t)).toBe(1);
+    expect(levelFor(400000, t)).toBe(3);
+  });
+});
+
+describe("levelFor", () => {
+  const t = { q1: 200, q2: 300 };
+
+  it("keeps empty buckets at level 0", () => {
+    expect(levelFor(0, t)).toBe(0);
+  });
+
+  it("assigns increasing bands as the amount crosses each cut-point", () => {
+    expect(levelFor(100, t)).toBe(1);
+    expect(levelFor(200, t)).toBe(1);
+    expect(levelFor(300, t)).toBe(2);
+    expect(levelFor(301, t)).toBe(3);
+  });
+});
+
+describe("pooledThresholds", () => {
+  // A quiet year used to promote its lone deposit to the top band, because the
+  // quartiles were derived from that year's cells alone.
+  const deposits = [
+    deposit({ id: "a", amount: 100000, end_date: "2024-03-01" }),
+    deposit({ id: "b", amount: 400000, end_date: "2025-03-01" }),
+    deposit({ id: "c", amount: 100000, end_date: "2026-03-01" }),
+  ];
+  const levelIn = (year: number, key: string) =>
+    computeHeatmap(deposits, year, "month", pooledThresholds(deposits, "month")).find(
+      (c) => c.key === key,
+    )?.level;
+
+  it("returns null when there are no deposits", () => {
+    expect(pooledThresholds([], "month")).toBeNull();
+  });
+
+  it("does not let a quiet year promote its deposit to the top band", () => {
+    expect(computeLevels([400000])).toEqual([1]); // 2025 on its own
+    expect(levelIn(2025, "2025-03")).toBe(3); // on the pooled scale
+  });
+
+  it("gives the same amount the same level in every year", () => {
+    expect(levelIn(2024, "2024-03")).toBe(1);
+    expect(levelIn(2026, "2026-03")).toBe(1);
+  });
+
+  it("scales each mode separately, since buckets hold different sums", () => {
+    const spread = [
+      deposit({ id: "x", amount: 100000, end_date: "2024-03-05" }),
+      deposit({ id: "y", amount: 100000, end_date: "2024-03-20" }),
+      deposit({ id: "z", amount: 300000, end_date: "2024-06-10" }),
+    ];
+    // March collapses into one 200K month bucket, but spans two week buckets
+    // alongside June, so the extra 100K values pull the week scale down.
+    const month = pooledThresholds(spread, "month")!;
+    const week = pooledThresholds(spread, "week")!;
+    expect(month.q1).toBeGreaterThan(week.q1);
+    expect(month.q2).toBeGreaterThan(week.q2);
+  });
+
+  it("leaves every cell uncoloured when no thresholds are supplied", () => {
+    expect(computeHeatmap(deposits, 2024, "month", null).every((c) => c.level === 0)).toBe(true);
   });
 });
 

@@ -10,7 +10,7 @@ export interface HeatmapCell {
   amount: number;
   count: number;
   interest: number;
-  level: 0 | 1 | 2 | 3 | 4;
+  level: 0 | 1 | 2 | 3;
   isCurrent: boolean;
   isFuture: boolean;
 }
@@ -81,25 +81,66 @@ export function availableYears(
   return Array.from(years).sort((a, b) => a - b);
 }
 
-export function computeLevels(values: number[]): (0 | 1 | 2 | 3 | 4)[] {
-  const sorted = values.filter((v) => v > 0).sort((a, b) => a - b);
-  if (sorted.length === 0) return values.map(() => 0);
-  const q1 = quantile(sorted, 0.25);
-  const q2 = quantile(sorted, 0.5);
-  const q3 = quantile(sorted, 0.75);
-  return values.map((v) => {
-    if (v === 0) return 0;
-    if (v <= q1) return 1;
-    if (v <= q2) return 2;
-    if (v <= q3) return 3;
-    return 4;
-  });
+export interface Thresholds {
+  q1: number;
+  q2: number;
 }
 
+/**
+ * Ternary cut-points, or null when there are no amounts. Quantiles are taken
+ * over the *distinct* values: a portfolio where most cells are the same amount
+ * would otherwise collapse cut-points together and leave the band between them
+ * empty, so the legend would advertise a colour that never appears.
+ */
+export function computeThresholds(values: number[]): Thresholds | null {
+  const distinct = [...new Set(values.filter((v) => v > 0))].sort((a, b) => a - b);
+  if (distinct.length === 0) return null;
+  return {
+    q1: quantile(distinct, 1 / 3),
+    q2: quantile(distinct, 2 / 3),
+  };
+}
+
+export function levelFor(amount: number, t: Thresholds): 0 | 1 | 2 | 3 {
+  if (amount <= 0) return 0;
+  if (amount <= t.q1) return 1;
+  if (amount <= t.q2) return 2;
+  return 3;
+}
+
+export function computeLevels(values: number[]): (0 | 1 | 2 | 3)[] {
+  const t = computeThresholds(values);
+  return values.map((v) => (t ? levelFor(v, t) : 0));
+}
+
+/**
+ * Cut-points pooled across every year, so changing the displayed year never
+ * moves the colours. Scoped to `mode` because day, week and month buckets hold
+ * different absolute amounts.
+ */
+export function pooledThresholds(
+  deposits: DepositWithBank[],
+  mode: HeatmapMode,
+): Thresholds | null {
+  const totals = new Map<string, number>();
+  deposits.forEach((d) => {
+    const key = bucketKey(dayjs(d.end_date, "YYYY-MM-DD", true), mode);
+    totals.set(key, (totals.get(key) ?? 0) + d.amount);
+  });
+  return computeThresholds([...totals.values()]);
+}
+
+/**
+ * Builds the grid for `year`. `thresholds` is required rather than derived
+ * from this year's cells on purpose: a per-year scale makes the same amount
+ * land on a different colour in each year, so the legend stops meaning
+ * anything. Pass `pooledThresholds(deposits, mode)`.
+ */
 export function computeHeatmap(
   deposits: DepositWithBank[],
   year: number,
   mode: HeatmapMode,
+  thresholds: Thresholds | null,
 ): HeatmapCell[] {
   const yearStart = dayjs(`${year}-01-01`, "YYYY-MM-DD", true);
   const yearEnd = dayjs(`${year}-12-31`, "YYYY-MM-DD", true);
@@ -185,11 +226,11 @@ export function computeHeatmap(
     }
   }
 
-  const amounts = cells.map((c) => c.amount);
-  const levels = computeLevels(amounts);
-  cells.forEach((c, i) => {
-    c.level = levels[i];
-  });
+  if (thresholds) {
+    cells.forEach((c) => {
+      c.level = levelFor(c.amount, thresholds);
+    });
+  }
 
   return cells;
 }

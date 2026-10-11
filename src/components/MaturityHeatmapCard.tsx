@@ -7,9 +7,11 @@ import {
   bucketKey,
   availableYears as availableHeatmapYears,
   depositsInPeriod,
+  pooledThresholds,
   weekWindowClamped,
   type HeatmapMode,
   type HeatmapCell,
+  type Thresholds,
 } from "../lib/heatmap";
 import DepositListModal from "./DepositListModal";
 import HeatmapDayGrid from "./HeatmapDayGrid";
@@ -35,6 +37,42 @@ const MODE_LABELS: { label: string; value: HeatmapMode }[] = [
   { label: "按月", value: "month" },
 ];
 
+/** Compact HKD figure for a legend cut-point, e.g. 120000 -> "120K". */
+function formatThreshold(value: number): string {
+  if (value >= 1_000_000) return `${+(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${+(value / 1_000).toFixed(1)}K`;
+  return String(Math.round(value));
+}
+
+const NICE_STEPS = [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10];
+
+/** Snaps a cut-point to a figure a person would round to by hand, e.g. 66800 -> 70000. */
+function niceBoundary(value: number): number {
+  const magnitude = 10 ** Math.floor(Math.log10(value));
+  let best = magnitude;
+  for (const step of NICE_STEPS) {
+    const candidate = step * magnitude;
+    if (Math.abs(candidate - value) < Math.abs(best - value)) best = candidate;
+  }
+  return best;
+}
+
+/**
+ * One label per band, upper-bound first, with the open-ended top band last:
+ * ["<=70K", "<=150K", ">150K"].
+ */
+function formatBands(t: Thresholds): string[] {
+  let previous = 0;
+  const labels = [t.q1, t.q2].map((v) => {
+    const nice = niceBoundary(v);
+    const bound = nice > previous ? nice : v;
+    previous = bound;
+    return `≤${formatThreshold(bound)}`;
+  });
+  labels.push(`>${formatThreshold(previous)}`);
+  return labels;
+}
+
 export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardProps) {
   const [year, setYear] = useState<number>(() => dayjs().year());
   const [mode, setMode] = useState<HeatmapMode>("day");
@@ -53,7 +91,13 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
     [deposits, year],
   );
 
-  const allCells = useMemo(() => computeHeatmap(deposits, year, mode), [deposits, year, mode]);
+  const thresholds = useMemo(() => pooledThresholds(deposits, mode), [deposits, mode]);
+  const bandLabels = useMemo(() => (thresholds ? formatBands(thresholds) : []), [thresholds]);
+
+  const allCells = useMemo(
+    () => computeHeatmap(deposits, year, mode, thresholds),
+    [deposits, year, mode, thresholds],
+  );
 
   const dayGrid = useMemo<DayCell[][]>(() => {
     const cellMap = new Map(allCells.map((c) => [c.key, c]));
@@ -241,25 +285,34 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
               </Card>
             </SimpleGrid>
 
-            <Group justify="center" gap={6}>
-              <Text size="xs" c="dimmed">
-                少
-              </Text>
-              {([1, 2, 3, 4] as const).map((lvl) => (
-                <div
-                  key={lvl}
-                  style={{
-                    width: 11,
-                    height: 11,
-                    borderRadius: 2,
-                    backgroundColor: LEVEL_COLORS[lvl],
-                  }}
-                />
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexWrap: "wrap",
+                gap: 4,
+              }}
+            >
+              {([1, 2, 3] as const).map((lvl, i) => (
+                <div key={lvl} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <div
+                    style={{
+                      width: 11,
+                      height: 11,
+                      borderRadius: 2,
+                      flexShrink: 0,
+                      backgroundColor: LEVEL_COLORS[lvl],
+                    }}
+                  />
+                  {bandLabels[i] !== undefined && (
+                    <Text size="xs" c="dimmed" style={{ lineHeight: 1 }}>
+                      {bandLabels[i]}
+                    </Text>
+                  )}
+                </div>
               ))}
-              <Text size="xs" c="dimmed">
-                多
-              </Text>
-            </Group>
+            </div>
           </>
         )}
       </Stack>
