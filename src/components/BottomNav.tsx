@@ -39,7 +39,7 @@ export default function BottomNav() {
         right: 0,
         height: "64px",
         backgroundColor: "var(--mantine-color-body)",
-        borderTop: "1px solid var(--mantine-color-gray-3)",
+        borderTop: "1px solid var(--mantine-color-default-border)",
         display: "flex",
         justifyContent: "space-around",
         alignItems: "center",

@@ -38,7 +38,7 @@ export default function MonthlyMaturityCard({
         data={maturityTimeline}
         dataKey="month"
         series={[
-          { name: "value", color: "blue.6", label: maturityGroupBy === "amount" ? "金額" : "利息" },
+          { name: "value", color: "blue.4", label: maturityGroupBy === "amount" ? "金額" : "利息" },
         ]}
         tickLine="y"
         gridAxis="x"

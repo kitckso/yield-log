@@ -243,7 +243,8 @@ export default function DepositList() {
               position: "absolute",
               right: "24px",
               bottom: 0,
-              backgroundColor: "var(--mantine-color-blue-6)",
+              backgroundColor:
+                "light-dark(var(--mantine-color-blue-6), var(--mantine-color-blue-5))",
               color: "white",
             }}
             onClick={() => navigate("/deposits/new")}

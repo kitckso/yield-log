@@ -16,16 +16,7 @@ export default function DepositCard({ deposit, onClick }: DepositCardProps) {
   const periodLabel = formatPeriodLabel(deposit.period_value, deposit.period_unit);
 
   return (
-    <Card
-      padding="md"
-      radius="lg"
-      style={{
-        backgroundColor: "var(--mantine-color-body)",
-        border: "1px solid var(--mantine-color-gray-3)",
-        cursor: "pointer",
-      }}
-      onClick={onClick}
-    >
+    <Card padding="md" radius="lg" withBorder style={{ cursor: "pointer" }} onClick={onClick}>
       <Group justify="space-between" wrap="nowrap" mb="xs">
         <Group gap={6} wrap="nowrap">
           <Text fw={800} size="md">
@@ -52,7 +43,7 @@ export default function DepositCard({ deposit, onClick }: DepositCardProps) {
         justify="space-between"
         wrap="nowrap"
         pt="sm"
-        style={{ borderTop: "1px solid var(--mantine-color-gray-2)" }}
+        style={{ borderTop: "1px solid var(--mantine-color-default-border)" }}
       >
         <Group gap={4} wrap="nowrap">
           <Text size="sm" c="dimmed">

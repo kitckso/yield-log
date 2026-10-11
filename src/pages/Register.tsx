@@ -100,7 +100,7 @@ export default function Register() {
                 已有帳戶？{" "}
                 <Link
                   to="/login"
-                  style={{ color: "var(--mantine-color-blue-6)", textDecoration: "none" }}
+                  style={{ color: "var(--mantine-color-anchor)", textDecoration: "none" }}
                 >
                   登入
                 </Link>
@@ -121,7 +121,7 @@ export default function Register() {
               <Text size="sm" ta="center" mt="sm">
                 <Link
                   to="/login"
-                  style={{ color: "var(--mantine-color-blue-6)", textDecoration: "none" }}
+                  style={{ color: "var(--mantine-color-anchor)", textDecoration: "none" }}
                 >
                   返回登入
                 </Link>

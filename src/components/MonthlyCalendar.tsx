@@ -89,7 +89,7 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
             <Text
               fw={empty ? 600 : 800}
               size="md"
-              c={isCurrent ? "blue" : empty ? "dimmed" : dimmed ? "gray" : undefined}
+              c={isCurrent ? "blue" : empty || dimmed ? "dimmed" : undefined}
               miw={36}
             >
               {m.label}
@@ -103,10 +103,10 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
         {currentSplit ? (
           <Stack gap={2}>
             <Group gap="xs" align="center">
-              <Text size="xs" c="gray" fw={600}>
+              <Text size="xs" c="dimmed" fw={600}>
                 已期滿
               </Text>
-              <Text size="xs" c="gray">
+              <Text size="xs" c="dimmed">
                 · {currentSplit.passed.length} 筆
               </Text>
             </Group>
@@ -122,7 +122,7 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
               <Text size="xs" c="dimmed" fw={500}>
                 利息
               </Text>
-              <Text size="xs" c="gray" fw={600}>
+              <Text size="xs" c="dimmed" fw={600}>
                 {formatCurrency(currentSplit.passedInterest)}
               </Text>
             </Group>

@@ -84,7 +84,7 @@ export default function Login() {
               還沒有帳戶？{" "}
               <Link
                 to="/register"
-                style={{ color: "var(--mantine-color-blue-6)", textDecoration: "none" }}
+                style={{ color: "var(--mantine-color-anchor)", textDecoration: "none" }}
               >
                 註冊
               </Link>

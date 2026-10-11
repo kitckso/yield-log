@@ -148,7 +148,7 @@ describe("bankDistribution", () => {
     expect(items.map((i) => i.name)).toEqual(["HSBC", "ZA Bank"]);
     expect(items.map((i) => i.value)).toEqual([7500, 2500]);
     expect(items.map((i) => i.pct)).toEqual([75, 25]);
-    expect(items[0].color).toBe("blue.6");
+    expect(items[0].color).toBe("blue.4");
     expect(items[1].color).toBe("cyan.6");
   });
 

@@ -9,14 +9,7 @@ interface BankItemProps {
 
 export default function BankItem({ name, onEdit, onDelete }: BankItemProps) {
   return (
-    <Card
-      padding="md"
-      radius="lg"
-      style={{
-        backgroundColor: "var(--mantine-color-body)",
-        border: "1px solid var(--mantine-color-gray-3)",
-      }}
-    >
+    <Card padding="md" radius="lg" withBorder>
       <Group justify="space-between">
         <Group gap="md">
           <ThemeIcon size="lg" radius="xl" variant="light" color="blue">
@@ -27,10 +20,10 @@ export default function BankItem({ name, onEdit, onDelete }: BankItemProps) {
           </Stack>
         </Group>
         <Group gap="xs">
-          <ActionIcon variant="subtle" color="gray" onClick={onEdit}>
+          <ActionIcon variant="subtle" color="gray.6" onClick={onEdit}>
             <IconEdit size={18} />
           </ActionIcon>
-          <ActionIcon variant="subtle" color="red" onClick={onDelete}>
+          <ActionIcon variant="subtle" color="red.7" onClick={onDelete}>
             <IconTrash size={18} />
           </ActionIcon>
         </Group>

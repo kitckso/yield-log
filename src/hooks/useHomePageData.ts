@@ -5,7 +5,7 @@ import { isMatured } from "./useCalculations";
 import dayjs from "dayjs";
 
 const chartColors = [
-  "blue.6",
+  "blue.4",
   "cyan.6",
   "teal.6",
   "grape.6",
@@ -161,7 +161,7 @@ export function useHomePageData(
     };
     const buckets: Record<string, TermBucket> = {
       short: { name: "短期（<6個月）", value: 0, color: "green.6" },
-      medium: { name: "中期（6-12個月）", value: 0, color: "blue.6" },
+      medium: { name: "中期（6-12個月）", value: 0, color: "blue.4" },
       long: { name: "長期（1年以上）", value: 0, color: "grape.6" },
     };
     activeDeposits.forEach((d) => {

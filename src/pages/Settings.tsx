@@ -246,7 +246,7 @@ export default function Settings() {
 
         <Divider />
 
-        <Card padding="lg" radius="lg" withBorder bd="1px solid var(--mantine-color-red-4)">
+        <Card padding="lg" radius="lg" withBorder bd="1px solid var(--mantine-color-error)">
           <Stack gap="md">
             <Group gap="xs">
               <IconAlertTriangle size={20} color="var(--mantine-color-red-6)" />

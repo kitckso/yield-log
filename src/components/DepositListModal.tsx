@@ -62,7 +62,7 @@ export default function DepositListModal({
                 transition: "background-color 0.15s",
               }}
               onMouseEnter={(e) =>
-                (e.currentTarget.style.backgroundColor = "var(--mantine-color-gray-0)")
+                (e.currentTarget.style.backgroundColor = "var(--mantine-color-default-hover)")
               }
               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
             >

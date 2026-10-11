@@ -39,7 +39,7 @@ export default function InterestGrowthCard({ growthData }: InterestGrowthCardPro
                 {
                   x: todayMonth,
                   label: "今天",
-                  color: "blue.5",
+                  color: "blue.4",
                   strokeDasharray: "6 4",
                 },
               ],
@@ -61,7 +61,7 @@ export default function InterestGrowthCard({ growthData }: InterestGrowthCardPro
           justify="space-between"
           mt="sm"
           pt="sm"
-          style={{ borderTop: "1px solid var(--mantine-color-gray-3)" }}
+          style={{ borderTop: "1px solid var(--mantine-color-default-border)" }}
         >
           <Text size="sm" c="dimmed">
             今日累計利息

@@ -45,7 +45,7 @@ export default function YearSummaryCard({
         h={160}
         data={yearChartData}
         dataKey="year"
-        series={[{ name: "amount", color: "blue.6" }]}
+        series={[{ name: "amount", color: "blue.4" }]}
         tickLine="y"
         gridAxis="x"
         withYAxis={false}

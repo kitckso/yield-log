@@ -161,7 +161,7 @@ export default function DepositDetail() {
         <Group grow mt="md">
           <Button
             variant="outline"
-            color="red"
+            color="red.7"
             leftSection={<IconTrash size={18} />}
             onClick={handleDelete}
           >
