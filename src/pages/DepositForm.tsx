@@ -1,42 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import {
-  Container,
-  Stack,
-  NumberInput,
-  Select,
-  Button,
-  Group,
-  Title,
-  Loader,
-  Center,
-  Text,
-} from "@mantine/core";
+import { Container, Stack, Button, Group, Title, Loader, Center } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconArrowLeft } from "@tabler/icons-react";
-import { DateInput } from "@mantine/dates";
 import { useAuthStore } from "../store/auth";
 import { useBanksStore } from "../store/banks";
 import { useDepositsStore } from "../store/deposits";
 import { getErrorMessage } from "../hooks/useCalculations";
+import DepositFormFields from "../components/DepositFormFields";
 import {
   buildDepositDraft,
-  calcEndDateFor,
-  calcInterestFor,
-  formatPeriodLabel,
   parseRenewParams,
   recentAmounts,
   recentPeriods,
   recentRates,
+  resolveEndDate,
+  resolveInterest,
   shouldOfferFloorAlternative,
 } from "../lib/depositForm";
-
-const periodUnits = [
-  { value: "days", label: "日" },
-  { value: "weeks", label: "星期" },
-  { value: "months", label: "個月" },
-  { value: "years", label: "年" },
-];
 
 export default function DepositForm() {
   const navigate = useNavigate();
@@ -57,9 +38,9 @@ export default function DepositForm() {
   const [periodValue, setPeriodValue] = useState<number | string>("");
   const [periodUnit, setPeriodUnit] = useState<string | null>(null);
   const [interestRate, setInterestRate] = useState<number | string>("");
-  const [interest, setInterest] = useState<number | string>(0);
   const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [manualEndDate, setManualEndDate] = useState<Date | null>(null);
+  const [manualInterest, setManualInterest] = useState<number | string>("");
   const [interestManuallyEdited, setInterestManuallyEdited] = useState(false);
   const [endDateManuallyEdited, setEndDateManuallyEdited] = useState(false);
 
@@ -80,9 +61,7 @@ export default function DepositForm() {
         setPeriodValue(deposit.period_value);
         setPeriodUnit(deposit.period_unit);
         setInterestRate(deposit.interest_rate);
-        setInterest(deposit.interest);
         setStartDate(new Date(deposit.start_date));
-        setEndDate(new Date(deposit.end_date));
       }
       setFormLoading(false);
     } else if (isRenew) {
@@ -100,36 +79,45 @@ export default function DepositForm() {
     }
   }, [id, deposits, isEditing, isRenew, searchParams]);
 
-  // Auto-calc end date
-  useEffect(() => {
-    if (startDate && periodValue && periodUnit && !endDateManuallyEdited) {
-      setEndDate(calcEndDateFor(startDate, periodValue, periodUnit));
-    }
-  }, [startDate, periodValue, periodUnit, endDateManuallyEdited]);
+  // The end date follows from the start date and term unless the user set it.
+  const endDate = resolveEndDate(
+    startDate,
+    periodValue,
+    periodUnit,
+    manualEndDate,
+    endDateManuallyEdited,
+  );
 
-  // Auto-calc interest
-  const [floorInterest, setFloorInterest] = useState<number>(0);
-  useEffect(() => {
-    if (startDate && endDate && amount && interestRate && !interestManuallyEdited) {
-      const { interest: rounded, floorInterest: floor } = calcInterestFor(
-        amount,
-        interestRate,
-        startDate,
-        endDate,
-      );
-      setInterest(rounded);
-      setFloorInterest(floor);
-    }
-  }, [amount, interestRate, startDate, endDate, interestManuallyEdited]);
+  // Interest follows from amount, rate and dates unless the user set it.
+  const { interest, floorInterest } = resolveInterest(
+    amount,
+    interestRate,
+    startDate,
+    endDate,
+    manualInterest,
+    interestManuallyEdited,
+  );
 
   const handleInterestChange = (val: number | string) => {
-    setInterest(val);
+    setManualInterest(val);
     setInterestManuallyEdited(true);
   };
 
   const handleEndDateChange = (val: Date | null) => {
-    setEndDate(val);
+    setManualEndDate(val);
     setEndDateManuallyEdited(true);
+  };
+
+  const resetForm = () => {
+    setAmount("");
+    setPeriodValue("");
+    setPeriodUnit(null);
+    setInterestRate("");
+    setManualInterest("");
+    setManualEndDate(null);
+    setStartDate(new Date());
+    setInterestManuallyEdited(false);
+    setEndDateManuallyEdited(false);
   };
 
   const handleSubmit = async (stay?: boolean) => {
@@ -171,30 +159,16 @@ export default function DepositForm() {
         message: getErrorMessage(e),
         color: "red",
       });
-      setLoading(false);
       return;
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
 
     if (stay) {
       resetForm();
     } else {
       void navigate("/deposits");
     }
-  };
-
-  const resetForm = () => {
-    setAmount("");
-    setPeriodValue("");
-    setPeriodUnit(null);
-    setInterestRate("");
-    setInterest(0);
-    setFloorInterest(0);
-    setStartDate(new Date());
-    setEndDate(null);
-    setInterestManuallyEdited(false);
-    setEndDateManuallyEdited(false);
   };
 
   if (formLoading) {
@@ -219,148 +193,39 @@ export default function DepositForm() {
           <Title order={2}>{isEditing ? "編輯存款" : isRenew ? "續存" : "新增存款"}</Title>
         </Group>
 
-        <Stack gap={4}>
-          <Text size="sm" fw={500}>
-            銀行名稱
-          </Text>
-          <Group gap={8}>
-            {banks.map((b) => (
-              <Button
-                key={b.id}
-                size="compact-sm"
-                variant={bankId === b.id ? "filled" : "light"}
-                onClick={() => setBankId(b.id)}
-              >
-                {b.name}
-              </Button>
-            ))}
-          </Group>
-        </Stack>
-
-        <NumberInput
-          label="本金 (HKD)"
-          placeholder="500,000"
-          value={amount}
-          onChange={setAmount}
-          thousandSeparator=","
-          min={0}
-          required
+        <DepositFormFields
+          isEditing={isEditing}
+          banks={banks}
+          bankId={bankId}
+          setBankId={setBankId}
+          amount={amount}
+          setAmount={setAmount}
+          periodValue={periodValue}
+          setPeriodValue={setPeriodValue}
+          periodUnit={periodUnit}
+          setPeriodUnit={setPeriodUnit}
+          interestRate={interestRate}
+          setInterestRate={setInterestRate}
+          startDate={startDate}
+          setStartDate={setStartDate}
+          endDate={endDate}
+          handleEndDateChange={handleEndDateChange}
+          interest={interest}
+          handleInterestChange={handleInterestChange}
+          floorInterest={floorInterest}
+          showFloorAlternative={shouldOfferFloorAlternative(
+            interest,
+            floorInterest,
+            interestManuallyEdited,
+          )}
+          applyFloorInterest={() => {
+            setManualInterest(floorInterest);
+            setInterestManuallyEdited(true);
+          }}
+          recentAmountSuggestions={recentAmountSuggestions}
+          recentRateSuggestions={recentRateSuggestions}
+          recentPeriodSuggestions={recentPeriodSuggestions}
         />
-        {!isEditing && recentAmountSuggestions.length > 0 && (
-          <Group gap={4}>
-            {recentAmountSuggestions.map((v) => (
-              <Button
-                key={v}
-                size="compact-xs"
-                variant={amount === v ? "filled" : "light"}
-                onClick={() => setAmount(v)}
-              >
-                {v.toLocaleString("en-HK")}
-              </Button>
-            ))}
-          </Group>
-        )}
-
-        <Group grow>
-          <NumberInput
-            label="存期"
-            value={periodValue}
-            onChange={setPeriodValue}
-            min={1}
-            required
-          />
-          <Select
-            label="單位"
-            data={periodUnits}
-            value={periodUnit}
-            onChange={setPeriodUnit}
-            required
-          />
-        </Group>
-        {!isEditing && recentPeriodSuggestions.length > 0 && (
-          <Group gap={4}>
-            {recentPeriodSuggestions.map((p) => (
-              <Button
-                key={`${p.value}-${p.unit}`}
-                size="compact-xs"
-                variant={periodValue === p.value && periodUnit === p.unit ? "filled" : "light"}
-                onClick={() => {
-                  setPeriodValue(p.value);
-                  setPeriodUnit(p.unit);
-                }}
-              >
-                {formatPeriodLabel(p.value, p.unit)}
-              </Button>
-            ))}
-          </Group>
-        )}
-
-        <NumberInput
-          label="年利率 (%)"
-          value={interestRate}
-          onChange={setInterestRate}
-          min={0}
-          step={0.01}
-          decimalScale={2}
-          required
-        />
-        {!isEditing && recentRateSuggestions.length > 0 && (
-          <Group gap={4}>
-            {recentRateSuggestions.map((v) => (
-              <Button
-                key={v}
-                size="compact-xs"
-                variant={interestRate === v ? "filled" : "light"}
-                onClick={() => setInterestRate(v)}
-              >
-                {v}%
-              </Button>
-            ))}
-          </Group>
-        )}
-
-        <Group grow>
-          <DateInput
-            label="起息日期"
-            value={startDate}
-            onChange={setStartDate}
-            valueFormat="YYYY年MM月DD日"
-            required
-          />
-          <DateInput
-            label="到期日期"
-            value={endDate}
-            onChange={handleEndDateChange}
-            valueFormat="YYYY年MM月DD日"
-            required
-          />
-        </Group>
-
-        <NumberInput
-          label="利息收益 (HKD)"
-          value={interest}
-          onChange={handleInterestChange}
-          decimalScale={2}
-          fixedDecimalScale
-          required
-        />
-        {shouldOfferFloorAlternative(interest, floorInterest, interestManuallyEdited) && (
-          <Group gap={4}>
-            <Button
-              size="compact-xs"
-              variant="light"
-              onClick={() => {
-                setInterest(floorInterest);
-                setInterestManuallyEdited(true);
-              }}
-            >
-              {floorInterest.toLocaleString("en-HK", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </Button>
-          </Group>
-        )}
 
         <Group mt="md">
           <Button variant="outline" flex={1} onClick={() => navigate("/deposits")}>

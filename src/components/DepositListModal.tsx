@@ -1,5 +1,5 @@
 import { Badge, Group, Modal, ScrollArea, Stack, Text } from "@mantine/core";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import dayjs from "dayjs";
 import { formatCurrency, isMatured } from "../hooks/useCalculations";
 import type { DepositWithBank } from "../types";
@@ -19,8 +19,6 @@ export default function DepositListModal({
   title,
   deposits,
 }: DepositListModalProps) {
-  const navigate = useNavigate();
-
   return (
     <Modal
       opened={opened}
@@ -44,13 +42,16 @@ export default function DepositListModal({
         {deposits.map((d) => {
           const matured = isMatured(d.end_date);
           return (
-            <div
+            <Link
               key={d.id}
-              onClick={() => {
-                void navigate(`/deposits/${d.id}/detail`);
-                onClose();
-              }}
+              to={`/deposits/${d.id}/detail`}
+              onClick={onClose}
               style={{
+                display: "block",
+                width: "100%",
+                textAlign: "left",
+                color: "inherit",
+                textDecoration: "none",
                 borderLeft: `4px solid ${
                   matured ? "var(--mantine-color-gray-4)" : "var(--mantine-color-teal-5)"
                 }`,
@@ -94,7 +95,7 @@ export default function DepositListModal({
                   </Text>
                 </Group>
               </Group>
-            </div>
+            </Link>
           );
         })}
       </Stack>

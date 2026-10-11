@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Card, Group, SegmentedControl, SimpleGrid, Stack, Text, Tooltip } from "@mantine/core";
+import { Card, Group, SegmentedControl, SimpleGrid, Stack, Text } from "@mantine/core";
 import dayjs from "dayjs";
 import { formatCurrency } from "../hooks/useCalculations";
 import {
@@ -12,45 +12,31 @@ import {
   type HeatmapCell,
 } from "../lib/heatmap";
 import DepositListModal from "./DepositListModal";
+import HeatmapDayGrid from "./HeatmapDayGrid";
+import HeatmapWeekList from "./HeatmapWeekList";
+import HeatmapMonthGrid from "./HeatmapMonthGrid";
+import {
+  DAY_CELL_GAP,
+  DAY_CELL_SIZE,
+  LABEL_COL,
+  LEVEL_COLORS,
+  WEEKS_PER_YEAR,
+  type DayCell,
+} from "./heatmapTheme";
 import type { DepositWithBank } from "../types";
 
 interface MaturityHeatmapCardProps {
   deposits: DepositWithBank[];
 }
 
-type Level = 0 | 1 | 2 | 3 | 4;
-
-interface DayCell {
-  date: string;
-  amount: number;
-  count: number;
-  level: Level;
-  isToday: boolean;
-}
-
-const LEVEL_COLORS: Record<Level, string> = {
-  0: "light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-4))",
-  1: "light-dark(var(--mantine-color-orange-1), var(--mantine-color-orange-8))",
-  2: "light-dark(var(--mantine-color-orange-3), var(--mantine-color-orange-6))",
-  3: "light-dark(var(--mantine-color-orange-6), var(--mantine-color-orange-4))",
-  4: "light-dark(var(--mantine-color-orange-8), var(--mantine-color-orange-2))",
-};
-
-const CURRENT_COLOR = "light-dark(var(--mantine-color-blue-6), var(--mantine-color-blue-2))";
-const CURRENT_BORDER = `2px solid ${CURRENT_COLOR}`;
-const EMPTY_OPACITY = 0.5;
-
-const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
-
-const DAY_CELL_SIZE = 14;
-const DAY_CELL_GAP = 2;
-const LABEL_COL = 14;
-const MONTH_LABEL_HEIGHT = 14;
-const WEEK_LABEL_COL = 28;
-const WEEKS_PER_YEAR = 53;
+const MODE_LABELS: { label: string; value: HeatmapMode }[] = [
+  { label: "按日", value: "day" },
+  { label: "按週", value: "week" },
+  { label: "按月", value: "month" },
+];
 
 export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardProps) {
-  const [year, setYear] = useState<number>(dayjs().year());
+  const [year, setYear] = useState<number>(() => dayjs().year());
   const [mode, setMode] = useState<HeatmapMode>("day");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const dayScrollRef = useRef<HTMLDivElement>(null);
@@ -118,6 +104,7 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
     () => deposits.filter((d) => d.end_date.startsWith(`${year}-`)),
     [deposits, year],
   );
+
   const totalAmount = useMemo(() => yearDeposits.reduce((s, d) => s + d.amount, 0), [yearDeposits]);
   const peakAmount = useMemo(() => {
     const periodTotals = new Map<string, number>();
@@ -146,17 +133,16 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
     );
   }, [selectedDate, deposits, mode, yearStart, yearEnd]);
 
-  const cellTooltip = (cell: DayCell) => {
-    if (mode === "day") {
-      return `${dayjs(cell.date).format("YYYY年M月D日")} (${WEEKDAYS[dayjs(cell.date).day()]})\n${formatCurrency(cell.amount)}  ·  ${cell.count} 筆`;
-    }
-    if (mode === "week") {
-      const sunday = dayjs(cell.date).subtract(dayjs(cell.date).day(), "day");
-      const saturday = sunday.add(6, "day");
-      return `${sunday.format("M月D日")} - ${saturday.format("M月D日")}\n${formatCurrency(cell.amount)}  ·  ${cell.count} 筆`;
-    }
-    return `${dayjs(cell.date).format("YYYY年M月")}\n${formatCurrency(cell.amount)}  ·  ${cell.count} 筆`;
-  };
+  const weekMonthGroups = useMemo(() => {
+    const monthGroups = new Map<string, HeatmapCell[]>();
+    allCells.forEach((cell) => {
+      if (dayjs(cell.periodStart, "YYYY-MM-DD", true).year() !== year) return;
+      const monthKey = dayjs(cell.periodStart, "YYYY-MM-DD", true).format("M月");
+      if (!monthGroups.has(monthKey)) monthGroups.set(monthKey, []);
+      monthGroups.get(monthKey)!.push(cell);
+    });
+    return Array.from(monthGroups.entries());
+  }, [allCells, year]);
 
   useEffect(() => {
     if (mode !== "day") return;
@@ -172,254 +158,16 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
     container.scrollLeft = target;
   }, [mode, year, today, weekStart]);
 
-  function renderDayGrid() {
-    return (
-      <div
-        ref={dayScrollRef}
-        style={{
-          overflowX: "auto",
-          overflowY: "hidden",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            gap: DAY_CELL_GAP,
-            width: "fit-content",
-          }}
-        >
-          <Stack gap={DAY_CELL_GAP} style={{ width: LABEL_COL, flexShrink: 0 }}>
-            <div style={{ height: MONTH_LABEL_HEIGHT }} />
-            {WEEKDAYS.map((w) => (
-              <div
-                key={w}
-                style={{
-                  height: DAY_CELL_SIZE,
-                  fontSize: 9,
-                  color: "var(--mantine-color-dimmed)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                {w}
-              </div>
-            ))}
-          </Stack>
-          <div>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: `repeat(${WEEKS_PER_YEAR}, ${DAY_CELL_SIZE}px)`,
-                columnGap: DAY_CELL_GAP,
-                height: MONTH_LABEL_HEIGHT,
-              }}
-            >
-              {monthLabels.map((m, i) => {
-                const next = monthLabels[i + 1];
-                const span = next ? next.col - m.col : WEEKS_PER_YEAR - m.col;
-                return (
-                  <div
-                    key={`${m.col}-${m.label}`}
-                    style={{
-                      gridColumn: `${m.col + 1} / span ${span}`,
-                      fontSize: 9,
-                      color: "var(--mantine-color-dimmed)",
-                      fontWeight: 500,
-                      display: "flex",
-                      alignItems: "flex-end",
-                      paddingBottom: 1,
-                    }}
-                  >
-                    {m.label}
-                  </div>
-                );
-              })}
-            </div>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: `repeat(${WEEKS_PER_YEAR}, ${DAY_CELL_SIZE}px)`,
-                gridTemplateRows: `repeat(7, ${DAY_CELL_SIZE}px)`,
-                columnGap: DAY_CELL_GAP,
-                rowGap: DAY_CELL_GAP,
-              }}
-            >
-              {dayGrid.flatMap((rowCells, row) =>
-                rowCells.map((cell, col) => {
-                  const bg = LEVEL_COLORS[cell.level];
-                  const hasData = cell.amount > 0;
-                  const style: React.CSSProperties = {
-                    gridColumn: col + 1,
-                    gridRow: row + 1,
-                    width: DAY_CELL_SIZE,
-                    height: DAY_CELL_SIZE,
-                    backgroundColor: bg,
-                    borderRadius: 3,
-                    cursor: hasData ? "pointer" : "default",
-                    transition: "transform 0.1s",
-                    outline: cell.isToday ? CURRENT_BORDER : undefined,
-                    outlineOffset: cell.isToday ? -2 : undefined,
-                    opacity: hasData || cell.isToday ? 1 : EMPTY_OPACITY,
-                  };
-                  if (!hasData) {
-                    return <div key={cell.date} style={style} />;
-                  }
-                  return (
-                    <Tooltip key={cell.date} label={cellTooltip(cell)} withArrow openDelay={150}>
-                      <div
-                        style={style}
-                        onClick={() => setSelectedDate(cell.date)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            setSelectedDate(cell.date);
-                          }
-                        }}
-                        role="button"
-                        tabIndex={0}
-                        aria-label={cellTooltip(cell)}
-                        onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.4)")}
-                        onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-                      />
-                    </Tooltip>
-                  );
-                }),
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  function renderWeekList() {
-    const monthGroups = new Map<string, HeatmapCell[]>();
-    allCells.forEach((cell) => {
-      if (dayjs(cell.periodStart, "YYYY-MM-DD", true).year() !== year) return;
-      const monthKey = dayjs(cell.periodStart, "YYYY-MM-DD", true).format("M月");
-      if (!monthGroups.has(monthKey)) monthGroups.set(monthKey, []);
-      monthGroups.get(monthKey)!.push(cell);
-    });
-    return (
-      <Stack gap={5}>
-        {Array.from(monthGroups.entries()).map(([monthLabel, cells]) => (
-          <Group key={monthLabel} gap="xs" wrap="nowrap" align="center">
-            <Text size="xs" w={WEEK_LABEL_COL} c="dimmed" ta="right">
-              {monthLabel}
-            </Text>
-            <div style={{ display: "flex", gap: 4, flex: 1 }}>
-              {cells.map((cell) => {
-                const hasData = cell.amount > 0;
-                const start = dayjs(cell.periodStart);
-                const end = dayjs(cell.periodEnd);
-                const tooltipLabel = hasData
-                  ? `${start.format("M/D")} - ${end.format("M/D")}\n${formatCurrency(cell.amount)} · ${cell.count} 筆`
-                  : `${start.format("M/D")} - ${end.format("M/D")}\n無到期`;
-                return (
-                  <Tooltip key={cell.key} label={tooltipLabel} withArrow openDelay={150}>
-                    <div
-                      onClick={hasData ? () => setSelectedDate(cell.periodStart) : undefined}
-                      onKeyDown={(e) => {
-                        if (hasData && (e.key === "Enter" || e.key === " ")) {
-                          e.preventDefault();
-                          setSelectedDate(cell.periodStart);
-                        }
-                      }}
-                      role={hasData ? "button" : undefined}
-                      tabIndex={hasData ? 0 : undefined}
-                      aria-label={hasData ? tooltipLabel : undefined}
-                      style={{
-                        flex: 1,
-                        height: 22,
-                        borderRadius: 3,
-                        background: LEVEL_COLORS[cell.level],
-                        cursor: hasData ? "pointer" : "default",
-                        opacity: hasData || cell.isCurrent ? 1 : EMPTY_OPACITY,
-                        boxSizing: "border-box",
-                        border: cell.isCurrent ? CURRENT_BORDER : "2px solid transparent",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: 9,
-                        fontWeight: 600,
-                        color:
-                          "light-dark(var(--mantine-color-dark-9), var(--mantine-color-dark-1))",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        minWidth: 0,
-                      }}
-                    >
-                      {`${start.format("D")}-${end.format("D")}`}
-                    </div>
-                  </Tooltip>
-                );
-              })}
-            </div>
-          </Group>
-        ))}
-      </Stack>
-    );
-  }
-
-  function renderMonthGrid() {
-    return (
-      <SimpleGrid cols={{ base: 2, xs: 3, sm: 4 }} spacing="xs">
-        {allCells.map((cell) => {
-          const date = dayjs(cell.periodStart);
-          const hasData = cell.amount > 0;
-          return (
-            <Card
-              key={cell.key}
-              padding="sm"
-              radius="md"
-              withBorder
-              onClick={hasData ? () => setSelectedDate(cell.periodStart) : undefined}
-              onKeyDown={(e) => {
-                if (hasData && (e.key === "Enter" || e.key === " ")) {
-                  e.preventDefault();
-                  setSelectedDate(cell.periodStart);
-                }
-              }}
-              role={hasData ? "button" : undefined}
-              tabIndex={hasData ? 0 : undefined}
-              aria-label={
-                hasData
-                  ? `${date.format("YYYY年M月")} 到期 ${formatCurrency(cell.amount)}，利息 ${formatCurrency(cell.interest)}，${cell.count} 筆`
-                  : undefined
-              }
-              style={{
-                cursor: hasData ? "pointer" : "default",
-                background: LEVEL_COLORS[cell.level],
-                opacity: hasData || cell.isCurrent ? 1 : EMPTY_OPACITY,
-                borderColor: cell.isCurrent ? CURRENT_COLOR : undefined,
-                borderWidth: cell.isCurrent ? 2 : 1,
-              }}
-            >
-              <Text size="xs" fw={600} c={hasData ? undefined : "dimmed"}>
-                {date.format("M月")}
-              </Text>
-              <Text size="sm" fw={700} mt={2} style={{ wordBreak: "break-all" }}>
-                {hasData ? formatCurrency(cell.amount) : "—"}
-              </Text>
-              <Text
-                size="xs"
-                mt={2}
-                fw={600}
-                c={hasData ? undefined : "dimmed"}
-                style={{ wordBreak: "break-all" }}
-              >
-                {hasData ? `利息 ${formatCurrency(cell.interest)}` : "—"}
-              </Text>
-              <Text size="xs" mt={2} fw={700}>
-                {cell.count} 筆
-              </Text>
-            </Card>
-          );
-        })}
-      </SimpleGrid>
-    );
-  }
+  const modalTitle = (() => {
+    if (!selectedDate) return "";
+    const selected = dayjs(selectedDate, "YYYY-MM-DD", true);
+    if (mode === "day") return `${selected.format("YYYY年M月D日")} 到期記錄`;
+    if (mode === "week") {
+      const { start, end } = weekWindowClamped(selected, yearStart, yearEnd);
+      return `${start.format("M月D日")} - ${end.format("M月D日")} 到期記錄`;
+    }
+    return `${selected.format("YYYY年M月")} 到期記錄`;
+  })();
 
   return (
     <Card padding="lg" radius="lg" withBorder>
@@ -430,11 +178,7 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
             size="xs"
             value={mode}
             onChange={(v) => setMode(v as HeatmapMode)}
-            data={[
-              { label: "按日", value: "day" },
-              { label: "按週", value: "week" },
-              { label: "按月", value: "month" },
-            ]}
+            data={MODE_LABELS}
           />
         </Group>
 
@@ -456,11 +200,16 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
             </Text>
           </Stack>
         ) : mode === "day" ? (
-          renderDayGrid()
+          <HeatmapDayGrid
+            ref={dayScrollRef}
+            dayGrid={dayGrid}
+            monthLabels={monthLabels}
+            onSelect={setSelectedDate}
+          />
         ) : mode === "week" ? (
-          renderWeekList()
+          <HeatmapWeekList monthGroups={weekMonthGroups} onSelect={setSelectedDate} />
         ) : (
-          renderMonthGrid()
+          <HeatmapMonthGrid cells={allCells} onSelect={setSelectedDate} />
         )}
 
         {yearHasData && (
@@ -518,16 +267,7 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
       <DepositListModal
         opened={!!selectedDate}
         onClose={() => setSelectedDate(null)}
-        title={(() => {
-          if (!selectedDate) return "";
-          const selected = dayjs(selectedDate, "YYYY-MM-DD", true);
-          if (mode === "day") return `${selected.format("YYYY年M月D日")} 到期記錄`;
-          if (mode === "week") {
-            const { start, end } = weekWindowClamped(selected, yearStart, yearEnd);
-            return `${start.format("M月D日")} - ${end.format("M月D日")} 到期記錄`;
-          }
-          return `${selected.format("YYYY年M月")} 到期記錄`;
-        })()}
+        title={modalTitle}
         deposits={selectedDeposits}
       />
     </Card>

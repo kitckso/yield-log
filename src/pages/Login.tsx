@@ -28,12 +28,17 @@ export default function Login() {
       return;
     }
     setLoading(true);
-    const err = await signIn(email, password);
-    if (err) {
-      setError(err);
+    try {
+      const err = await signIn(email, password);
+      if (err) {
+        setError(err);
+      } else {
+        void navigate("/");
+      }
+    } catch {
+      setError("登入失敗，請稍後再試");
+    } finally {
       setLoading(false);
-    } else {
-      void navigate("/");
     }
   };
 

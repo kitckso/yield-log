@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Container,
   Stack,
@@ -26,7 +26,7 @@ export default function BankManagement() {
   const { banks, fetchBanks, addBank, updateBank, deleteBank } = useBanksStore();
   const [loading, setLoading] = useState(true);
   const [newBankName, setNewBankName] = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const editingIdRef = useRef<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false);
 
@@ -55,18 +55,18 @@ export default function BankManagement() {
   };
 
   const handleEdit = (id: string, name: string) => {
-    setEditingId(id);
+    editingIdRef.current = id;
     setEditingName(name);
     openModal();
   };
 
   const handleUpdate = async () => {
     const name = normalizeBankName(editingName);
-    if (!editingId || !name) return;
+    if (!editingIdRef.current || !name) return;
     try {
-      await updateBank(editingId, name);
+      await updateBank(editingIdRef.current, name);
       closeModal();
-      setEditingId(null);
+      editingIdRef.current = null;
       setEditingName("");
       notifications.show({
         title: "已更新",

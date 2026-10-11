@@ -16,6 +16,8 @@ import {
   recentDeposits,
   recentPeriods,
   recentRates,
+  resolveEndDate,
+  resolveInterest,
   shouldOfferFloorAlternative,
   topByFrequency,
   validateRegistration,
@@ -262,6 +264,58 @@ describe("calcInterestFor", () => {
     const result = calcInterestFor(100000, 3, new Date("2023-01-01"), new Date("2024-01-01"));
     expect(result.interest).toBe(3000);
     expect(result.floorInterest).toBe(3000);
+  });
+});
+
+describe("resolveEndDate", () => {
+  const start = new Date("2026-01-01");
+
+  it("derives the end date from the start date and term", () => {
+    const result = resolveEndDate(start, 3, "months", null, false);
+    expect(result?.toLocaleDateString("en-CA")).toBe("2026-04-01");
+  });
+
+  it("returns the manual override once the user set one", () => {
+    const manual = new Date("2026-06-15");
+    const result = resolveEndDate(start, 3, "months", manual, true);
+    expect(result?.toLocaleDateString("en-CA")).toBe("2026-06-15");
+  });
+
+  it("keeps a cleared date cleared instead of re-deriving it", () => {
+    expect(resolveEndDate(start, 3, "months", null, true)).toBeNull();
+  });
+
+  it("returns null until the form has enough input", () => {
+    expect(resolveEndDate(null, 3, "months", null, false)).toBeNull();
+    expect(resolveEndDate(start, "", "months", null, false)).toBeNull();
+    expect(resolveEndDate(start, 3, null, null, false)).toBeNull();
+  });
+});
+
+describe("resolveInterest", () => {
+  const start = new Date("2024-01-01");
+  const end = new Date("2024-01-02");
+
+  it("derives interest and the floored alternative when not overridden", () => {
+    const result = resolveInterest(100000, 1.5, start, end, "", false);
+    expect(result.interest).toBe(4.11);
+    expect(result.floorInterest).toBe(4.1);
+  });
+
+  it("returns the manual value once the user typed one", () => {
+    const result = resolveInterest(100000, 1.5, start, end, 999, true);
+    expect(result.interest).toBe(999);
+  });
+
+  it("falls back to zero interest while an input is missing", () => {
+    expect(resolveInterest("", 1.5, start, end, "", false).interest).toBe(0);
+    expect(resolveInterest(100000, "", start, end, "", false).interest).toBe(0);
+    expect(resolveInterest(100000, 1.5, null, end, "", false).interest).toBe(0);
+    expect(resolveInterest(100000, 1.5, start, null, "", false).interest).toBe(0);
+  });
+
+  it("reports no floor alternative while an input is missing", () => {
+    expect(resolveInterest(100000, 1.5, start, null, "", false).floorInterest).toBe(0);
   });
 });
 

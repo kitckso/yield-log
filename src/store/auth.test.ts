@@ -87,6 +87,7 @@ describe("signUp", () => {
       "ZA Bank",
       "Mox Bank",
     ]);
+    // user_id is stamped from the session, matching banks.ts / deposits.ts.
     expect(mock.state.insertedBanks.every((b) => b.user_id === "new-user")).toBe(true);
   });
 

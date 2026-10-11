@@ -35,12 +35,17 @@ export default function Register() {
       return;
     }
     setLoading(true);
-    const err = await signUp(email, password);
-    if (err) {
-      setError(err);
+    try {
+      const err = await signUp(email, password);
+      if (err) {
+        setError(err);
+      } else {
+        void navigate("/");
+      }
+    } catch {
+      setError("註冊失敗，請稍後再試");
+    } finally {
       setLoading(false);
-    } else {
-      void navigate("/");
     }
   };
 

@@ -166,6 +166,23 @@ export function shouldOfferFloorAlternative(
   return floorInterest !== Number(interest);
 }
 
+/**
+ * The end date to show: the manual override when the user set one, otherwise
+ * the value derived from the start date and term. Returns null until the form
+ * has enough input to derive it.
+ */
+export function resolveEndDate(
+  startDate: Date | null,
+  periodValue: number | string,
+  periodUnit: string | null,
+  manualEndDate: Date | null,
+  endDateManuallyEdited: boolean,
+): Date | null {
+  if (endDateManuallyEdited) return manualEndDate;
+  if (!startDate || !periodValue || !periodUnit) return null;
+  return calcEndDateFor(startDate, periodValue, periodUnit);
+}
+
 export interface AutoInterest {
   interest: number;
   floorInterest: number;
@@ -195,6 +212,28 @@ export function calcEndDateFor(
   return new Date(
     calculateEndDate(startDate.toLocaleDateString("en-CA"), Number(periodValue), periodUnit),
   );
+}
+
+/**
+ * The interest to store and the floored alternative to offer: the manual
+ * override when the user typed one, otherwise the auto-calculated value.
+ */
+export function resolveInterest(
+  amount: number | string,
+  interestRate: number | string,
+  startDate: Date | null,
+  endDate: Date | null,
+  manualInterest: number | string,
+  interestManuallyEdited: boolean,
+): { interest: number | string; floorInterest: number } {
+  const auto =
+    startDate && endDate && amount && interestRate
+      ? calcInterestFor(amount, interestRate, startDate, endDate)
+      : null;
+  return {
+    interest: interestManuallyEdited ? manualInterest : (auto?.interest ?? 0),
+    floorInterest: auto?.floorInterest ?? 0,
+  };
 }
 
 export interface RenewParams {
