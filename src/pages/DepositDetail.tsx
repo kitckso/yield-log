@@ -16,7 +16,8 @@ import { notifications } from "@mantine/notifications";
 import { IconArrowLeft, IconTrash, IconEdit, IconRefresh } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { useDepositsStore } from "../store/deposits";
-import { isMatured, formatCurrency, formatDate, getErrorMessage } from "../hooks/useCalculations";
+import { formatCurrency, formatDate, getErrorMessage } from "../hooks/useCalculations";
+import { isMatured } from "../lib/depositLifecycle";
 import { buildRenewUrl, formatPeriodLabel } from "../lib/depositForm";
 import type { DepositWithBank } from "../types";
 

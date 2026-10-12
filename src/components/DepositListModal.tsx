@@ -1,7 +1,8 @@
 import { Badge, Group, Modal, ScrollArea, Stack, Text } from "@mantine/core";
 import { Link } from "react-router-dom";
 import dayjs from "dayjs";
-import { formatCurrency, isMatured } from "../hooks/useCalculations";
+import { formatCurrency } from "../hooks/useCalculations";
+import { isMatured } from "../lib/depositLifecycle";
 import type { DepositWithBank } from "../types";
 
 interface DepositListModalProps {

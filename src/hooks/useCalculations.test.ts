@@ -8,7 +8,6 @@ import {
   formatDate,
   formatRelativeDays,
   getErrorMessage,
-  isMatured,
 } from "./useCalculations";
 
 describe("calculateInterest", () => {
@@ -55,20 +54,6 @@ describe("calculateEndDate", () => {
 
   it("adds years", () => {
     expect(calculateEndDate("2024-02-29", 1, "years")).toBe("2025-02-28");
-  });
-});
-
-describe("isMatured", () => {
-  it("is true for a past date", () => {
-    expect(isMatured("2020-01-01")).toBe(true);
-  });
-
-  it("is true for today", () => {
-    expect(isMatured(dayjs().format("YYYY-MM-DD"))).toBe(true);
-  });
-
-  it("is false for a future date", () => {
-    expect(isMatured(dayjs().add(10, "day").format("YYYY-MM-DD"))).toBe(false);
   });
 });
 

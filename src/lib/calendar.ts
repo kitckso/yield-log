@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { isMatured } from "../hooks/useCalculations";
+import { isMatured, splitByMaturity } from "./depositLifecycle";
 import type { DepositWithBank } from "../types";
 
 export interface MonthGroup {
@@ -115,16 +115,14 @@ export function projectDec31Interest(
 }
 
 export function splitMonthByToday(deposits: DepositWithBank[]): MonthSplit {
-  const todayStart = dayjs().startOf("day");
-  const passed = deposits.filter((d) => dayjs(d.end_date).isBefore(todayStart));
-  const future = deposits.filter((d) => !dayjs(d.end_date).isBefore(todayStart));
+  const { matured, active } = splitByMaturity(deposits);
   return {
-    passed,
-    future,
-    passedAmount: passed.reduce((s, d) => s + d.amount, 0),
-    passedInterest: passed.reduce((s, d) => s + d.interest, 0),
-    futureAmount: future.reduce((s, d) => s + d.amount, 0),
-    futureInterest: future.reduce((s, d) => s + d.interest, 0),
+    passed: matured,
+    future: active,
+    passedAmount: matured.reduce((s, d) => s + d.amount, 0),
+    passedInterest: matured.reduce((s, d) => s + d.interest, 0),
+    futureAmount: active.reduce((s, d) => s + d.amount, 0),
+    futureInterest: active.reduce((s, d) => s + d.interest, 0),
   };
 }
 

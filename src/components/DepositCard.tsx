@@ -1,6 +1,7 @@
 import { Card, Text, Group, Badge } from "@mantine/core";
 import dayjs from "dayjs";
-import { isMatured, formatCurrency, formatDate } from "../hooks/useCalculations";
+import { formatCurrency, formatDate } from "../hooks/useCalculations";
+import { isMatured } from "../lib/depositLifecycle";
 import { formatPeriodLabel } from "../lib/depositForm";
 import type { DepositWithBank } from "../types";
 

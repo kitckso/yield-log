@@ -1,9 +1,7 @@
 import dayjs from "dayjs";
-import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { hasPermissionError } from "../lib/settings";
 
-dayjs.extend(isSameOrBefore);
 dayjs.extend(customParseFormat);
 
 export function calculateInterest(
@@ -57,10 +55,6 @@ export function calculateEndDate(
   }
 
   return end.format("YYYY-MM-DD");
-}
-
-export function isMatured(endDate: string): boolean {
-  return dayjs(endDate, "YYYY-MM-DD", true).isSameOrBefore(dayjs(), "day");
 }
 
 export function formatCurrency(amount: number): string {

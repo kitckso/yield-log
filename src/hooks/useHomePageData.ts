@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useDepositsStore } from "../store/deposits";
 import { useBanksStore } from "../store/banks";
-import { isMatured } from "./useCalculations";
+import { isMatured, splitByMaturity } from "../lib/depositLifecycle";
 import dayjs from "dayjs";
 
 const chartColors = [
@@ -100,9 +100,10 @@ export function useHomePageData(
     return map;
   }, [banks]);
 
-  const activeDeposits = useMemo(() => deposits.filter((d) => !isMatured(d.end_date)), [deposits]);
-
-  const maturedDeposits = useMemo(() => deposits.filter((d) => isMatured(d.end_date)), [deposits]);
+  const { active: activeDeposits, matured: maturedDeposits } = useMemo(
+    () => splitByMaturity(deposits),
+    [deposits],
+  );
 
   const activeAmount = useMemo(
     () => activeDeposits.reduce((sum, d) => sum + d.amount, 0),

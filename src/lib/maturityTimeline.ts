@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { formatRelativeDays } from "../hooks/useCalculations";
+import { maturityStatus } from "./depositLifecycle";
 import type { DepositWithBank } from "../types";
 
 export const INITIAL_SHOW = 5;
@@ -26,31 +26,15 @@ export interface RelativeMaturity {
 }
 
 export function classifyMaturity(endDate: string, today: dayjs.Dayjs = dayjs()): RelativeMaturity {
-  const target = dayjs(endDate).startOf("day");
-  const daysDiff = target.diff(today.startOf("day"), "day");
-  const isYesterday = daysDiff === -1;
-  const isToday = daysDiff === 0;
-  const isTomorrow = daysDiff === 1;
-  const matured = daysDiff < 0;
-
-  const label = isToday
-    ? "今日到期"
-    : isYesterday
-      ? "昨日到期"
-      : isTomorrow
-        ? "明天到期"
-        : matured
-          ? `${formatRelativeDays(daysDiff)}前到期`
-          : `${formatRelativeDays(daysDiff)}後到期`;
-
+  const status = maturityStatus(endDate, today);
   return {
-    daysDiff,
-    isYesterday,
-    isToday,
-    isTomorrow,
-    matured,
-    dimmed: matured && !isToday,
-    label,
+    daysDiff: status.daysDiff,
+    isYesterday: status.wasYesterday,
+    isToday: status.maturesToday,
+    isTomorrow: status.maturesTomorrow,
+    matured: status.isMatured,
+    dimmed: status.dimmed,
+    label: status.label,
   };
 }
 

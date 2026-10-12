@@ -363,4 +363,15 @@ describe("date handling is stable regardless of when the suite runs", () => {
     });
     expect(result.map((d) => d.id)).toEqual(["f"]);
   });
+
+  it("counts a deposit maturing today as matured", () => {
+    const today = dep({ id: "t", end_date: dayjs().format("YYYY-MM-DD") });
+    const tomorrow = dep({ id: "n", end_date: dayjs().add(1, "day").format("YYYY-MM-DD") });
+    const result = filterAndSortDeposits([today, tomorrow], {
+      statusFilter: "matured",
+      bankFilter: null,
+      sortBy: "end_asc",
+    });
+    expect(result.map((d) => d.id)).toEqual(["t"]);
+  });
 });

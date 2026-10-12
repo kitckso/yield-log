@@ -8,7 +8,7 @@ import {
   splitMonthByToday,
   sumYearTotals,
 } from "./calendar";
-import { isMatured } from "../hooks/useCalculations";
+import { isMatured } from "./depositLifecycle";
 import type { DepositWithBank } from "../types";
 
 function dep(over: Partial<DepositWithBank> = {}): DepositWithBank {
@@ -123,9 +123,9 @@ describe("projectDec31Interest", () => {
   const yStart = (m: number, d: number) => dayjs().year(year).month(m).date(d);
   const fmt = (d: dayjs.Dayjs) => d.format("YYYY-MM-DD");
 
-  // Pin the clock to the previous December so the whole target year is still
-  // strictly in the future. isMatured() treats today as matured, so starting
-  // the clock on Jan 1 would skip every deposit dated Jan 1.
+  // Pin the clock to the previous December so every fixture date is still in the
+  // future. These tests project forward from today, so a fixture that has already
+  // matured would be skipped and the projection would collapse to 0.
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(year - 1, 11, 1));
@@ -135,11 +135,11 @@ describe("projectDec31Interest", () => {
     vi.useRealTimers();
   });
 
-  it("keeps the whole target year in the future, whatever day the suite runs", () => {
-    // Guards every other test here: they all assume no date inside `year` is
-    // already matured, which only holds because the clock is pinned to the
-    // previous December. Without the pin, a run in e.g. November would treat
-    // every fixture as matured and the projections would collapse to 0.
+  it("keeps every fixture date in the future, whatever day the suite runs", () => {
+    // Guards every other test here: they all assume no date inside `year` has
+    // matured yet, which only holds because the clock is pinned to the previous
+    // December. Without the pin, a run in e.g. November would treat every
+    // fixture as matured and the projections would collapse to 0.
     expect(dayjs().format("YYYY-MM-DD")).toBe(`${year - 1}-12-01`);
     expect(isMatured(fmt(yStart(0, 1)))).toBe(false);
     expect(isMatured(fmt(yStart(11, 31)))).toBe(false);
@@ -478,13 +478,13 @@ describe("splitMonthByToday", () => {
     expect(split.futureInterest).toBe(20);
   });
 
-  it("counts a deposit maturing today as not yet passed", () => {
+  it("counts a deposit maturing today as passed", () => {
     const split = splitMonthByToday([
       dep({ id: "today", end_date: dayjs().format("YYYY-MM-DD"), amount: 300, interest: 30 }),
     ]);
-    expect(split.passed).toHaveLength(0);
-    expect(split.future.map((d) => d.id)).toEqual(["today"]);
-    expect(split.futureAmount).toBe(300);
+    expect(split.passed.map((d) => d.id)).toEqual(["today"]);
+    expect(split.future).toHaveLength(0);
+    expect(split.passedAmount).toBe(300);
   });
 
   it("returns zeroed aggregates for an empty list", () => {

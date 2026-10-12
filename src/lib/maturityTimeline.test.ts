@@ -31,11 +31,11 @@ function dep(over: Partial<DepositWithBank> = {}): DepositWithBank {
 }
 
 describe("classifyMaturity", () => {
-  it("treats today as not yet matured", () => {
+  it("treats today as already matured, but still labelled today", () => {
     const result = classifyMaturity(fmt(TODAY), TODAY);
     expect(result.daysDiff).toBe(0);
     expect(result.isToday).toBe(true);
-    expect(result.matured).toBe(false);
+    expect(result.matured).toBe(true);
     expect(result.label).toBe("今日到期");
     expect(result.dimmed).toBe(false);
   });

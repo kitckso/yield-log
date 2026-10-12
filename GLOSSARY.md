@@ -13,6 +13,14 @@
 Deposit 的利息結算日。到期日之前稱為未到期，之後稱為已到期。
 _Avoid_: 存款紀錄、單筆、entry
 
+**Matured**（已到期）:
+Maturity 已經在今天或更早的 Deposit。當天即算已到期。
+**Matures Today**（今日到期）:
+Maturity 正好是今天的 Deposit，屬於已到期。時間軸用「今日到期」而非相對天數標示它，
+並且是唯一不做淡化的已到期項目。
+Deposit 的「已到期」判定只有這一條規則。
+_Avoid_: 未到期、not yet matured
+
 **Bank**:
 存款所在的機構。Deposit 必須屬於一間 Bank。
 _Avoid_: 機構、provider

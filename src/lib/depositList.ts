@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { isMatured } from "../hooks/useCalculations";
+import { isMatured } from "./depositLifecycle";
 import type { DepositWithBank } from "../types";
 
 export type SortBy =
