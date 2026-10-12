@@ -70,7 +70,10 @@ export function createListQuery<T>({ set, get, load, replace }: ListQueryOptions
             set({ lastFetched: Date.now() });
           }
         } catch (e) {
-          if (epoch === mine) set({ error: getErrorMessage(e) });
+          // A failure stamps nothing, so the rows are a guess again and the next
+          // caller retries. Leaving the previous stamp in place would keep
+          // serving them without ever asking, with the error still on screen.
+          if (epoch === mine) set({ error: getErrorMessage(e), lastFetched: 0 });
         } finally {
           // Only the newest request gets to say the list has stopped loading.
           if (inFlight === request) {

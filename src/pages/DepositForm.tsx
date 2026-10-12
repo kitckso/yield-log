@@ -8,6 +8,7 @@ import { useBanksStore } from "../store/banks";
 import { useDepositsStore } from "../store/deposits";
 import { getErrorMessage } from "../lib/errors";
 import DepositFormFields from "../components/DepositFormFields";
+import FetchErrorNotice from "../components/FetchErrorNotice";
 import {
   buildDepositDraft,
   parseRenewParams,
@@ -32,7 +33,13 @@ export default function DepositForm() {
 
   const { user } = useAuthStore();
   const { banks, fetchBanks } = useBanksStore();
-  const { deposits, fetchDeposits, addDeposit, updateDeposit } = useDepositsStore();
+  const {
+    deposits,
+    error: depositsError,
+    fetchDeposits,
+    addDeposit,
+    updateDeposit,
+  } = useDepositsStore();
 
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
@@ -193,6 +200,25 @@ export default function DepositForm() {
   }
 
   if (isEditing && !deposits.some((d) => d.id === id)) {
+    // Not finding the row is not the same as it being gone: the list may simply
+    // have failed to load, and saying it was deleted would be a lie the user
+    // acts on.
+    if (depositsError) {
+      return (
+        <Container size="sm" pt="md" pb={{ base: 80, sm: 16 }}>
+          <Stack gap="md">
+            <FetchErrorNotice error={depositsError} onRetry={() => void fetchDeposits(true)} />
+            <Button
+              variant="subtle"
+              leftSection={<IconArrowLeft size={20} />}
+              onClick={() => navigate("/deposits")}
+            >
+              返回
+            </Button>
+          </Stack>
+        </Container>
+      );
+    }
     return (
       <Container size="sm" pt="md" pb={{ base: 80, sm: 16 }}>
         <Stack gap="md">

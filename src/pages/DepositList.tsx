@@ -42,7 +42,7 @@ export default function DepositList() {
     void fetchDeposits();
   }, [fetchDeposits]);
 
-  const { banks, fetchBanks } = useBanksStore();
+  const { banks, error: banksError, fetchBanks } = useBanksStore();
   useEffect(() => {
     void fetchBanks();
   }, [fetchBanks]);
@@ -157,6 +157,10 @@ export default function DepositList() {
           />
 
           {error && <FetchErrorNotice error={error} onRetry={() => void fetchDeposits(true)} />}
+          {/* Without the banks, the 全部銀行 filter is silently the only option. */}
+          {banksError && (
+            <FetchErrorNotice error={banksError} onRetry={() => void fetchBanks(true)} />
+          )}
 
           {loading && deposits.length === 0 ? (
             <Stack gap="md">

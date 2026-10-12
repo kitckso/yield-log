@@ -113,12 +113,38 @@ describe("createListQuery", () => {
   });
 
   it("retries after a failure, because a failure stamps nothing", async () => {
-    const load = vi.fn(async () => ["a"]);
+    let shouldFail = false;
+    const load = vi.fn(async () => {
+      if (shouldFail) throw new Error("boom");
+      return ["a"];
+    });
     const { state, query } = harness(load);
     await query.fetch();
-    state.lastFetched = 0;
+    shouldFail = true;
+    await query.fetch(true);
+    expect(state.lastFetched).toBe(0);
+
+    shouldFail = false;
     await query.fetch();
-    expect(load).toHaveBeenCalledTimes(2);
+    expect(load).toHaveBeenCalledTimes(3);
+  });
+
+  it("does not keep an error on screen behind a warm cache", async () => {
+    let shouldFail = false;
+    const { state, query } = harness(async () => {
+      if (shouldFail) throw new Error("boom");
+      return ["a"];
+    });
+    await query.fetch();
+    shouldFail = true;
+    await query.fetch(true);
+    expect(state.error).not.toBeNull();
+
+    // The rows on screen are still the good ones, so the next page to ask must
+    // retry rather than read a cache that looks fine and say nothing.
+    shouldFail = false;
+    await query.fetch();
+    expect(state.error).toBeNull();
   });
 
   it("marks the rows as a guess when invalidated", async () => {
