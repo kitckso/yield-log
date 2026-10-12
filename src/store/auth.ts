@@ -11,6 +11,8 @@ interface AuthState {
   signIn: (email: string, password: string) => Promise<string | null>;
   signOut: () => Promise<void>;
   getSession: () => Promise<void>;
+  /** Subscribes to the session ending on its own. Returns the unsubscribe. */
+  watchSession: () => () => void;
 }
 
 /**
@@ -24,6 +26,20 @@ function forgetCachedAccount() {
   useDepositsStore.getState().clear();
   useBanksStore.getState().clear();
 }
+
+/**
+ * A session can end without anyone pressing 登出: the refresh token fails, or
+ * another tab signs out over the localStorage the session lives in. Supabase
+ * then has nobody signed in, but this store would keep the user and the cached
+ * rows, so the next person to open the app on that device would be shown the
+ * previous account's dashboard without ever being asked to sign in.
+ *
+ * Only SIGNED_OUT is acted on. INITIAL_SESSION fires the moment this is
+ * subscribed, and treating it as a sign-out would clear the cache on every boot.
+ *
+ * Nothing in here awaits Supabase: the callback runs inside its own auth lock,
+ * and a round trip made from within it can deadlock.
+ */
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
@@ -97,5 +113,16 @@ export const useAuthStore = create<AuthState>((set) => ({
       forgetCachedAccount();
       set({ loading: false });
     }
+  },
+
+  watchSession: () => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event !== "SIGNED_OUT") return;
+      forgetCachedAccount();
+      set({ user: null });
+    });
+    return () => subscription.unsubscribe();
   },
 }));

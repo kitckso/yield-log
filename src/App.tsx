@@ -14,11 +14,15 @@ import Settings from "./pages/Settings";
 import PwaUpdater from "./components/PwaUpdater";
 
 export default function App() {
-  const { getSession } = useAuthStore();
+  const { getSession, watchSession } = useAuthStore();
 
   useEffect(() => {
     void getSession();
   }, [getSession]);
+
+  // The session can lapse without a sign-out button being pressed, which would
+  // otherwise leave the last account's rows cached for whoever opens the app next.
+  useEffect(() => watchSession(), [watchSession]);
 
   return (
     <>

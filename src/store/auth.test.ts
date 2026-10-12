@@ -7,11 +7,15 @@ const mock = vi.hoisted(() => {
     signUpResult?: unknown;
     signInResult?: unknown;
     insertedBanks: { user_id: string; name: string }[];
+    authListener: ((event: string) => void) | null;
+    unsubscribed: boolean;
   } = {
     session: null,
     signUpResult: undefined,
     signInResult: undefined,
     insertedBanks: [],
+    authListener: null,
+    unsubscribed: false,
   };
 
   const chain = (result: unknown) => {
@@ -35,7 +39,20 @@ const mock = vi.hoisted(() => {
     },
   }));
 
-  return { state, from };
+  const onAuthStateChange = vi.fn((listener: (event: string) => void) => {
+    state.authListener = listener;
+    return {
+      data: {
+        subscription: {
+          unsubscribe: vi.fn(() => {
+            state.unsubscribed = true;
+          }),
+        },
+      },
+    };
+  });
+
+  return { state, from, onAuthStateChange };
 });
 
 vi.mock("../lib/supabase", () => ({
@@ -46,6 +63,7 @@ vi.mock("../lib/supabase", () => ({
       signUp: vi.fn(async () => mock.state.signUpResult),
       signInWithPassword: vi.fn(async () => mock.state.signInResult),
       signOut: vi.fn(async () => ({})),
+      onAuthStateChange: mock.onAuthStateChange,
     },
   },
 }));
@@ -65,6 +83,8 @@ beforeEach(() => {
   mock.state.signUpResult = undefined;
   mock.state.signInResult = undefined;
   mock.state.insertedBanks = [];
+  mock.state.authListener = null;
+  mock.state.unsubscribed = false;
   useAuthStore.setState({ user: null, loading: true });
   useDepositsStore.setState({ deposits: [], loading: true, lastFetched: 123 });
   useBanksStore.setState({ banks: [], loading: true, lastFetched: 123 });
@@ -198,5 +218,52 @@ describe("getSession", () => {
     expect(useBanksStore.getState().banks).toEqual([]);
     expect(useDepositsStore.getState().lastFetched).toBe(0);
     expect(useBanksStore.getState().lastFetched).toBe(0);
+  });
+});
+
+describe("watchSession", () => {
+  /** Puts a signed-in account and its warm cache in place, the state a lapse ruins. */
+  const signedIn = () => {
+    useAuthStore.setState({ user: { id: "u1", email: "a@b.com" } });
+    useDepositsStore.setState({ deposits: [oldDeposit], lastFetched: Date.now() });
+    useBanksStore.setState({ banks: [oldBank], lastFetched: Date.now() });
+  };
+
+  it("clears the user and both caches when the session ends on its own", () => {
+    signedIn();
+    useAuthStore.getState().watchSession();
+
+    mock.state.authListener?.("SIGNED_OUT");
+
+    // Otherwise the next person to open the app is shown this dashboard, still
+    // signed in, with its rows inside the cache's fresh window.
+    expect(useAuthStore.getState().user).toBeNull();
+    expect(useDepositsStore.getState().deposits).toEqual([]);
+    expect(useBanksStore.getState().banks).toEqual([]);
+    expect(useDepositsStore.getState().lastFetched).toBe(0);
+    expect(useBanksStore.getState().lastFetched).toBe(0);
+  });
+
+  it("leaves the cache alone for events that keep the same account", () => {
+    signedIn();
+    useAuthStore.getState().watchSession();
+
+    // INITIAL_SESSION fires the instant this is subscribed, so treating it as a
+    // sign-out would empty the cache on every boot.
+    ["INITIAL_SESSION", "SIGNED_IN", "TOKEN_REFRESHED", "USER_UPDATED"].forEach((event) => {
+      mock.state.authListener?.(event);
+    });
+
+    expect(useAuthStore.getState().user).toEqual({ id: "u1", email: "a@b.com" });
+    expect(useDepositsStore.getState().deposits).toEqual([oldDeposit]);
+    expect(useBanksStore.getState().banks).toEqual([oldBank]);
+    expect(useDepositsStore.getState().lastFetched).not.toBe(0);
+  });
+
+  it("detaches on unsubscribe, so a remount stops reacting", () => {
+    signedIn();
+    const unsubscribe = useAuthStore.getState().watchSession();
+    unsubscribe();
+    expect(mock.state.unsubscribed).toBe(true);
   });
 });

@@ -23,7 +23,13 @@ export interface ListQuery {
   fetch: (force?: boolean) => Promise<void>;
   /** Marks the rows as a guess: the next fetch goes to the server. */
   invalidate: () => void;
-  /** Nothing here is worth keeping: drops the rows and any request in flight. */
+  /**
+   * Nothing here is worth keeping: drops the rows and any request in flight.
+   *
+   * Reset deliberately writes no state of its own, so the caller owns clearing
+   * `loading` alongside the rows — a `reset()` that forgets to does it leaves a
+   * list that never stops loading.
+   */
   reset: () => void;
 }
 
