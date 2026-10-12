@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Container, Title, Text, Stack, Group, Skeleton, Button, SimpleGrid } from "@mantine/core";
 import UserMenu from "../components/UserMenu";
+import FetchErrorNotice from "../components/FetchErrorNotice";
 import DashboardSummaryCard from "../components/DashboardSummaryCard";
 import MaturityHeatmapCard from "../components/MaturityHeatmapCard";
 import MaturityTimelineCard from "../components/MaturityTimelineCard";
@@ -40,6 +41,8 @@ export default function HomePage() {
             </div>
             <UserMenu />
           </Group>
+
+          {data.error && <FetchErrorNotice error={data.error} onRetry={() => void data.retry()} />}
 
           {data.loading && data.activeDeposits.length === 0 && data.maturedDeposits.length === 0 ? (
             <Stack gap="md">

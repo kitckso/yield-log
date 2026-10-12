@@ -17,6 +17,7 @@ import {
 import { IconCoin, IconPlus } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import UserMenu from "../components/UserMenu";
+import FetchErrorNotice from "../components/FetchErrorNotice";
 import MonthlyCalendar from "../components/MonthlyCalendar";
 import { useDepositsStore } from "../store/deposits";
 import { useBanksStore } from "../store/banks";
@@ -35,7 +36,7 @@ import { formatMoney } from "../lib/money";
 export default function DepositList() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { deposits, loading, fetchDeposits } = useDepositsStore();
+  const { deposits, loading, error, fetchDeposits } = useDepositsStore();
 
   useEffect(() => {
     void fetchDeposits();
@@ -154,6 +155,8 @@ export default function DepositList() {
             ]}
             fullWidth
           />
+
+          {error && <FetchErrorNotice error={error} onRetry={() => void fetchDeposits(true)} />}
 
           {loading && deposits.length === 0 ? (
             <Stack gap="md">

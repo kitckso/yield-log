@@ -60,6 +60,10 @@ const row = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
+/** The shape the join actually returns, flattened the way the store stores it. */
+const deposit = (over: Record<string, unknown> = {}): DepositWithBank =>
+  row(over) as unknown as DepositWithBank;
+
 const newDeposit = () => ({
   user_id: "",
   bank_id: "b1",
@@ -75,7 +79,12 @@ const newDeposit = () => ({
 beforeEach(() => {
   vi.clearAllMocks();
   mock.state.session = { user: { id: "user-1" } };
-  useDepositsStore.setState({ deposits: [], loading: false, lastFetched: 0 });
+  useDepositsStore.setState({
+    deposits: [],
+    loading: false,
+    error: null,
+    lastFetched: 0,
+  });
 });
 
 describe("fetchDeposits", () => {
@@ -117,11 +126,56 @@ describe("fetchDeposits", () => {
   });
 
   it("keeps existing data on error and clears loading", async () => {
-    useDepositsStore.setState({ deposits: [row() as unknown as DepositWithBank] });
+    useDepositsStore.setState({ deposits: [deposit()] });
     mock.state.select = { data: null, error: { message: "boom" } };
     await useDepositsStore.getState().fetchDeposits();
     expect(useDepositsStore.getState().deposits).toHaveLength(1);
     expect(useDepositsStore.getState().loading).toBe(false);
+  });
+
+  it("says a fetch failed instead of leaving stale rows looking current", async () => {
+    mock.state.select = { data: null, error: { message: "boom" } };
+    await useDepositsStore.getState().fetchDeposits();
+    expect(useDepositsStore.getState().error).toBe("操作失敗，請稍後再試");
+  });
+
+  it("clears the error once a fetch succeeds", async () => {
+    mock.state.select = { data: null, error: { message: "boom" } };
+    await useDepositsStore.getState().fetchDeposits();
+    mock.state.select = { data: [row()], error: null };
+    await useDepositsStore.getState().fetchDeposits(true);
+    expect(useDepositsStore.getState().error).toBeNull();
+  });
+});
+
+describe("forgetBank", () => {
+  it("drops the deposits the database took with the bank", () => {
+    useDepositsStore.setState({
+      deposits: [deposit({ id: "d1", bank_id: "b1" }), deposit({ id: "d2", bank_id: "b2" })],
+      lastFetched: Date.now(),
+    });
+    useDepositsStore.getState().forgetBank("b1");
+    expect(useDepositsStore.getState().deposits.map((d) => d.id)).toEqual(["d2"]);
+    // The local guess is marked stale so a refetch can correct it either way.
+    expect(useDepositsStore.getState().lastFetched).toBe(0);
+  });
+});
+
+describe("clear", () => {
+  it("empties the store so no account sees another's rows", () => {
+    useDepositsStore.setState({
+      deposits: [deposit()],
+      loading: true,
+      error: "boom",
+      lastFetched: Date.now(),
+    });
+    useDepositsStore.getState().clear();
+    expect(useDepositsStore.getState()).toMatchObject({
+      deposits: [],
+      loading: false,
+      error: null,
+      lastFetched: 0,
+    });
   });
 });
 

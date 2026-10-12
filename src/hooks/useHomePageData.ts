@@ -62,6 +62,10 @@ interface BankStat {
 
 export interface HomePageData {
   loading: boolean;
+  /** Why the last fetch failed, or null. */
+  error: string | null;
+  /** Fetches again, ignoring the cache. */
+  retry: () => Promise<void>;
   bankMap: Map<string, string>;
   activeDeposits: import("../types").DepositWithBank[];
   maturedDeposits: import("../types").DepositWithBank[];
@@ -87,7 +91,7 @@ export function useHomePageData(
   yearGroupMode: "start" | "end",
   maturityGroupBy: "amount" | "interest",
 ): HomePageData {
-  const { deposits, loading, fetchDeposits } = useDepositsStore();
+  const { deposits, loading, error, fetchDeposits } = useDepositsStore();
   const { banks, fetchBanks } = useBanksStore();
 
   useEffect(() => {
@@ -303,6 +307,8 @@ export function useHomePageData(
 
   return {
     loading,
+    error,
+    retry: () => fetchDeposits(true),
     bankMap,
     activeDeposits,
     maturedDeposits,

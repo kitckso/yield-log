@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
+import type { Bank, DepositWithBank } from "../types";
 
 const mock = vi.hoisted(() => {
   const state: {
@@ -52,6 +53,10 @@ vi.mock("../lib/supabase", () => ({
 const { useAuthStore } = await import("./auth");
 const { useDepositsStore } = await import("./deposits");
 const { useBanksStore } = await import("./banks");
+
+/** Only the identity of a cached row matters here: it stands for one account's data. */
+const oldDeposit = { id: "old" } as unknown as DepositWithBank;
+const oldBank = { id: "old" } as unknown as Bank;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -122,6 +127,16 @@ describe("signIn", () => {
     expect(await useAuthStore.getState().signIn("a@b.com", "pw")).toBe("invalid login");
     expect(useAuthStore.getState().user).toBeNull();
   });
+
+  it("drops the previous account's cache", async () => {
+    useDepositsStore.setState({ deposits: [oldDeposit], lastFetched: Date.now() });
+    useBanksStore.setState({ banks: [oldBank], lastFetched: Date.now() });
+    mock.state.signInResult = { data: { user: { id: "u2", email: "b@b.com" } }, error: null };
+    await useAuthStore.getState().signIn("b@b.com", "pw");
+    // A warm cache would otherwise be served to the new account without a query.
+    expect(useDepositsStore.getState().lastFetched).toBe(0);
+    expect(useBanksStore.getState().lastFetched).toBe(0);
+  });
 });
 
 describe("signOut", () => {
@@ -151,5 +166,16 @@ describe("getSession", () => {
     await useAuthStore.getState().getSession();
     expect(useAuthStore.getState().user).toBeNull();
     expect(useAuthStore.getState().loading).toBe(false);
+  });
+
+  it("drops a lapsed session's cache, so the next login cannot read it", async () => {
+    mock.state.session = null;
+    useDepositsStore.setState({ deposits: [oldDeposit], lastFetched: Date.now() });
+    useBanksStore.setState({ banks: [oldBank], lastFetched: Date.now() });
+    await useAuthStore.getState().getSession();
+    expect(useDepositsStore.getState().deposits).toEqual([]);
+    expect(useBanksStore.getState().banks).toEqual([]);
+    expect(useDepositsStore.getState().lastFetched).toBe(0);
+    expect(useBanksStore.getState().lastFetched).toBe(0);
   });
 });

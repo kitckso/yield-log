@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
-import type { Bank } from "../types";
+import type { Bank, DepositWithBank } from "../types";
 
 const mock = vi.hoisted(() => {
   const state: {
@@ -55,7 +55,7 @@ const bank = (over: Partial<Bank> = {}): Bank => ({
 beforeEach(() => {
   vi.clearAllMocks();
   mock.state.session = { user: { id: "user-1" } };
-  useBanksStore.setState({ banks: [], loading: false, lastFetched: 0 });
+  useBanksStore.setState({ banks: [], loading: false, error: null, lastFetched: 0 });
 });
 
 describe("fetchBanks", () => {
@@ -87,6 +87,38 @@ describe("fetchBanks", () => {
     expect(useBanksStore.getState().banks).toHaveLength(1);
     expect(useBanksStore.getState().loading).toBe(false);
   });
+
+  it("says a fetch failed instead of leaving stale rows looking current", async () => {
+    mock.state.select = { data: null, error: new Error("boom") };
+    await useBanksStore.getState().fetchBanks();
+    expect(useBanksStore.getState().error).toBe("操作失敗，請稍後再試");
+  });
+
+  it("clears the error once a fetch succeeds", async () => {
+    mock.state.select = { data: null, error: new Error("boom") };
+    await useBanksStore.getState().fetchBanks();
+    mock.state.select = { data: [bank()], error: null };
+    await useBanksStore.getState().fetchBanks(true);
+    expect(useBanksStore.getState().error).toBeNull();
+  });
+});
+
+describe("clear", () => {
+  it("empties the store so no account sees another's banks", () => {
+    useBanksStore.setState({
+      banks: [bank()],
+      loading: true,
+      error: "boom",
+      lastFetched: Date.now(),
+    });
+    useBanksStore.getState().clear();
+    expect(useBanksStore.getState()).toMatchObject({
+      banks: [],
+      loading: false,
+      error: null,
+      lastFetched: 0,
+    });
+  });
 });
 
 describe("addBank", () => {
@@ -95,11 +127,11 @@ describe("addBank", () => {
     await expect(useBanksStore.getState().addBank("ZA Bank")).rejects.toThrow("Not authenticated");
   });
 
-  it("appends the created bank", async () => {
+  it("puts the created bank in name order, not at the end", async () => {
     useBanksStore.setState({ banks: [bank({ id: "b0", name: "Existing" })] });
-    mock.state.insert = { data: bank({ id: "b2", name: "ZA Bank" }), error: null };
-    await useBanksStore.getState().addBank("ZA Bank");
-    expect(useBanksStore.getState().banks.map((b) => b.name)).toEqual(["Existing", "ZA Bank"]);
+    mock.state.insert = { data: bank({ id: "b2", name: "AAA Bank" }), error: null };
+    await useBanksStore.getState().addBank("AAA Bank");
+    expect(useBanksStore.getState().banks.map((b) => b.name)).toEqual(["AAA Bank", "Existing"]);
   });
 
   it("propagates insert errors", async () => {
@@ -109,13 +141,13 @@ describe("addBank", () => {
 });
 
 describe("updateBank", () => {
-  it("replaces the matching bank name", async () => {
+  it("renames the bank and re-sorts it", async () => {
     useBanksStore.setState({
       banks: [bank({ id: "b1", name: "Old" }), bank({ id: "b2", name: "Keep" })],
     });
     mock.state.update = { data: bank({ id: "b1", name: "New" }), error: null };
     await useBanksStore.getState().updateBank("b1", "New");
-    expect(useBanksStore.getState().banks.map((b) => b.name)).toEqual(["New", "Keep"]);
+    expect(useBanksStore.getState().banks.map((b) => b.name)).toEqual(["Keep", "New"]);
   });
 
   it("propagates update errors", async () => {
@@ -137,5 +169,19 @@ describe("deleteBank", () => {
     await expect(useBanksStore.getState().deleteBank("b1")).rejects.toMatchObject({
       code: "42501",
     });
+  });
+
+  it("drops the deposits the database cascaded away with it", async () => {
+    const { useDepositsStore } = await import("./deposits");
+    useBanksStore.setState({ banks: [bank({ id: "b1" })] });
+    useDepositsStore.setState({
+      deposits: [
+        { id: "d1", bank_id: "b1" },
+        { id: "d2", bank_id: "b2" },
+      ] as unknown as DepositWithBank[],
+    });
+    mock.state.delete = { data: [bank({ id: "b1" })], error: null };
+    await useBanksStore.getState().deleteBank("b1");
+    expect(useDepositsStore.getState().deposits.map((d) => d.id)).toEqual(["d2"]);
   });
 });

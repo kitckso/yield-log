@@ -13,6 +13,17 @@ interface AuthState {
   getSession: () => Promise<void>;
 }
 
+/**
+ * Cached rows belong to whoever was signed in when they were fetched. Every
+ * route to a signed-out state has to drop them: a session can lapse without
+ * anyone pressing 登出, and a fresh login would otherwise serve the previous
+ * account's rows straight out of the cache.
+ */
+function forgetCachedAccount() {
+  useDepositsStore.getState().clear();
+  useBanksStore.getState().clear();
+}
+
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   loading: true,
@@ -56,6 +67,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (error) return error.message;
 
     if (data.user) {
+      forgetCachedAccount();
       set({
         user: { id: data.user.id, email: data.user.email ?? "" },
       });
@@ -65,8 +77,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   signOut: async () => {
     await supabase.auth.signOut();
-    useDepositsStore.setState({ deposits: [], loading: false, lastFetched: 0 });
-    useBanksStore.setState({ banks: [], loading: false, lastFetched: 0 });
+    forgetCachedAccount();
     set({ user: null });
   },
 
@@ -78,6 +89,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         loading: false,
       });
     } else {
+      forgetCachedAccount();
       set({ loading: false });
     }
   },
