@@ -1,3 +1,5 @@
+import type { PeriodUnit } from "../lib/period";
+
 export interface User {
   id: string;
   email: string;
@@ -16,7 +18,7 @@ export interface FixedDeposit {
   bank_id: string;
   amount: number;
   period_value: number;
-  period_unit: "days" | "weeks" | "months" | "years";
+  period_unit: PeriodUnit;
   interest_rate: number;
   interest: number;
   start_date: string;

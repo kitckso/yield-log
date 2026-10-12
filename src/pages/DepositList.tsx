@@ -30,6 +30,7 @@ import {
   parseListUrlState,
   sortFieldFor,
 } from "../lib/depositList";
+import { formatMoney } from "../lib/money";
 
 export default function DepositList() {
   const navigate = useNavigate();
@@ -95,7 +96,7 @@ export default function DepositList() {
 
     const monthGroups = groupByMonthField(filteredDeposits, sortFieldFor(sortBy));
     const elements: React.ReactNode[] = [];
-    const fmt = (n: number) => `$${n.toLocaleString("en-HK")}`;
+    const fmt = formatMoney;
     for (const group of monthGroups) {
       elements.push(
         <Divider

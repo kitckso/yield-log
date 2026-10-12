@@ -1,5 +1,5 @@
 import { Card, Text, Stack, Group, SimpleGrid, Title } from "@mantine/core";
-import { formatCurrency } from "../hooks/useCalculations";
+import { formatMoney } from "../lib/money";
 
 interface DashboardSummaryCardProps {
   activeAmount: number;
@@ -29,7 +29,7 @@ export default function DashboardSummaryCard({
           總資產（進行中）
         </Text>
         <Title order={1} style={{ fontSize: "36px", lineHeight: "40px" }}>
-          {formatCurrency(activeAmount)}
+          {formatMoney(activeAmount)}
         </Title>
         <Group gap="xs">
           <Text size="sm" fw={600}>
@@ -47,7 +47,7 @@ export default function DashboardSummaryCard({
                 ·
               </Text>
               <Text size="sm" fw={600}>
-                平均每筆 {formatCurrency(Math.round(activeAmount / activeCount))}
+                平均每筆 {formatMoney(Math.round(activeAmount / activeCount))}
               </Text>
             </>
           )}
@@ -59,7 +59,7 @@ export default function DashboardSummaryCard({
                 每日利息
               </Text>
               <Text size="sm" fw={600} c="green.7">
-                {formatCurrency(interestPerDay)}
+                {formatMoney(interestPerDay)}
               </Text>
             </Group>
             <Group gap={4} wrap="nowrap">
@@ -67,7 +67,7 @@ export default function DashboardSummaryCard({
                 每月利息
               </Text>
               <Text size="sm" fw={600} c="green.7">
-                {formatCurrency(interestPerDay * 30)}
+                {formatMoney(interestPerDay * 30)}
               </Text>
             </Group>
           </Group>
@@ -78,7 +78,7 @@ export default function DashboardSummaryCard({
               待收利息
             </Text>
             <Text size="sm" fw={500}>
-              {formatCurrency(pendingInterest)}
+              {formatMoney(pendingInterest)}
             </Text>
           </Stack>
           <Stack gap={0}>
@@ -86,16 +86,16 @@ export default function DashboardSummaryCard({
               已收利息
             </Text>
             <Text size="sm" fw={500}>
-              {formatCurrency(totalReceivedInterest)}
+              {formatMoney(totalReceivedInterest)}
             </Text>
           </Stack>
         </SimpleGrid>
         <Text size="sm" fw={500} mt="xs">
-          預估總利息 {formatCurrency(pendingInterest + totalReceivedInterest)}
+          預估總利息 {formatMoney(pendingInterest + totalReceivedInterest)}
         </Text>
         {maturedCount > 0 && (
           <Text size="xs" c="dimmed">
-            已期滿 {maturedCount} 筆，共 {formatCurrency(maturedTotal)}
+            已期滿 {maturedCount} 筆，共 {formatMoney(maturedTotal)}
           </Text>
         )}
       </Stack>

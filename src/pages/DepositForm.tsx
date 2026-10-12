@@ -6,7 +6,7 @@ import { IconArrowLeft } from "@tabler/icons-react";
 import { useAuthStore } from "../store/auth";
 import { useBanksStore } from "../store/banks";
 import { useDepositsStore } from "../store/deposits";
-import { getErrorMessage } from "../hooks/useCalculations";
+import { getErrorMessage } from "../lib/errors";
 import DepositFormFields from "../components/DepositFormFields";
 import {
   buildDepositDraft,

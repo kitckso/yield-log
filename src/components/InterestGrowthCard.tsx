@@ -1,7 +1,7 @@
 import { Card, Group, Text } from "@mantine/core";
 import { LineChart } from "@mantine/charts";
 import dayjs from "dayjs";
-import { formatCurrency } from "../hooks/useCalculations";
+import { formatAxisMoney, formatMoney } from "../lib/money";
 
 interface GrowthItem {
   month: string;
@@ -45,16 +45,8 @@ export default function InterestGrowthCard({ growthData }: InterestGrowthCardPro
               ],
             }
           : {})}
-        yAxisProps={{
-          tickFormatter: (v: number) => {
-            if (v >= 100_000_000) return `$${(v / 100_000_000).toFixed(1)}億`;
-            if (v >= 10_000) return `$${(v / 10_000).toFixed(1)}萬`;
-            return `$${v}`;
-          },
-        }}
-        valueFormatter={(v: number) =>
-          `$${v.toLocaleString("en-HK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-        }
+        yAxisProps={{ tickFormatter: formatAxisMoney }}
+        valueFormatter={formatMoney}
       />
       {hasToday && (
         <Group
@@ -67,7 +59,7 @@ export default function InterestGrowthCard({ growthData }: InterestGrowthCardPro
             今日累計利息
           </Text>
           <Text size="sm" fw={600} c="green.7">
-            {formatCurrency(todayEntry.累計利息)}
+            {formatMoney(todayEntry.累計利息)}
           </Text>
         </Group>
       )}

@@ -1,6 +1,6 @@
 import { Card, Text, Stack, Group, SimpleGrid, SegmentedControl, ColorSwatch } from "@mantine/core";
 import { DonutChart } from "@mantine/charts";
-import { formatCurrency } from "../hooks/useCalculations";
+import { formatMoney } from "../lib/money";
 import type { BankDistributionItem } from "../hooks/useHomePageData";
 
 interface BankDistributionCardProps {
@@ -64,7 +64,7 @@ export default function BankDistributionCard({
                   withShadow={false}
                 />
                 <Text size="xs">
-                  {item.name} {formatCurrency(item.value)} {item.pct}%
+                  {item.name} {formatMoney(item.value)} {item.pct}%
                 </Text>
               </Group>
             ))}

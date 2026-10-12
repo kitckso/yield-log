@@ -1,7 +1,7 @@
 import { Badge, Group, Modal, ScrollArea, Stack, Text } from "@mantine/core";
 import { Link } from "react-router-dom";
 import dayjs from "dayjs";
-import { formatCurrency } from "../hooks/useCalculations";
+import { formatMoney } from "../lib/money";
 import { isMatured } from "../lib/depositLifecycle";
 import type { DepositWithBank } from "../types";
 
@@ -85,14 +85,14 @@ export default function DepositListModal({
               </Group>
               <Group justify="space-between" wrap="nowrap">
                 <Text size="sm" fw={700}>
-                  {formatCurrency(d.amount)}
+                  {formatMoney(d.amount)}
                 </Text>
                 <Group gap={4} wrap="nowrap">
                   <Text size="xs" c="dimmed">
                     利息
                   </Text>
                   <Text size="xs" c="green" fw={700}>
-                    {formatCurrency(d.interest)}
+                    {formatMoney(d.interest)}
                   </Text>
                 </Group>
               </Group>

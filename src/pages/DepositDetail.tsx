@@ -16,9 +16,12 @@ import { notifications } from "@mantine/notifications";
 import { IconArrowLeft, IconTrash, IconEdit, IconRefresh } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { useDepositsStore } from "../store/deposits";
-import { formatCurrency, formatDate, getErrorMessage } from "../hooks/useCalculations";
+import { formatDate } from "../lib/dateFormat";
+import { getErrorMessage } from "../lib/errors";
+import { formatMoney } from "../lib/money";
 import { isMatured } from "../lib/depositLifecycle";
-import { buildRenewUrl, formatPeriodLabel } from "../lib/depositForm";
+import { buildRenewUrl } from "../lib/depositForm";
+import { formatPeriodLabel } from "../lib/period";
 import type { DepositWithBank } from "../types";
 
 export default function DepositDetail() {
@@ -111,7 +114,7 @@ export default function DepositDetail() {
                 本金
               </Text>
               <Text fw={700} style={{ fontSize: "24px" }}>
-                {formatCurrency(deposit.amount)}
+                {formatMoney(deposit.amount)}
               </Text>
             </div>
             <div>
@@ -119,7 +122,7 @@ export default function DepositDetail() {
                 利息
               </Text>
               <Text fw={700} style={{ fontSize: "24px" }} c="green">
-                {formatCurrency(deposit.interest)}
+                {formatMoney(deposit.interest)}
               </Text>
             </div>
             <div>

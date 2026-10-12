@@ -1,6 +1,6 @@
 import { Card, SimpleGrid, Text } from "@mantine/core";
 import dayjs from "dayjs";
-import { formatCurrency } from "../hooks/useCalculations";
+import { formatMoney } from "../lib/money";
 import type { MaturityBucket } from "../lib/maturityCalendar";
 import { BAND_COLORS, CURRENT_COLOR, EMPTY_OPACITY } from "./heatmapTheme";
 
@@ -33,7 +33,7 @@ export default function HeatmapMonthGrid({ buckets, onSelect }: HeatmapMonthGrid
             tabIndex={hasData ? 0 : undefined}
             aria-label={
               hasData
-                ? `${date.format("YYYY年M月")} 到期 ${formatCurrency(cell.amount)}，利息 ${formatCurrency(cell.interest)}，${cell.count} 筆`
+                ? `${date.format("YYYY年M月")} 到期 ${formatMoney(cell.amount)}，利息 ${formatMoney(cell.interest)}，${cell.count} 筆`
                 : undefined
             }
             style={{
@@ -48,7 +48,7 @@ export default function HeatmapMonthGrid({ buckets, onSelect }: HeatmapMonthGrid
               {date.format("M月")}
             </Text>
             <Text size="sm" fw={700} mt={2} style={{ wordBreak: "break-all" }}>
-              {hasData ? formatCurrency(cell.amount) : "—"}
+              {hasData ? formatMoney(cell.amount) : "—"}
             </Text>
             <Text
               size="xs"
@@ -57,7 +57,7 @@ export default function HeatmapMonthGrid({ buckets, onSelect }: HeatmapMonthGrid
               c={hasData ? undefined : "dimmed"}
               style={{ wordBreak: "break-all" }}
             >
-              {hasData ? `利息 ${formatCurrency(cell.interest)}` : "—"}
+              {hasData ? `利息 ${formatMoney(cell.interest)}` : "—"}
             </Text>
             <Text size="xs" mt={2} fw={700}>
               {cell.count} 筆

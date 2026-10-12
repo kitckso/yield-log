@@ -1,6 +1,6 @@
 import { Group, Stack, Text, Tooltip } from "@mantine/core";
 import dayjs from "dayjs";
-import { formatCurrency } from "../hooks/useCalculations";
+import { formatMoney } from "../lib/money";
 import type { MaturityBucket } from "../lib/maturityCalendar";
 import { BAND_COLORS, CURRENT_BORDER, EMPTY_OPACITY, WEEK_LABEL_COL } from "./heatmapTheme";
 
@@ -24,7 +24,7 @@ export default function HeatmapWeekList({ monthGroups, onSelect }: HeatmapWeekLi
               const start = dayjs(cell.periodStart);
               const end = dayjs(cell.periodEnd);
               const tooltipLabel = hasData
-                ? `${start.format("M/D")} - ${end.format("M/D")}\n${formatCurrency(cell.amount)} · ${cell.count} 筆`
+                ? `${start.format("M/D")} - ${end.format("M/D")}\n${formatMoney(cell.amount)} · ${cell.count} 筆`
                 : `${start.format("M/D")} - ${end.format("M/D")}\n無到期`;
               return (
                 <Tooltip key={cell.key} label={tooltipLabel} withArrow openDelay={150}>

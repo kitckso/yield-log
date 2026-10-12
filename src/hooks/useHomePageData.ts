@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useDepositsStore } from "../store/deposits";
 import { useBanksStore } from "../store/banks";
 import { isMatured, splitByMaturity } from "../lib/depositLifecycle";
+import { periodInMonths } from "../lib/period";
 import dayjs from "dayjs";
 
 const chartColors = [
@@ -154,19 +155,13 @@ export function useHomePageData(
   }, [deposits, activeDeposits, bankMap, groupBy, scope]);
 
   const termDistribution = useMemo(() => {
-    const monthMap: Record<string, number> = {
-      days: 1 / 30,
-      weeks: 7 / 30,
-      months: 1,
-      years: 12,
-    };
     const buckets: Record<string, TermBucket> = {
       short: { name: "短期（<6個月）", value: 0, color: "green.6" },
       medium: { name: "中期（6-12個月）", value: 0, color: "blue.4" },
       long: { name: "長期（1年以上）", value: 0, color: "grape.6" },
     };
     activeDeposits.forEach((d) => {
-      const months = d.period_value * (monthMap[d.period_unit] ?? 1);
+      const months = periodInMonths(d.period_value, d.period_unit);
       if (months < 6) buckets.short.value += d.amount;
       else if (months < 12) buckets.medium.value += d.amount;
       else buckets.long.value += d.amount;

@@ -1,24 +1,10 @@
 import dayjs from "dayjs";
-import {
-  calculateEndDate,
-  calculateInterest,
-  calculateInterestRounded,
-} from "../hooks/useCalculations";
+import { calculateEndDate, calculateInterest, calculateInterestRounded } from "./interest";
+import type { PeriodUnit } from "./period";
 import type { DepositWithBank } from "../types";
 
 export const RECENT_WINDOW_MONTHS = 6;
 export const MAX_SUGGESTIONS = 5;
-
-export const PERIOD_UNIT_LABELS: Record<string, string> = {
-  days: "日",
-  weeks: "週",
-  months: "個月",
-  years: "年",
-};
-
-export function formatPeriodLabel(value: number, unit: string): string {
-  return `${value}${PERIOD_UNIT_LABELS[unit] ?? unit}`;
-}
 
 /**
  * Keeps the most frequent values of `keyFn` across recent deposits. Ties keep
@@ -102,8 +88,6 @@ export interface DepositFormValues {
   startDate: Date | null;
   endDate: Date | null;
 }
-
-export type PeriodUnit = "days" | "weeks" | "months" | "years";
 
 export interface DepositDraft {
   user_id: string;

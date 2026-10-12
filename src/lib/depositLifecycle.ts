@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { formatRelativeDays } from "../hooks/useCalculations";
+import { formatRelativeDays } from "./dateFormat";
 import type { DepositWithBank } from "../types";
 
 /**

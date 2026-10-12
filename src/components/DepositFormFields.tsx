@@ -1,15 +1,9 @@
 import { Button, Group, NumberInput, Select, Stack, Text } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
-import { formatPeriodLabel, type PeriodSuggestion } from "../lib/depositForm";
+import { formatPeriodLabel, PERIOD_UNIT_OPTIONS } from "../lib/period";
+import type { PeriodSuggestion } from "../lib/depositForm";
 import SuggestionChips from "./SuggestionChips";
 import type { Bank } from "../types";
-
-const PERIOD_UNITS = [
-  { value: "days", label: "日" },
-  { value: "weeks", label: "星期" },
-  { value: "months", label: "個月" },
-  { value: "years", label: "年" },
-];
 
 export interface DepositFormFieldsProps {
   isEditing: boolean;
@@ -109,7 +103,7 @@ export default function DepositFormFields({
         <NumberInput label="存期" value={periodValue} onChange={setPeriodValue} min={1} required />
         <Select
           label="單位"
-          data={PERIOD_UNITS}
+          data={PERIOD_UNIT_OPTIONS}
           value={periodUnit}
           onChange={setPeriodUnit}
           required

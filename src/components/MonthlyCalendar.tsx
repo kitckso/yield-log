@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Card, Group, Stack, Text, Title, ActionIcon, SimpleGrid } from "@mantine/core";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { formatCurrency } from "../hooks/useCalculations";
+import { formatMoney } from "../lib/money";
 import {
   buildMonthGroups,
   hasDepositsInYear,
@@ -115,7 +115,7 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
                 本金
               </Text>
               <Text size="sm" c="dimmed" fw={600}>
-                {formatCurrency(currentSplit.passedAmount)}
+                {formatMoney(currentSplit.passedAmount)}
               </Text>
             </Group>
             <Group gap={4}>
@@ -123,7 +123,7 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
                 利息
               </Text>
               <Text size="xs" c="dimmed" fw={600}>
-                {formatCurrency(currentSplit.passedInterest)}
+                {formatMoney(currentSplit.passedInterest)}
               </Text>
             </Group>
             <div
@@ -146,7 +146,7 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
                 本金
               </Text>
               <Text size="sm" fw={700}>
-                {formatCurrency(currentSplit.futureAmount)}
+                {formatMoney(currentSplit.futureAmount)}
               </Text>
             </Group>
             <Group gap={4}>
@@ -154,7 +154,7 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
                 利息
               </Text>
               <Text size="sm" fw={700} c="green">
-                {formatCurrency(currentSplit.futureInterest)}
+                {formatMoney(currentSplit.futureInterest)}
               </Text>
             </Group>
           </Stack>
@@ -184,7 +184,7 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
                 本金
               </Text>
               <Text size="sm" fw={dimmed ? 600 : 700} c={dimmed ? "dimmed" : undefined}>
-                {formatCurrency(m.totalAmount)}
+                {formatMoney(m.totalAmount)}
               </Text>
             </Group>
             <Group gap={4}>
@@ -192,7 +192,7 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
                 利息
               </Text>
               <Text size="sm" fw={dimmed ? 600 : 700} c={dimmed ? "gray" : "green"}>
-                {formatCurrency(m.totalInterest)}
+                {formatMoney(m.totalInterest)}
               </Text>
             </Group>
           </Stack>
@@ -232,7 +232,7 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
               全年本金
             </Text>
             <Text fw={700} size="lg" ta="center">
-              {formatCurrency(yearTotalAmount)}
+              {formatMoney(yearTotalAmount)}
             </Text>
           </div>
           <div>
@@ -240,7 +240,7 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
               全年利息
             </Text>
             <Text fw={700} size="lg" c="green" ta="center">
-              {formatCurrency(yearTotalInterest)}
+              {formatMoney(yearTotalInterest)}
             </Text>
           </div>
           {projectedDec31Interest !== null && (
@@ -249,7 +249,7 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
                 預估至 12月31日
               </Text>
               <Text fw={700} size="lg" c="dimmed" ta="center">
-                {formatCurrency(projectedDec31Interest)}
+                {formatMoney(projectedDec31Interest)}
               </Text>
             </div>
           )}

@@ -1,11 +1,5 @@
+import { formatBandMoney } from "../lib/money";
 import type { BandBounds } from "../lib/maturityCalendar";
-
-/** Compact HKD figure for a legend cut-point, e.g. 120000 -> "120K". */
-export function formatThreshold(value: number): string {
-  if (value >= 1_000_000) return `${+(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1_000) return `${+(value / 1_000).toFixed(1)}K`;
-  return String(Math.round(value));
-}
 
 const NICE_STEPS = [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10];
 
@@ -22,7 +16,7 @@ export function niceBoundary(value: number): number {
 
 /**
  * One label per band, upper-bound first, with the open-ended top band last:
- * ["<=70K", "<=150K", ">150K"].
+ * ["≤$7萬", "≤$15萬", ">$15萬"].
  */
 export function formatBands(bounds: BandBounds): string[] {
   let previous = 0;
@@ -30,8 +24,8 @@ export function formatBands(bounds: BandBounds): string[] {
     const nice = niceBoundary(value);
     const bound = nice > previous ? nice : value;
     previous = bound;
-    return `≤${formatThreshold(bound)}`;
+    return `≤${formatBandMoney(bound)}`;
   });
-  labels.push(`>${formatThreshold(previous)}`);
+  labels.push(`>${formatBandMoney(previous)}`);
   return labels;
 }

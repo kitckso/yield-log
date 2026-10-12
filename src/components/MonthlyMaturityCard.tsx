@@ -1,5 +1,6 @@
 import { Card, Text, SegmentedControl } from "@mantine/core";
 import { BarChart } from "@mantine/charts";
+import { formatMoney } from "../lib/money";
 
 interface MaturityMonth {
   month: string;
@@ -43,9 +44,7 @@ export default function MonthlyMaturityCard({
         tickLine="y"
         gridAxis="x"
         withYAxis={false}
-        valueFormatter={(v: number) =>
-          `$${v.toLocaleString("en-HK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-        }
+        valueFormatter={formatMoney}
       />
     </Card>
   );

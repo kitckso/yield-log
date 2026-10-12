@@ -1,8 +1,9 @@
 import { Card, Text, Group, Badge } from "@mantine/core";
 import dayjs from "dayjs";
-import { formatCurrency, formatDate } from "../hooks/useCalculations";
+import { formatDate } from "../lib/dateFormat";
+import { formatMoney } from "../lib/money";
 import { isMatured } from "../lib/depositLifecycle";
-import { formatPeriodLabel } from "../lib/depositForm";
+import { formatPeriodLabel } from "../lib/period";
 import type { DepositWithBank } from "../types";
 
 interface DepositCardProps {
@@ -33,7 +34,7 @@ export default function DepositCard({ deposit, onClick }: DepositCardProps) {
       </Group>
 
       <Text fw={700} style={{ fontSize: "28px", lineHeight: "32px" }} mb={4}>
-        {formatCurrency(deposit.amount)}
+        {formatMoney(deposit.amount)}
       </Text>
 
       <Text size="xs" c="dimmed" mb="sm">
@@ -56,7 +57,7 @@ export default function DepositCard({ deposit, onClick }: DepositCardProps) {
             利息
           </Text>
           <Text fw={700} size="sm" c="green">
-            {formatCurrency(deposit.interest)}
+            {formatMoney(deposit.interest)}
           </Text>
         </Group>
       </Group>

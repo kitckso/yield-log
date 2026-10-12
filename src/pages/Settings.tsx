@@ -28,7 +28,7 @@ import { useBanksStore } from "../store/banks";
 import { useAuthStore } from "../store/auth";
 import { useAppStore, type ColorScheme } from "../store/app";
 import { supabase } from "../lib/supabase";
-import { getErrorMessage } from "../hooks/useCalculations";
+import { getErrorMessage } from "../lib/errors";
 import {
   buildExportFilename,
   buildExportPayload,

@@ -1,6 +1,6 @@
 import { Card, Text, Stack, Group, ColorSwatch } from "@mantine/core";
 import { DonutChart } from "@mantine/charts";
-import { formatCurrency } from "../hooks/useCalculations";
+import { formatMoney } from "../lib/money";
 
 interface TermItem {
   name: string;
@@ -40,7 +40,7 @@ export default function TermDistributionCard({ termDistribution }: TermDistribut
                 {item.name}
               </Text>
               <Text size="xs" fw={500}>
-                {formatCurrency(item.value)}
+                {formatMoney(item.value)}
               </Text>
             </Group>
           ))}

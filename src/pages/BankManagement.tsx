@@ -17,7 +17,7 @@ import { IconPlus, IconCoin } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { useDisclosure } from "@mantine/hooks";
 import { useBanksStore } from "../store/banks";
-import { getErrorMessage } from "../hooks/useCalculations";
+import { getErrorMessage } from "../lib/errors";
 import { normalizeBankName } from "../lib/depositForm";
 import UserMenu from "../components/UserMenu";
 import BankItem from "../components/BankItem";

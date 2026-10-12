@@ -1,5 +1,5 @@
 import { Card, Text, Stack, Group, SimpleGrid } from "@mantine/core";
-import { formatCurrency } from "../hooks/useCalculations";
+import { formatMoney } from "../lib/money";
 
 interface BankStat {
   bankId: string;
@@ -40,7 +40,7 @@ export default function BankStatsCard({ bankStats, onNavigate }: BankStatsCardPr
                   {b.bankName}
                 </Text>
                 <Text size="sm" fw={600}>
-                  {formatCurrency(totalAmount)}
+                  {formatMoney(totalAmount)}
                 </Text>
               </Group>
               <SimpleGrid cols={2} spacing="xs">
@@ -51,11 +51,11 @@ export default function BankStatsCard({ bankStats, onNavigate }: BankStatsCardPr
                         進行中
                       </Text>
                       <Text size="xs">
-                        {b.activeCount}筆 {formatCurrency(b.activeAmount)}
+                        {b.activeCount}筆 {formatMoney(b.activeAmount)}
                       </Text>
                       {b.pendingInterest > 0 && (
                         <Text size="xs" c="dimmed">
-                          待收利息 {formatCurrency(b.pendingInterest)}
+                          待收利息 {formatMoney(b.pendingInterest)}
                         </Text>
                       )}
                     </>
@@ -68,11 +68,11 @@ export default function BankStatsCard({ bankStats, onNavigate }: BankStatsCardPr
                         已期滿
                       </Text>
                       <Text size="xs">
-                        {b.maturedCount}筆 {formatCurrency(b.maturedAmount)}
+                        {b.maturedCount}筆 {formatMoney(b.maturedAmount)}
                       </Text>
                       {b.receivedInterest > 0 && (
                         <Text size="xs" c="dimmed">
-                          已收利息 {formatCurrency(b.receivedInterest)}
+                          已收利息 {formatMoney(b.receivedInterest)}
                         </Text>
                       )}
                     </>

@@ -1,6 +1,6 @@
 import { Card, Text, Stack, Group, SegmentedControl } from "@mantine/core";
 import { BarChart } from "@mantine/charts";
-import { formatCurrency } from "../hooks/useCalculations";
+import { formatMoney } from "../lib/money";
 
 interface YearItem {
   year: string;
@@ -59,14 +59,14 @@ export default function YearSummaryCard({
               {y.year}
             </Text>
             <Stack gap={0} align="end">
-              <Text size="sm">{formatCurrency(y.amount)}</Text>
+              <Text size="sm">{formatMoney(y.amount)}</Text>
               <Text size="xs" c="dimmed">
                 {y.count} 筆
               </Text>
               <Text size="xs" c="dimmed">
-                {y.pending > 0 && `待收 ${formatCurrency(y.pending)}`}
+                {y.pending > 0 && `待收 ${formatMoney(y.pending)}`}
                 {y.pending > 0 && y.received > 0 && " · "}
-                {y.received > 0 && `已收 ${formatCurrency(y.received)}`}
+                {y.received > 0 && `已收 ${formatMoney(y.received)}`}
               </Text>
             </Stack>
           </Group>

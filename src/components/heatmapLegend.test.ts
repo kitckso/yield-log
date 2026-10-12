@@ -1,20 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { formatBands, formatThreshold, niceBoundary } from "./heatmapLegend";
-
-describe("formatThreshold", () => {
-  it("leaves small figures plain", () => {
-    expect(formatThreshold(500)).toBe("500");
-  });
-
-  it("abbreviates thousands", () => {
-    expect(formatThreshold(120_000)).toBe("120K");
-    expect(formatThreshold(1500)).toBe("1.5K");
-  });
-
-  it("abbreviates millions", () => {
-    expect(formatThreshold(2_500_000)).toBe("2.5M");
-  });
-});
+import { formatBands, niceBoundary } from "./heatmapLegend";
 
 describe("niceBoundary", () => {
   it("snaps to a round figure a person would pick", () => {
@@ -29,16 +14,21 @@ describe("niceBoundary", () => {
 
 describe("formatBands", () => {
   it("labels each band by its upper bound, top band last", () => {
-    expect(formatBands({ q1: 70_000, q2: 150_000 })).toEqual(["≤70K", "≤150K", ">150K"]);
+    expect(formatBands({ q1: 70_000, q2: 150_000 })).toEqual(["≤$7萬", "≤$15萬", ">$15萬"]);
   });
 
   it("keeps labels strictly increasing when rounding would collide", () => {
-    // Both cut-points round to 100K, so the second falls back to its raw value.
+    // Both cut-points snap to 100K, so the second falls back to its raw value,
+    // which happens to round to the same figure.
     const labels = formatBands({ q1: 99_000, q2: 100_000 });
     expect(labels).toHaveLength(3);
-    expect(labels[0]).toBe("≤100K");
-    expect(labels[1]).toBe("≤100K");
-    expect(labels[2]).toBe(">100K");
+    expect(labels[0]).toBe("≤$10萬");
+    expect(labels[1]).toBe("≤$10萬");
+    expect(labels[2]).toBe(">$10萬");
+  });
+
+  it("groups plain figures when the whole portfolio is small", () => {
+    expect(formatBands({ q1: 1000, q2: 2000 })).toEqual(["≤$1,000", "≤$2,000", ">$2,000"]);
   });
 
   it("always returns three labels, matching the three coloured bands", () => {

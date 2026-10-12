@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Card, Group, SegmentedControl, SimpleGrid, Stack, Text } from "@mantine/core";
 import dayjs from "dayjs";
-import { formatCurrency } from "../hooks/useCalculations";
+import { formatMoney } from "../lib/money";
 import {
   availableMaturityYears,
   bucketLabel,
@@ -148,7 +148,7 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
                   累計到期
                 </Text>
                 <Text fw={700} size="sm" mt={2} style={{ wordBreak: "break-all" }}>
-                  {formatCurrency(calendar.summary.totalAmount)}
+                  {formatMoney(calendar.summary.totalAmount)}
                 </Text>
               </Card>
               <Card padding="xs" radius="md" withBorder>
@@ -156,9 +156,7 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
                   單{PERIOD_LABELS[mode]}峰值
                 </Text>
                 <Text fw={700} size="sm" mt={2} style={{ wordBreak: "break-all" }}>
-                  {calendar.summary.peakAmount > 0
-                    ? formatCurrency(calendar.summary.peakAmount)
-                    : "—"}
+                  {calendar.summary.peakAmount > 0 ? formatMoney(calendar.summary.peakAmount) : "—"}
                 </Text>
               </Card>
               <Card padding="xs" radius="md" withBorder>

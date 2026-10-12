@@ -1,4 +1,5 @@
 import dayjs from "dayjs";
+import { addPeriod, periodInDays } from "./period";
 import { isMatured, splitByMaturity } from "./depositLifecycle";
 import type { DepositWithBank } from "../types";
 
@@ -58,21 +59,10 @@ function advanceTerm(
   periodValue: number,
   periodUnit: DepositWithBank["period_unit"],
 ): { nextEnd: dayjs.Dayjs; termDays: number } {
-  switch (periodUnit) {
-    case "days":
-      return { nextEnd: currentEnd.add(periodValue, "day"), termDays: periodValue };
-    case "weeks":
-      return {
-        nextEnd: currentEnd.add(periodValue * 7, "day"),
-        termDays: periodValue * 7,
-      };
-    case "months":
-      return { nextEnd: currentEnd.add(periodValue, "month"), termDays: 0 };
-    case "years":
-      return { nextEnd: currentEnd.add(periodValue, "year"), termDays: 0 };
-    default:
-      return { nextEnd: currentEnd.add(periodValue, "month"), termDays: 0 };
-  }
+  return {
+    nextEnd: addPeriod(currentEnd, periodValue, periodUnit),
+    termDays: periodInDays(periodValue, periodUnit),
+  };
 }
 
 /**

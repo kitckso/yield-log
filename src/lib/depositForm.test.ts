@@ -7,7 +7,6 @@ import {
   buildRenewUrl,
   calcEndDateFor,
   calcInterestFor,
-  formatPeriodLabel,
   isDepositFormComplete,
   isRegistrationEnabled,
   normalizeBankName,
@@ -43,19 +42,6 @@ function dep(over: Partial<DepositWithBank> = {}): DepositWithBank {
 }
 
 const NOW = dayjs("2026-06-15", "YYYY-MM-DD", true);
-
-describe("formatPeriodLabel", () => {
-  it("labels every supported unit", () => {
-    expect(formatPeriodLabel(3, "days")).toBe("3日");
-    expect(formatPeriodLabel(2, "weeks")).toBe("2週");
-    expect(formatPeriodLabel(6, "months")).toBe("6個月");
-    expect(formatPeriodLabel(1, "years")).toBe("1年");
-  });
-
-  it("falls back to the raw unit for unknown values", () => {
-    expect(formatPeriodLabel(4, "decades")).toBe("4decades");
-  });
-});
 
 describe("topByFrequency", () => {
   const items = ["a", "b", "a", "c", "b", "a", "d"];

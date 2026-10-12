@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Card, Text, Stack, Group, Badge, Divider, Button } from "@mantine/core";
-import { formatCurrency } from "../hooks/useCalculations";
+import { formatMoney } from "../lib/money";
 import {
   classifyMaturity,
   groupByMonth,
@@ -70,10 +70,10 @@ export default function MaturityTimelineCard({
         </Stack>
         <Stack gap={0} align="end">
           <Text fw={600} size="sm" c={isToday ? "green.7" : matured ? "dimmed" : undefined}>
-            {formatCurrency(d.amount)}
+            {formatMoney(d.amount)}
           </Text>
           <Text size="xs" c="dimmed">
-            利息 {formatCurrency(d.interest)}
+            利息 {formatMoney(d.interest)}
           </Text>
         </Stack>
       </Group>
