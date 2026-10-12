@@ -240,6 +240,17 @@ export default function DepositForm() {
     );
   }
 
+  // The seed runs in an effect, so the render where the row first arrives would
+  // otherwise commit one frame with blank fields before the values pop in. Safe
+  // either way — an empty form cannot be saved — but it looks like a glitch.
+  if (isEditing && seededRoute.current !== routeKey) {
+    return (
+      <Center style={{ minHeight: "100dvh" }}>
+        <Loader />
+      </Center>
+    );
+  }
+
   return (
     <Container size="sm" pt="md" pb={{ base: 80, sm: 16 }}>
       <Stack gap="md">

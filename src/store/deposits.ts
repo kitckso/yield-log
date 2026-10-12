@@ -35,6 +35,8 @@ interface DepositsState {
   deleteDeposit: (id: string) => Promise<void>;
   /** A Bank is gone, so the schema took its Deposits with it. */
   forgetBank: (bankId: string) => void;
+  /** A Bank was renamed, and these rows carry a copy of its name. */
+  renameBank: (bankId: string, name: string) => void;
   /** Nothing cached belongs to an account any more. */
   clear: () => void;
 }
@@ -95,6 +97,13 @@ export const useDepositsStore = create<DepositsState>((set, get) => {
 
     forgetBank: (bankId) => {
       set({ deposits: get().deposits.filter((d) => d.bank_id !== bankId) });
+      query.invalidate();
+    },
+
+    renameBank: (bankId, name) => {
+      set({
+        deposits: get().deposits.map((d) => (d.bank_id === bankId ? { ...d, bank_name: name } : d)),
+      });
       query.invalidate();
     },
 

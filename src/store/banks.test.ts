@@ -161,6 +161,24 @@ describe("updateBank", () => {
     expect(useBanksStore.getState().banks.map((b) => b.name)).toEqual(["Keep", "New"]);
   });
 
+  it("renames the deposits that carry a copy of the old name", async () => {
+    const { useDepositsStore } = await import("./deposits");
+    useBanksStore.setState({ banks: [bank({ id: "b1", name: "Old" })] });
+    useDepositsStore.setState({
+      deposits: [
+        { id: "d1", bank_id: "b1", bank_name: "Old" },
+        { id: "d2", bank_id: "b2", bank_name: "Other" },
+      ] as DepositWithBank[],
+    });
+    mock.state.update = { data: bank({ id: "b1", name: "New" }), error: null };
+
+    await useBanksStore.getState().updateBank("b1", "New");
+
+    // The list prints the name the deposit row carries, not the banks store's.
+    const rows = useDepositsStore.getState().deposits;
+    expect(rows.map((d) => d.bank_name)).toEqual(["New", "Other"]);
+  });
+
   it("propagates update errors", async () => {
     mock.state.update = { data: null, error: new Error("update failed") };
     await expect(useBanksStore.getState().updateBank("b1", "New")).rejects.toThrow("update failed");

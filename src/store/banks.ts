@@ -68,6 +68,10 @@ export const useBanksStore = create<BanksState>((set, get) => {
           .banks.map((b) => (b.id === id ? data : b))
           .sort(byName),
       });
+      // Deposit rows carry a copy of the bank's name from the join, and that
+      // copy is what the list prints. Renaming has to reach them the same way
+      // deleting does.
+      useDepositsStore.getState().renameBank(id, name);
       query.invalidate();
     },
 
