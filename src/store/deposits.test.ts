@@ -8,10 +8,18 @@ const mock = vi.hoisted(() => {
     update?: { data?: unknown; error?: unknown };
     delete?: { data?: unknown; error?: unknown };
     session: { user: { id: string } } | null;
-  } = { session: { user: { id: "user-1" } } };
+    /** When set, selects stay in flight until the test releases them. */
+    holdSelects: boolean;
+    pendingSelects: { resolve: (r: unknown) => void }[];
+  } = { session: { user: { id: "user-1" } }, holdSelects: false, pendingSelects: [] };
 
-  const chain = (result: { data?: unknown; error?: unknown } | undefined) => {
-    const resolved = () => Promise.resolve(result ?? { data: null, error: null });
+  const chain = (result: { data?: unknown; error?: unknown } | undefined, isSelect = false) => {
+    const resolved = () => {
+      if (isSelect && state.holdSelects) {
+        return new Promise((res) => state.pendingSelects.push({ resolve: res }));
+      }
+      return Promise.resolve(result ?? { data: null, error: null });
+    };
     const c: Record<string, unknown> = {
       select: () => c,
       order: () => c,
@@ -24,7 +32,7 @@ const mock = vi.hoisted(() => {
   };
 
   const from = vi.fn(() => ({
-    select: () => chain(state.select),
+    select: () => chain(state.select, true),
     insert: () => chain(state.insert),
     update: () => chain(state.update),
     delete: () => chain(state.delete),
@@ -79,11 +87,69 @@ const newDeposit = () => ({
 beforeEach(() => {
   vi.clearAllMocks();
   mock.state.session = { user: { id: "user-1" } };
+  mock.state.holdSelects = false;
+  mock.state.pendingSelects = [];
   useDepositsStore.setState({
     deposits: [],
     loading: false,
     error: null,
     lastFetched: 0,
+  });
+});
+
+describe("when the account changes mid-fetch", () => {
+  const hold = () => mock.state.pendingSelects;
+  /** The query only reaches the builder on a microtask, so let it get there. */
+  const settle = () => new Promise((r) => setTimeout(r, 0));
+
+  it("does not write another account's rows into the store", async () => {
+    mock.state.holdSelects = true;
+    const pending = useDepositsStore.getState().fetchDeposits();
+    await settle();
+    // A signs out and B signs in while the request is still going.
+    useDepositsStore.getState().clear();
+    hold()[0].resolve({ data: [row({ id: "a" })], error: null });
+    await pending;
+
+    // A's rows must not become the list B is about to read.
+    expect(useDepositsStore.getState().deposits).toEqual([]);
+    // And a stamp here would freeze them in place for five minutes.
+    expect(useDepositsStore.getState().lastFetched).toBe(0);
+  });
+
+  it("makes the next account ask again instead of joining the abandoned request", async () => {
+    mock.state.holdSelects = true;
+    const abandoned = useDepositsStore.getState().fetchDeposits();
+    await settle();
+    useDepositsStore.getState().clear();
+    const fresh = useDepositsStore.getState().fetchDeposits();
+    await settle();
+
+    // Two queries went out, one per account, instead of one shared between them.
+    expect(hold()).toHaveLength(2);
+    hold()[0].resolve({ data: [row({ id: "a" })], error: null });
+    hold()[1].resolve({ data: [row({ id: "b" })], error: null });
+    await Promise.all([abandoned, fresh]);
+
+    expect(useDepositsStore.getState().deposits.map((d) => d.id)).toEqual(["b"]);
+  });
+
+  it("keeps an optimistic row that a slower snapshot would have dropped", async () => {
+    mock.state.holdSelects = true;
+    mock.state.insert = { data: row({ id: "new" }), error: null };
+    const pending = useDepositsStore.getState().fetchDeposits();
+    await settle();
+    // The insert lands first and patches the row in, then marks the rows a guess.
+    await useDepositsStore.getState().addDeposit({ ...newDeposit(), amount: 999 });
+    expect(useDepositsStore.getState().deposits.map((d) => d.id)).toEqual(["new"]);
+
+    // The request that started before the insert answers with a snapshot that
+    // does not contain it.
+    hold()[0].resolve({ data: [row({ id: "stale" })], error: null });
+    await pending;
+
+    expect(useDepositsStore.getState().deposits.map((d) => d.id)).toEqual(["new"]);
+    expect(useDepositsStore.getState().lastFetched).toBe(0);
   });
 });
 

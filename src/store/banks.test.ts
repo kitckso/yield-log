@@ -119,6 +119,17 @@ describe("clear", () => {
       lastFetched: 0,
     });
   });
+
+  it("drops a request that was already on its way", async () => {
+    // The previous account's fetch is still in flight when clear() runs. Its
+    // response must not repopulate the store or stamp it fresh.
+    const pending = useBanksStore.getState().fetchBanks();
+    useBanksStore.getState().clear();
+    mock.state.select = { data: [bank()], error: null };
+    await pending;
+    expect(useBanksStore.getState().banks).toEqual([]);
+    expect(useBanksStore.getState().lastFetched).toBe(0);
+  });
 });
 
 describe("addBank", () => {

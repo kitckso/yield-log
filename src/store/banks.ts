@@ -85,6 +85,9 @@ export const useBanksStore = create<BanksState>((set, get) => {
       query.invalidate();
     },
 
-    clear: () => set({ banks: [], loading: false, error: null, lastFetched: 0 }),
+    clear: () => {
+      query.reset();
+      set({ banks: [], loading: false, error: null, lastFetched: 0 });
+    },
   };
 });

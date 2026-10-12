@@ -23,6 +23,8 @@ export interface ListQuery {
   fetch: (force?: boolean) => Promise<void>;
   /** Marks the rows as a guess: the next fetch goes to the server. */
   invalidate: () => void;
+  /** Nothing here is worth keeping: drops the rows and any request in flight. */
+  reset: () => void;
 }
 
 /**
@@ -31,36 +33,66 @@ export interface ListQuery {
  *
  * Two callers arriving together share one request, because the freshness stamp
  * is only written once the request comes back.
+ *
+ * Every request remembers the epoch it started in, and only writes if that is
+ * still the current one. A response that was already on its way describes the
+ * world as it was when it left, so it must not overwrite what has happened
+ * since: a sign-out or a sign-in means those rows belong to someone else, and a
+ * write means the snapshot is missing it. Both of those bump the epoch, and a
+ * fetch started after them bumps it too, so an older response can never land
+ * last.
  */
 export function createListQuery<T>({ set, get, load, replace }: ListQueryOptions<T>): ListQuery {
   let inFlight: Promise<void> | null = null;
+  let epoch = 0;
 
   return {
     initial: { loading: false, error: null, lastFetched: 0 },
 
     async fetch(force) {
-      if (inFlight) return inFlight;
+      // A forced fetch is meant to go to the server now, so it cannot be served
+      // by a request that was started for other reasons.
+      if (inFlight && !force) return inFlight;
 
       const { lastFetched } = get();
       if (!force && lastFetched && Date.now() - lastFetched < STALE_TIME) return;
 
-      inFlight = (async () => {
+      const mine = ++epoch;
+      // Declared first so the finally block below can compare against it: the
+      // promise exists by the time it settles, but not before it is assigned.
+      let request: Promise<void> | null = null;
+      request = (async () => {
         set({ loading: true, error: null });
         try {
-          replace(await load());
-          set({ lastFetched: Date.now() });
+          const rows = await load();
+          if (epoch === mine) {
+            replace(rows);
+            set({ lastFetched: Date.now() });
+          }
         } catch (e) {
-          set({ error: getErrorMessage(e) });
+          if (epoch === mine) set({ error: getErrorMessage(e) });
         } finally {
-          set({ loading: false });
-          inFlight = null;
+          // Only the newest request gets to say the list has stopped loading.
+          if (inFlight === request) {
+            inFlight = null;
+            set({ loading: false });
+          }
         }
       })();
-      return inFlight;
+      inFlight = request;
+      return request;
     },
 
     invalidate() {
+      // A write landed while a request was in flight, so that request's snapshot
+      // predates the write and would drop the row the store just patched in.
+      epoch += 1;
       set({ lastFetched: 0 });
+    },
+
+    reset() {
+      epoch += 1;
+      inFlight = null;
     },
   };
 }

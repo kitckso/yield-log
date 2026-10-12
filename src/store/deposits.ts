@@ -98,6 +98,9 @@ export const useDepositsStore = create<DepositsState>((set, get) => {
       query.invalidate();
     },
 
-    clear: () => set({ deposits: [], loading: false, error: null, lastFetched: 0 }),
+    clear: () => {
+      query.reset();
+      set({ deposits: [], loading: false, error: null, lastFetched: 0 });
+    },
   };
 });

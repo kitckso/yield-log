@@ -140,4 +140,97 @@ describe("createListQuery", () => {
     await pending;
     expect(state.loading).toBe(false);
   });
+
+  describe("when the world changes under a fetch", () => {
+    it("discards rows that arrive after a reset", async () => {
+      let release: (rows: string[]) => void = () => {};
+      const { state, query, rows } = harness(() => new Promise<string[]>((r) => (release = r)));
+      const pending = query.fetch();
+      query.reset();
+      release(["a", "b"]);
+      await pending;
+      // These rows describe whoever was signed in when the request left.
+      expect(rows()).toEqual([]);
+      expect(state.lastFetched).toBe(0);
+    });
+
+    it("does not let a discarded request report a failure", async () => {
+      let fail: () => void = () => {};
+      const { state, query } = harness(
+        () => new Promise<string[]>((_, reject) => (fail = () => reject(new Error("boom")))),
+      );
+      const pending = query.fetch();
+      query.reset();
+      fail();
+      await pending;
+      expect(state.error).toBeNull();
+    });
+
+    it("keeps loading true only until the newest request settles", async () => {
+      const releases: ((rows: string[]) => void)[] = [];
+      const { state, query } = harness(() => new Promise<string[]>((r) => releases.push(r)));
+      const first = query.fetch();
+      const second = query.fetch(true);
+      // The forced fetch does not attach to the first one; it asks again.
+      expect(releases).toHaveLength(2);
+      releases[1](["new"]);
+      await second;
+      expect(state.loading).toBe(false);
+      releases[0](["old"]);
+      await first;
+      expect(state.loading).toBe(false);
+    });
+
+    it("does not let an older response land last", async () => {
+      const releases: ((rows: string[]) => void)[] = [];
+      const { query, rows } = harness(() => new Promise<string[]>((r) => releases.push(r)));
+      const first = query.fetch();
+      const second = query.fetch(true);
+      // The newer request answers first...
+      releases[1](["new"]);
+      await second;
+      // ...and the older one answering afterwards must not overwrite it.
+      releases[0](["old"]);
+      await first;
+      expect(rows()).toEqual(["new"]);
+    });
+
+    it("drops an in-flight snapshot that predates a write", async () => {
+      let release: (rows: string[]) => void = () => {};
+      const { state, query, rows } = harness(() => new Promise<string[]>((r) => (release = r)));
+      const pending = query.fetch();
+      // The optimistic write patched a row in, then marked the rows a guess.
+      query.invalidate();
+      release(["stale snapshot"]);
+      await pending;
+      // Replacing here would drop the row the store just wrote.
+      expect(rows()).toEqual([]);
+      expect(state.lastFetched).toBe(0);
+    });
+
+    it("still refetches after dropping a snapshot", async () => {
+      const load = vi.fn(async () => ["a"]);
+      const { query } = harness(load);
+      const pending = query.fetch();
+      query.invalidate();
+      await pending;
+      await query.fetch();
+      expect(load).toHaveBeenCalledTimes(2);
+    });
+
+    it("stops sharing a request that was already abandoned", async () => {
+      const releases: ((rows: string[]) => void)[] = [];
+      const load = vi.fn(() => new Promise<string[]>((r) => releases.push(r)));
+      const { query } = harness(load);
+      const pending = query.fetch();
+      query.reset();
+      // The abandoned request must not be handed to the next caller.
+      const next = query.fetch();
+      expect(load).toHaveBeenCalledTimes(2);
+      releases[0](["a"]);
+      releases[1](["b"]);
+      await Promise.all([pending, next]);
+      expect(releases).toHaveLength(2);
+    });
+  });
 });
