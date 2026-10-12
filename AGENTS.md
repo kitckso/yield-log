@@ -55,6 +55,25 @@ cp .env.example .env
 vp dev
 ```
 
+## Release
+
+When the user says **"release"**, follow these steps in order:
+
+1. **Commit current changes** — stage everything and commit with a Conventional Commits message describing the work (`git add -A` then `git commit`).
+2. **Bump version** — run `npm version <patch|minor|major>`.
+   - If the user did **not** specify patch/minor/major, **ask which one before running it**.
+   - `npm version` updates `package.json` + `package-lock.json`, creates a commit, and tags `vX.Y.Z` (repo convention: version commit message is the bare version, e.g. `1.7.1`).
+3. **Push** — `git push` (pushes the version commit and the tag).
+
+```bash
+git add -A
+git commit -m "feat(scope): description"
+npm version patch   # patch | minor | major — ask the user if unspecified
+git push
+```
+
+Note: run `vp check` and `vp test` before releasing so only verified changes get committed.
+
 ## Review Checklist
 
 - [ ] Run `vp install` after pulling remote changes and before getting started.
