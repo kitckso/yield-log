@@ -9,6 +9,7 @@ import {
   depositsInPeriod,
   pooledThresholds,
   weekWindowClamped,
+  weeksInYear,
   type HeatmapMode,
   type HeatmapCell,
   type Thresholds,
@@ -17,14 +18,7 @@ import DepositListModal from "./DepositListModal";
 import HeatmapDayGrid from "./HeatmapDayGrid";
 import HeatmapWeekList from "./HeatmapWeekList";
 import HeatmapMonthGrid from "./HeatmapMonthGrid";
-import {
-  DAY_CELL_GAP,
-  DAY_CELL_SIZE,
-  LABEL_COL,
-  LEVEL_COLORS,
-  WEEKS_PER_YEAR,
-  type DayCell,
-} from "./heatmapTheme";
+import { DAY_CELL_GAP, DAY_CELL_SIZE, LABEL_COL, LEVEL_COLORS, type DayCell } from "./heatmapTheme";
 import type { DepositWithBank } from "../types";
 
 interface MaturityHeatmapCardProps {
@@ -83,6 +77,7 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
   const yearStart = useMemo(() => dayjs(`${year}-01-01`, "YYYY-MM-DD", true), [year]);
   const yearEnd = useMemo(() => dayjs(`${year}-12-31`, "YYYY-MM-DD", true), [year]);
   const weekStart = useMemo(() => yearStart.subtract(yearStart.day(), "day"), [yearStart]);
+  const columnCount = useMemo(() => weeksInYear(year), [year]);
 
   const availableYears = useMemo(() => availableHeatmapYears(deposits), [deposits]);
 
@@ -104,7 +99,7 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
     const result: DayCell[][] = [];
     for (let r = 0; r < 7; r++) {
       const row: DayCell[] = [];
-      for (let c = 0; c < WEEKS_PER_YEAR; c++) {
+      for (let c = 0; c < columnCount; c++) {
         const date = weekStart.add(c * 7 + r, "day");
         const dateStr = date.format("YYYY-MM-DD");
         const inYear = mode !== "day" || date.year() === year;
@@ -121,12 +116,12 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
       result.push(row);
     }
     return result;
-  }, [allCells, year, mode, weekStart, today]);
+  }, [allCells, year, mode, weekStart, today, columnCount]);
 
   const monthLabels = useMemo(() => {
     const labels: { col: number; label: string }[] = [];
     let lastMonth = -1;
-    for (let col = 0; col < WEEKS_PER_YEAR; col++) {
+    for (let col = 0; col < columnCount; col++) {
       const date = weekStart.add(col * 7, "day");
       if (date.year() !== year) continue;
       const m = date.month();
@@ -136,7 +131,7 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
       }
     }
     return labels;
-  }, [weekStart, year]);
+  }, [weekStart, year, columnCount]);
 
   const periodLabelText = useMemo(() => {
     if (mode === "day") return "天";
@@ -247,6 +242,7 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
           <HeatmapDayGrid
             ref={dayScrollRef}
             dayGrid={dayGrid}
+            columnCount={columnCount}
             monthLabels={monthLabels}
             onSelect={setSelectedDate}
           />

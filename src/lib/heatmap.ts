@@ -21,6 +21,18 @@ export function bucketKey(d: dayjs.Dayjs, mode: HeatmapMode): string {
   return d.format("YYYY-MM");
 }
 
+/**
+ * Week columns needed to lay out a whole year, Sunday-start. A year whose Jan 1
+ * is a Saturday spills into 54 columns; hard-coding 53 dropped Dec 31 in 2028.
+ */
+export function weeksInYear(year: number): number {
+  const yearStart = dayjs(`${year}-01-01`, "YYYY-MM-DD", true);
+  const yearEnd = dayjs(`${year}-12-31`, "YYYY-MM-DD", true);
+  const firstSunday = yearStart.subtract(yearStart.day(), "day");
+  const lastWeekSunday = yearEnd.subtract(yearEnd.day(), "day");
+  return Math.floor(lastWeekSunday.diff(firstSunday, "day") / 7) + 1;
+}
+
 function quantile(sorted: number[], q: number): number {
   const pos = (sorted.length - 1) * q;
   const base = Math.floor(pos);
@@ -163,10 +175,10 @@ export function computeHeatmap(
 
   if (mode === "day" || mode === "week") {
     const firstSunday = yearStart.subtract(yearStart.day(), "day");
-    const lastWeekSunday = yearEnd.subtract(yearEnd.day(), "day");
+    const columnCount = weeksInYear(year);
     const seen = new Set<string>();
-    let cursor = firstSunday;
-    while (cursor.isSame(lastWeekSunday) || cursor.isBefore(lastWeekSunday)) {
+    for (let c = 0; c < columnCount; c++) {
+      const cursor = firstSunday.add(c * 7, "day");
       if (mode === "day") {
         for (let row = 0; row < 7; row++) {
           const date = cursor.add(row, "day");
@@ -205,7 +217,6 @@ export function computeHeatmap(
           isFuture: start.isAfter(today, "day"),
         });
       }
-      cursor = cursor.add(7, "day");
     }
   } else {
     for (let m = 0; m < 12; m++) {

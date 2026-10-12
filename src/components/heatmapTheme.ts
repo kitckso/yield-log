@@ -26,4 +26,3 @@ export const DAY_CELL_GAP = 2;
 export const LABEL_COL = 14;
 export const MONTH_LABEL_HEIGHT = 14;
 export const WEEK_LABEL_COL = 28;
-export const WEEKS_PER_YEAR = 53;

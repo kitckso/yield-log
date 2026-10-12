@@ -10,6 +10,7 @@ import {
   levelFor,
   pooledThresholds,
   weekWindowClamped,
+  weeksInYear,
 } from "./heatmap";
 import type { DepositWithBank } from "../types";
 
@@ -44,6 +45,30 @@ describe("bucketKey", () => {
 
   it("month mode returns YYYY-MM", () => {
     expect(bucketKey(d, "month")).toBe("2024-03");
+  });
+});
+
+describe("weeksInYear", () => {
+  it("needs 53 columns for an ordinary year", () => {
+    expect(weeksInYear(2024)).toBe(53);
+  });
+
+  it("needs 54 columns when Jan 1 is a Saturday, or Dec 31 falls off the grid", () => {
+    // 2028 starts on a Saturday, so the last week reaches into January.
+    expect(weeksInYear(2028)).toBe(54);
+  });
+
+  it("puts Dec 31 inside the last column for every year", () => {
+    for (const year of [2024, 2025, 2026, 2027, 2028, 2029, 2032, 2033]) {
+      const yearStart = dayjs(`${year}-01-01`, "YYYY-MM-DD", true);
+      const firstSunday = yearStart.subtract(yearStart.day(), "day");
+      // Trailing columns spill into the next year and render empty, which is fine.
+      // What must hold is that Dec 31 lands somewhere the grid actually draws.
+      const lastCellOffset = (weeksInYear(year) - 1) * 7 + 6;
+      const dec31Offset = dayjs(`${year}-12-31`, "YYYY-MM-DD", true).diff(firstSunday, "day");
+      expect(dec31Offset, `year ${year}`).toBeLessThanOrEqual(lastCellOffset);
+      expect(dec31Offset, `year ${year}`).toBeGreaterThanOrEqual(0);
+    }
   });
 });
 

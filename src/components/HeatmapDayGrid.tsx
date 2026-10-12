@@ -10,19 +10,19 @@ import {
   LEVEL_COLORS,
   MONTH_LABEL_HEIGHT,
   WEEKDAYS,
-  WEEKS_PER_YEAR,
   type DayCell,
 } from "./heatmapTheme";
 
 interface HeatmapDayGridProps {
   dayGrid: DayCell[][];
+  columnCount: number;
   monthLabels: { col: number; label: string }[];
   onSelect: (date: string) => void;
 }
 
-/** The 53-week day grid, with a scroll container the parent auto-centres. */
+/** The Sunday-start day grid, with a scroll container the parent auto-centres. */
 const HeatmapDayGrid = forwardRef<HTMLDivElement, HeatmapDayGridProps>(function HeatmapDayGrid(
-  { dayGrid, monthLabels, onSelect },
+  { dayGrid, columnCount, monthLabels, onSelect },
   ref,
 ) {
   return (
@@ -50,14 +50,14 @@ const HeatmapDayGrid = forwardRef<HTMLDivElement, HeatmapDayGridProps>(function 
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: `repeat(${WEEKS_PER_YEAR}, ${DAY_CELL_SIZE}px)`,
+              gridTemplateColumns: `repeat(${columnCount}, ${DAY_CELL_SIZE}px)`,
               columnGap: DAY_CELL_GAP,
               height: MONTH_LABEL_HEIGHT,
             }}
           >
             {monthLabels.map((m, i) => {
               const next = monthLabels[i + 1];
-              const span = next ? next.col - m.col : WEEKS_PER_YEAR - m.col;
+              const span = next ? next.col - m.col : columnCount - m.col;
               return (
                 <div
                   key={`${m.col}-${m.label}`}
@@ -79,7 +79,7 @@ const HeatmapDayGrid = forwardRef<HTMLDivElement, HeatmapDayGridProps>(function 
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: `repeat(${WEEKS_PER_YEAR}, ${DAY_CELL_SIZE}px)`,
+              gridTemplateColumns: `repeat(${columnCount}, ${DAY_CELL_SIZE}px)`,
               gridTemplateRows: `repeat(7, ${DAY_CELL_SIZE}px)`,
               columnGap: DAY_CELL_GAP,
               rowGap: DAY_CELL_GAP,
