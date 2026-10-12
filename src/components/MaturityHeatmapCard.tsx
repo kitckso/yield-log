@@ -258,33 +258,8 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
 
         {yearHasData && (
           <>
-            <SimpleGrid cols={{ base: 1, xs: 3 }} spacing="xs">
-              <Card padding="xs" radius="md" withBorder>
-                <Text size="xs" c="dimmed">
-                  累計到期
-                </Text>
-                <Text fw={700} size="sm" mt={2} style={{ wordBreak: "break-all" }}>
-                  {formatCurrency(totalAmount)}
-                </Text>
-              </Card>
-              <Card padding="xs" radius="md" withBorder>
-                <Text size="xs" c="dimmed">
-                  單{periodLabelText}峰值
-                </Text>
-                <Text fw={700} size="sm" mt={2} style={{ wordBreak: "break-all" }}>
-                  {peakAmount > 0 ? formatCurrency(peakAmount) : "—"}
-                </Text>
-              </Card>
-              <Card padding="xs" radius="md" withBorder>
-                <Text size="xs" c="dimmed">
-                  活躍{periodLabelText}數
-                </Text>
-                <Text fw={700} size="sm" mt={2}>
-                  {activeCount}
-                </Text>
-              </Card>
-            </SimpleGrid>
-
+            {/* Legend sits directly under the grid so it stays next to what it explains,
+                rather than being pushed below the stat cards on narrow screens. */}
             <div
               style={{
                 display: "flex",
@@ -313,6 +288,33 @@ export default function MaturityHeatmapCard({ deposits }: MaturityHeatmapCardPro
                 </div>
               ))}
             </div>
+
+            <SimpleGrid cols={{ base: 1, xs: 3 }} spacing="xs">
+              <Card padding="xs" radius="md" withBorder>
+                <Text size="xs" c="dimmed">
+                  累計到期
+                </Text>
+                <Text fw={700} size="sm" mt={2} style={{ wordBreak: "break-all" }}>
+                  {formatCurrency(totalAmount)}
+                </Text>
+              </Card>
+              <Card padding="xs" radius="md" withBorder>
+                <Text size="xs" c="dimmed">
+                  單{periodLabelText}峰值
+                </Text>
+                <Text fw={700} size="sm" mt={2} style={{ wordBreak: "break-all" }}>
+                  {peakAmount > 0 ? formatCurrency(peakAmount) : "—"}
+                </Text>
+              </Card>
+              <Card padding="xs" radius="md" withBorder>
+                <Text size="xs" c="dimmed">
+                  活躍{periodLabelText}數
+                </Text>
+                <Text fw={700} size="sm" mt={2}>
+                  {activeCount}
+                </Text>
+              </Card>
+            </SimpleGrid>
           </>
         )}
       </Stack>
