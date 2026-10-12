@@ -2,7 +2,7 @@ import { Card, SimpleGrid, Text } from "@mantine/core";
 import dayjs from "dayjs";
 import { formatMoney } from "../lib/money";
 import type { MaturityBucket } from "../lib/maturityCalendar";
-import { BAND_COLORS, CURRENT_COLOR, EMPTY_OPACITY } from "./heatmapTheme";
+import { BAND_COLORS, BAND_TEXT_COLORS, CURRENT_COLOR, EMPTY_OPACITY } from "./heatmapTheme";
 
 interface HeatmapMonthGridProps {
   buckets: MaturityBucket[];
@@ -44,22 +44,30 @@ export default function HeatmapMonthGrid({ buckets, onSelect }: HeatmapMonthGrid
               borderWidth: cell.isCurrent ? 2 : 1,
             }}
           >
-            <Text size="xs" fw={600} c={hasData ? undefined : "dimmed"}>
+            {/* Mantine's Text always sets its own colour, so every line needs the
+                band's foreground rather than inheriting one from the Card. */}
+            <Text size="xs" fw={600} c={BAND_TEXT_COLORS[cell.band]}>
               {date.format("M月")}
             </Text>
-            <Text size="sm" fw={700} mt={2} style={{ wordBreak: "break-all" }}>
+            <Text
+              size="sm"
+              fw={700}
+              mt={2}
+              c={BAND_TEXT_COLORS[cell.band]}
+              style={{ wordBreak: "break-all" }}
+            >
               {hasData ? formatMoney(cell.amount) : "—"}
             </Text>
             <Text
               size="xs"
               mt={2}
               fw={600}
-              c={hasData ? undefined : "dimmed"}
+              c={BAND_TEXT_COLORS[cell.band]}
               style={{ wordBreak: "break-all" }}
             >
               {hasData ? `利息 ${formatMoney(cell.interest)}` : "—"}
             </Text>
-            <Text size="xs" mt={2} fw={700}>
+            <Text size="xs" mt={2} fw={700} c={BAND_TEXT_COLORS[cell.band]}>
               {cell.count} 筆
             </Text>
           </Card>

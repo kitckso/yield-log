@@ -2,7 +2,13 @@ import { Group, Stack, Text, Tooltip } from "@mantine/core";
 import dayjs from "dayjs";
 import { formatMoney } from "../lib/money";
 import type { MaturityBucket } from "../lib/maturityCalendar";
-import { BAND_COLORS, CURRENT_BORDER, EMPTY_OPACITY, WEEK_LABEL_COL } from "./heatmapTheme";
+import {
+  BAND_COLORS,
+  BAND_TEXT_COLORS,
+  CURRENT_BORDER,
+  EMPTY_OPACITY,
+  WEEK_LABEL_COL,
+} from "./heatmapTheme";
 
 interface HeatmapWeekListProps {
   monthGroups: { label: string; buckets: MaturityBucket[] }[];
@@ -53,7 +59,7 @@ export default function HeatmapWeekList({ monthGroups, onSelect }: HeatmapWeekLi
                       justifyContent: "center",
                       fontSize: 9,
                       fontWeight: 600,
-                      color: "light-dark(var(--mantine-color-dark-9), var(--mantine-color-dark-1))",
+                      color: BAND_TEXT_COLORS[cell.band],
                       whiteSpace: "nowrap",
                       overflow: "hidden",
                       minWidth: 0,
