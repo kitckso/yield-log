@@ -45,6 +45,13 @@ function dep(over: Partial<DepositWithBank> = {}): DepositWithBank {
   };
 }
 
+/**
+ * Local midnight on a stored date, the way the form builds its Dates. A bare
+ * `new Date("2026-01-01")` is UTC midnight and lands on the previous day west of
+ * Greenwich, so tests written that way only pass east of it.
+ */
+const local = (date: string) => new Date(`${date}T00:00:00`);
+
 const NOW = dayjs("2026-06-15", "YYYY-MM-DD", true);
 
 describe("topByFrequency", () => {
@@ -163,8 +170,8 @@ describe("isDepositFormComplete", () => {
     periodValue: 3,
     periodUnit: "months",
     interestRate: 3,
-    startDate: new Date("2026-01-01"),
-    endDate: new Date("2026-04-01"),
+    startDate: local("2026-01-01"),
+    endDate: local("2026-04-01"),
   };
 
   it("accepts a fully filled form", () => {
@@ -202,8 +209,8 @@ describe("buildDepositDraft", () => {
     periodValue: "3",
     periodUnit: "months",
     interestRate: "2.5",
-    startDate: new Date("2026-01-15"),
-    endDate: new Date("2026-04-15"),
+    startDate: local("2026-01-15"),
+    endDate: local("2026-04-15"),
   };
 
   it("coerces numeric fields and formats dates as YYYY-MM-DD", () => {
@@ -233,32 +240,32 @@ describe("buildDepositDraft", () => {
 
 describe("calcEndDateFor", () => {
   it("derives the end date from the start date and term", () => {
-    const result = calcEndDateFor(new Date("2026-01-31"), 1, "months");
+    const result = calcEndDateFor(local("2026-01-31"), 1, "months");
     expect(result.toLocaleDateString("en-CA")).toBe("2026-02-28");
   });
 
   it("accepts a numeric string term", () => {
-    const result = calcEndDateFor(new Date("2026-01-01"), "90", "days");
+    const result = calcEndDateFor(local("2026-01-01"), "90", "days");
     expect(result.toLocaleDateString("en-CA")).toBe("2026-04-01");
   });
 });
 
 describe("calcInterestFor", () => {
   it("returns both the rounded and floored interest", () => {
-    const result = calcInterestFor(100000, 1.5, new Date("2024-01-01"), new Date("2024-01-02"));
+    const result = calcInterestFor(100000, 1.5, local("2024-01-01"), local("2024-01-02"));
     expect(result.interest).toBe(4.11);
     expect(result.floorInterest).toBe(4.1);
   });
 
   it("returns identical values when there is no fractional cent", () => {
-    const result = calcInterestFor(100000, 3, new Date("2023-01-01"), new Date("2024-01-01"));
+    const result = calcInterestFor(100000, 3, local("2023-01-01"), local("2024-01-01"));
     expect(result.interest).toBe(3000);
     expect(result.floorInterest).toBe(3000);
   });
 });
 
 describe("resolveEndDate", () => {
-  const start = new Date("2026-01-01");
+  const start = local("2026-01-01");
 
   it("derives the end date from the start date and term", () => {
     const result = resolveEndDate(start, 3, "months", null, false);
@@ -266,7 +273,7 @@ describe("resolveEndDate", () => {
   });
 
   it("returns the manual override once the user set one", () => {
-    const manual = new Date("2026-06-15");
+    const manual = local("2026-06-15");
     const result = resolveEndDate(start, 3, "months", manual, true);
     expect(result?.toLocaleDateString("en-CA")).toBe("2026-06-15");
   });
@@ -283,8 +290,8 @@ describe("resolveEndDate", () => {
 });
 
 describe("resolveInterest", () => {
-  const start = new Date("2024-01-01");
-  const end = new Date("2024-01-02");
+  const start = local("2024-01-01");
+  const end = local("2024-01-02");
 
   it("derives interest and the floored alternative when not overridden", () => {
     const result = resolveInterest(100000, 1.5, start, end, "", false);
@@ -458,7 +465,37 @@ describe("seedFromDeposit", () => {
     expect(seed.periodValue).toBe(6);
     expect(seed.periodUnit).toBe("months");
     expect(seed.interestRate).toBe(2.5);
-    expect(seed.startDate?.toISOString().slice(0, 10)).toBe("2024-06-01");
+    // Local, not UTC: this is the day the user sees in the field.
+    expect(seed.startDate?.toLocaleDateString("en-CA")).toBe("2024-06-01");
+  });
+
+  it("reads the stored date as local midnight, not a UTC instant", () => {
+    // toISOString() would hide this: a UTC-midnight Date formats to the right
+    // string in UTC and to the right one in Hong Kong, and only gives the day
+    // away west of Greenwich. Local components say it anywhere.
+    const seed = seedFromDeposit(dep({ start_date: "2024-06-01" }));
+    const d = seed.startDate as Date;
+    expect([d.getFullYear(), d.getMonth(), d.getDate()]).toEqual([2024, 5, 1]);
+    expect(d.getHours()).toBe(0);
+  });
+
+  it("keeps the start date a round trip through saving", () => {
+    const seed = seedFromDeposit(dep({ start_date: "2024-06-01" }));
+    const draft = buildDepositDraft(
+      {
+        bankId: seed.bankId,
+        amount: seed.amount,
+        periodValue: seed.periodValue,
+        periodUnit: seed.periodUnit,
+        interestRate: seed.interestRate,
+        startDate: seed.startDate,
+        endDate: resolveEndDate(seed.startDate, seed.periodValue, seed.periodUnit, null, false),
+      },
+      "150",
+      "u",
+    );
+    // What the user sees is what gets stored.
+    expect(draft?.start_date).toBe("2024-06-01");
   });
 
   it("never leaves a field blank, so an edit form submits as the deposit read", () => {

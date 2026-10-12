@@ -7,6 +7,17 @@ export const RECENT_WINDOW_MONTHS = 6;
 export const MAX_SUGGESTIONS = 5;
 
 /**
+ * A stored YYYY-MM-DD read as the calendar day it names. `new Date("2026-10-13")`
+ * is UTC midnight, which is the day before anywhere west of Greenwich — and every
+ * consumer of these Dates renders them in local time, so the field would show a
+ * start date one day early, and saving would persist the shift. dayjs reads the
+ * same string in local time.
+ */
+function calendarDay(value: string): Date {
+  return dayjs(value).toDate();
+}
+
+/**
  * Keeps the most frequent values of `keyFn` across recent deposits. Ties keep
  * first-seen order, which is the order deposits arrived in.
  */
@@ -193,7 +204,7 @@ export function calcEndDateFor(
   periodValue: number | string,
   periodUnit: string,
 ): Date {
-  return new Date(
+  return calendarDay(
     calculateEndDate(startDate.toLocaleDateString("en-CA"), Number(periodValue), periodUnit),
   );
 }
@@ -277,7 +288,7 @@ export function seedFromDeposit(deposit: DepositWithBank): DepositFormSeed {
     periodValue: deposit.period_value,
     periodUnit: deposit.period_unit,
     interestRate: deposit.interest_rate,
-    startDate: new Date(deposit.start_date),
+    startDate: calendarDay(deposit.start_date),
   };
 }
 
