@@ -1,7 +1,7 @@
 import { Card, Text, Stack, Group, SimpleGrid, SegmentedControl, ColorSwatch } from "@mantine/core";
 import { DonutChart } from "@mantine/charts";
 import { formatMoney } from "../lib/money";
-import type { BankDistributionItem } from "../hooks/useHomePageData";
+import type { BankDistributionItem } from "../lib/portfolio";
 
 interface BankDistributionCardProps {
   bankDistribution: BankDistributionItem[];

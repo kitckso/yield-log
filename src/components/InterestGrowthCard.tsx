@@ -2,11 +2,7 @@ import { Card, Group, Text } from "@mantine/core";
 import { LineChart } from "@mantine/charts";
 import dayjs from "dayjs";
 import { formatAxisMoney, formatMoney } from "../lib/money";
-
-interface GrowthItem {
-  month: string;
-  累計利息: number;
-}
+import type { GrowthItem } from "../lib/portfolio";
 
 interface InterestGrowthCardProps {
   growthData: GrowthItem[];

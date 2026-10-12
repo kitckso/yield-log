@@ -1,11 +1,7 @@
 import { Card, Text, SegmentedControl } from "@mantine/core";
 import { BarChart } from "@mantine/charts";
 import { formatMoney } from "../lib/money";
-
-interface MaturityMonth {
-  month: string;
-  value: number;
-}
+import type { MaturityMonth } from "../lib/portfolio";
 
 interface MonthlyMaturityCardProps {
   maturityTimeline: MaturityMonth[];

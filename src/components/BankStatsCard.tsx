@@ -1,16 +1,6 @@
 import { Card, Text, Stack, Group, SimpleGrid } from "@mantine/core";
 import { formatMoney } from "../lib/money";
-
-interface BankStat {
-  bankId: string;
-  bankName: string;
-  activeCount: number;
-  activeAmount: number;
-  maturedCount: number;
-  maturedAmount: number;
-  pendingInterest: number;
-  receivedInterest: number;
-}
+import type { BankStat } from "../lib/portfolio";
 
 interface BankStatsCardProps {
   bankStats: BankStat[];
