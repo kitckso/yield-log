@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import { isMatured, splitByMaturity } from "./depositLifecycle";
+import { monthKey, monthKeyOf, monthLabelShort } from "./monthKey";
 import { periodInMonths } from "./period";
 import type { Bank, DepositWithBank } from "../types";
 
@@ -224,15 +225,14 @@ export function maturityTimeline(
 ): MaturityMonth[] {
   const grouped = new Map<string, number>();
   deposits.forEach((d) => {
-    const monthKey = dayjs(d.end_date).format("YYYY-MM");
     const val = maturityGroupBy === "amount" ? d.amount : d.interest;
-    grouped.set(monthKey, (grouped.get(monthKey) ?? 0) + val);
+    const key = monthKey(d.end_date);
+    grouped.set(key, (grouped.get(key) ?? 0) + val);
   });
   const months: MaturityMonth[] = [];
   for (let i = 0; i < 6; i++) {
-    const m = now.add(i, "month");
-    const key = m.format("YYYY-MM");
-    months.push({ month: m.format("M月"), value: grouped.get(key) ?? 0 });
+    const key = monthKeyOf(now.add(i, "month"));
+    months.push({ month: monthLabelShort(key), value: grouped.get(key) ?? 0 });
   }
   return months;
 }

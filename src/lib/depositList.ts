@@ -109,34 +109,6 @@ export function buildListUrlParams(state: ListUrlState, currentYear: number = da
   return params;
 }
 
-export interface MonthGroup {
-  key: string;
-  deposits: DepositWithBank[];
-  totalAmount: number;
-}
-
-/**
- * Groups date-sorted deposits under a YYYY年M月 divider, preserving the sort
- * order they arrived in.
- */
-export function groupByMonthField(
-  deposits: DepositWithBank[],
-  field: "start_date" | "end_date",
-): MonthGroup[] {
-  const grouped = new Map<string, DepositWithBank[]>();
-  deposits.forEach((d) => {
-    const key = dayjs(d[field]).format("YYYY年M月");
-    const entry = grouped.get(key);
-    if (entry) entry.push(d);
-    else grouped.set(key, [d]);
-  });
-  return [...grouped.entries()].map(([key, items]) => ({
-    key,
-    deposits: items,
-    totalAmount: items.reduce((s, d) => s + d.amount, 0),
-  }));
-}
-
 export function sortFieldFor(sortBy: string): "start_date" | "end_date" {
   return sortBy.startsWith("start_") ? "start_date" : "end_date";
 }

@@ -6,7 +6,6 @@ import {
   buildListUrlParams,
   compareDeposits,
   filterAndSortDeposits,
-  groupByMonthField,
   isDateSort,
   parseListUrlState,
   sortFieldFor,
@@ -291,48 +290,6 @@ describe("buildListUrlParams", () => {
       calendarYear: 2024,
     };
     expect(parseListUrlState(buildListUrlParams(state, 2026), 2026)).toEqual(state);
-  });
-});
-
-describe("groupByMonthField", () => {
-  it("groups by end month with subtotals", () => {
-    const groups = groupByMonthField(
-      [
-        dep({ id: "a", end_date: "2024-03-05", amount: 100 }),
-        dep({ id: "b", end_date: "2024-03-20", amount: 250 }),
-        dep({ id: "c", end_date: "2024-04-01", amount: 50 }),
-      ],
-      "end_date",
-    );
-    expect(groups.map((g) => g.key)).toEqual(["2024年3月", "2024年4月"]);
-    expect(groups[0].deposits.map((d) => d.id)).toEqual(["a", "b"]);
-    expect(groups[0].totalAmount).toBe(350);
-    expect(groups[1].totalAmount).toBe(50);
-  });
-
-  it("groups by start month when asked", () => {
-    const groups = groupByMonthField(
-      [dep({ id: "a", start_date: "2023-11-01", end_date: "2024-03-05" })],
-      "start_date",
-    );
-    expect(groups[0].key).toBe("2023年11月");
-  });
-
-  it("does not pad the month number", () => {
-    const groups = groupByMonthField([dep({ end_date: "2024-01-15" })], "end_date");
-    expect(groups[0].key).toBe("2024年1月");
-  });
-
-  it("keeps the incoming order inside a group", () => {
-    const groups = groupByMonthField(
-      [dep({ id: "a", end_date: "2024-03-20" }), dep({ id: "b", end_date: "2024-03-01" })],
-      "end_date",
-    );
-    expect(groups[0].deposits.map((d) => d.id)).toEqual(["a", "b"]);
-  });
-
-  it("returns nothing for no deposits", () => {
-    expect(groupByMonthField([], "end_date")).toEqual([]);
   });
 });
 

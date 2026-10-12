@@ -11,6 +11,8 @@ import {
   splitMonthByToday,
   sumYearTotals,
 } from "../lib/calendar";
+import { monthLabelShort, monthOf } from "../lib/monthKey";
+import type { MonthGroup } from "../lib/monthKey";
 import DepositListModal from "./DepositListModal";
 import type { DepositWithBank } from "../types";
 
@@ -19,8 +21,6 @@ interface MonthlyCalendarProps {
   year: number;
   onYearChange: (year: number) => void;
 }
-
-type MonthGroup = ReturnType<typeof buildMonthGroups>[number];
 
 export default function MonthlyCalendar({ deposits, year, onYearChange }: MonthlyCalendarProps) {
   const [selectedMonth, setSelectedMonth] = useState<MonthGroup | null>(null);
@@ -55,22 +55,20 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
     return () => clearTimeout(timer);
   }, [currentMonthId, deposits.length]);
 
-  const monthIsPast = (m: MonthGroup) => isPastMonth(year, m.month, currentYear, currentMonth);
-
-  const splitCurrentMonth = (m: MonthGroup) => splitMonthByToday(m.deposits);
-
   const renderMonth = (m: MonthGroup) => {
-    const isCurrent = isCurrentYear && m.month === currentMonth;
-    const isPast = monthIsPast(m);
+    const month = monthOf(m.key);
+    const label = monthLabelShort(m.key);
+    const isCurrent = isCurrentYear && month === currentMonth;
+    const isPast = isPastMonth(year, month, currentYear, currentMonth);
     const hasDeposits = m.deposits.length > 0;
     const dimmed = isPast && hasDeposits;
     const empty = !hasDeposits;
 
-    const currentSplit = isCurrent && hasDeposits ? splitCurrentMonth(m) : null;
+    const currentSplit = isCurrent && hasDeposits ? splitMonthByToday(m.deposits) : null;
 
     return (
       <Card
-        key={m.month}
+        key={m.key}
         id={isCurrent ? currentMonthId : undefined}
         padding="md"
         radius="lg"
@@ -92,7 +90,7 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
               c={isCurrent ? "blue" : empty || dimmed ? "dimmed" : undefined}
               miw={36}
             >
-              {m.label}
+              {label}
             </Text>
             <Text size="xs" c="dimmed">
               {empty ? "· —" : `· ${m.deposits.length} 筆`}
@@ -265,7 +263,7 @@ export default function MonthlyCalendar({ deposits, year, onYearChange }: Monthl
         onClose={() => setSelectedMonth(null)}
         title={
           selectedMonth
-            ? `${selectedMonth.label} 到期記錄（${selectedMonth.deposits.length} 筆）`
+            ? `${monthLabelShort(selectedMonth.key)} 到期記錄（${selectedMonth.deposits.length} 筆）`
             : ""
         }
         deposits={modalDeposits}

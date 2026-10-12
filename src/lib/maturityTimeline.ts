@@ -4,16 +4,6 @@ import type { DepositWithBank } from "../types";
 
 export const INITIAL_SHOW = 5;
 
-export function groupByMonth(items: DepositWithBank[]): [string, DepositWithBank[]][] {
-  const groups = new Map<string, DepositWithBank[]>();
-  for (const d of items) {
-    const key = dayjs(d.end_date, "YYYY-MM-DD", true).format("YYYY年M月");
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key)!.push(d);
-  }
-  return Array.from(groups.entries());
-}
-
 export interface RelativeMaturity {
   daysDiff: number;
   isYesterday: boolean;

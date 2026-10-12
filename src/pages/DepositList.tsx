@@ -26,11 +26,11 @@ import {
   SORT_OPTIONS,
   buildListUrlParams,
   filterAndSortDeposits,
-  groupByMonthField,
   isDateSort as isDateSortKey,
   parseListUrlState,
   sortFieldFor,
 } from "../lib/depositList";
+import { groupByMonth, monthLabel } from "../lib/monthKey";
 import { formatMoney } from "../lib/money";
 
 export default function DepositList() {
@@ -95,14 +95,14 @@ export default function DepositList() {
       ));
     }
 
-    const monthGroups = groupByMonthField(filteredDeposits, sortFieldFor(sortBy));
+    const monthGroups = groupByMonth(filteredDeposits, sortFieldFor(sortBy));
     const elements: React.ReactNode[] = [];
     const fmt = formatMoney;
     for (const group of monthGroups) {
       elements.push(
         <Divider
           key={`sep-${group.key}`}
-          label={`${group.key}  ·  ${fmt(group.totalAmount)}`}
+          label={`${monthLabel(group.key)}  ·  ${fmt(group.totalAmount)}`}
           labelPosition="center"
           pt="sm"
           pb="xs"

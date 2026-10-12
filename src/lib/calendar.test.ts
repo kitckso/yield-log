@@ -33,20 +33,19 @@ describe("buildMonthGroups", () => {
   it("always returns 12 groups in calendar order", () => {
     const groups = buildMonthGroups([], 2024);
     expect(groups).toHaveLength(12);
-    expect(groups.map((g) => g.month)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
-    expect(groups.map((g) => g.label)).toEqual([
-      "1月",
-      "2月",
-      "3月",
-      "4月",
-      "5月",
-      "6月",
-      "7月",
-      "8月",
-      "9月",
-      "10月",
-      "11月",
-      "12月",
+    expect(groups.map((g) => g.key)).toEqual([
+      "2024-01",
+      "2024-02",
+      "2024-03",
+      "2024-04",
+      "2024-05",
+      "2024-06",
+      "2024-07",
+      "2024-08",
+      "2024-09",
+      "2024-10",
+      "2024-11",
+      "2024-12",
     ]);
   });
 
@@ -92,13 +91,20 @@ describe("buildMonthGroups", () => {
     expect(groups.every((g) => g.deposits.length === 0)).toBe(true);
     expect(groups.every((g) => g.totalAmount === 0 && g.totalInterest === 0)).toBe(true);
   });
+
+  it("labels a February in a leap year as February", () => {
+    const groups = buildMonthGroups([dep({ end_date: "2024-02-29" })], 2024);
+    expect(groups[1].key).toBe("2024-02");
+    expect(groups[1].deposits).toHaveLength(1);
+    expect(groups[2].deposits).toHaveLength(0);
+  });
 });
 
 describe("sumYearTotals", () => {
   it("sums amount and interest across months", () => {
     const totals = sumYearTotals([
-      { month: 0, label: "1月", deposits: [], totalAmount: 100, totalInterest: 5 },
-      { month: 1, label: "2月", deposits: [], totalAmount: 250, totalInterest: 7 },
+      { key: "2024-01", deposits: [], totalAmount: 100, totalInterest: 5 },
+      { key: "2024-02", deposits: [], totalAmount: 250, totalInterest: 7 },
     ]);
     expect(totals).toEqual({ yearTotalAmount: 350, yearTotalInterest: 12 });
   });

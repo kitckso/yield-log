@@ -3,7 +3,6 @@ import dayjs from "dayjs";
 import {
   INITIAL_SHOW,
   classifyMaturity,
-  groupByMonth,
   shouldRenderTimeline,
   truncateForDisplay,
 } from "./maturityTimeline";
@@ -84,27 +83,6 @@ describe("classifyMaturity", () => {
   it("ignores the time of day when diffing", () => {
     const lateToday = classifyMaturity(`${fmt(TODAY)}T23:59:00`, TODAY);
     expect(lateToday.isToday).toBe(true);
-  });
-});
-
-describe("groupByMonth", () => {
-  it("groups by YYYY年M月 preserving arrival order", () => {
-    const groups = groupByMonth([
-      dep({ id: "a", end_date: "2026-07-03" }),
-      dep({ id: "b", end_date: "2026-07-20" }),
-      dep({ id: "c", end_date: "2026-08-01" }),
-    ]);
-    expect(groups.map(([key]) => key)).toEqual(["2026年7月", "2026年8月"]);
-    expect(groups[0][1].map((d) => d.id)).toEqual(["a", "b"]);
-  });
-
-  it("does not pad the month number", () => {
-    const groups = groupByMonth([dep({ end_date: "2026-01-05" })]);
-    expect(groups[0][0]).toBe("2026年1月");
-  });
-
-  it("returns nothing for no items", () => {
-    expect(groupByMonth([])).toEqual([]);
   });
 });
 

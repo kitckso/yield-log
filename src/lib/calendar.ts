@@ -1,15 +1,9 @@
 import dayjs from "dayjs";
 import { addPeriod, periodInDays } from "./period";
 import { isMatured, splitByMaturity } from "./depositLifecycle";
+import { emptyMonth, groupByMonth, monthKey, yearMonthKeys, yearOf } from "./monthKey";
+import type { MonthGroup } from "./monthKey";
 import type { DepositWithBank } from "../types";
-
-export interface MonthGroup {
-  month: number;
-  label: string;
-  deposits: DepositWithBank[];
-  totalAmount: number;
-  totalInterest: number;
-}
 
 export interface MonthSplit {
   passed: DepositWithBank[];
@@ -20,23 +14,20 @@ export interface MonthSplit {
   futureInterest: number;
 }
 
+/**
+ * Every month of a year, whether or not anything matures in it — a year-scoped
+ * calendar wants a row for each. Within a month, deposits run in maturity order.
+ */
 export function buildMonthGroups(deposits: DepositWithBank[], year: number): MonthGroup[] {
-  const groups: MonthGroup[] = [];
-  for (let m = 0; m < 12; m++) {
-    const date = dayjs().year(year).month(m);
-    const key = date.format("YYYY-MM");
-    const monthDeposits = deposits
-      .filter((d) => d.end_date.startsWith(key))
-      .sort((a, b) => a.end_date.localeCompare(b.end_date));
-    groups.push({
-      month: m,
-      label: date.format("M月"),
-      deposits: monthDeposits,
-      totalAmount: monthDeposits.reduce((s, d) => s + d.amount, 0),
-      totalInterest: monthDeposits.reduce((s, d) => s + d.interest, 0),
-    });
-  }
-  return groups;
+  const byKey = new Map(groupByMonth(deposits, "end_date").map((g) => [g.key, g]));
+  return yearMonthKeys(year).map((key) => {
+    const group = byKey.get(key);
+    if (!group) return emptyMonth(key);
+    return {
+      ...group,
+      deposits: [...group.deposits].sort((a, b) => a.end_date.localeCompare(b.end_date)),
+    };
+  });
 }
 
 export function sumYearTotals(months: MonthGroup[]): {
@@ -126,5 +117,5 @@ export function isPastMonth(
 }
 
 export function hasDepositsInYear(deposits: DepositWithBank[], year: number): boolean {
-  return deposits.some((d) => d.end_date.startsWith(String(year)));
+  return deposits.some((d) => yearOf(monthKey(d.end_date)) === year);
 }

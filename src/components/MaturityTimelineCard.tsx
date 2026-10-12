@@ -3,10 +3,11 @@ import { Card, Text, Stack, Group, Badge, Divider, Button } from "@mantine/core"
 import { formatMoney } from "../lib/money";
 import {
   classifyMaturity,
-  groupByMonth,
   shouldRenderTimeline,
   truncateForDisplay,
 } from "../lib/maturityTimeline";
+import { groupByMonth, monthLabel } from "../lib/monthKey";
+import type { MonthGroup } from "../lib/monthKey";
 import type { DepositWithBank } from "../types";
 
 interface MaturityTimelineCardProps {
@@ -32,7 +33,7 @@ export default function MaturityTimelineCard({
     hasMore,
   } = truncateForDisplay(recentlyMatured, upcoming, showAll);
 
-  const futureGroups = groupByMonth(displayUpcoming);
+  const futureGroups = groupByMonth(displayUpcoming, "end_date");
 
   function renderItem(d: DepositWithBank) {
     const { isToday, matured, dimmed, label } = classifyMaturity(d.end_date);
@@ -80,11 +81,12 @@ export default function MaturityTimelineCard({
     );
   }
 
-  function renderGroup([month, items]: [string, DepositWithBank[]], isFirst: boolean) {
+  function renderGroup(group: MonthGroup, isFirst: boolean) {
+    const label = monthLabel(group.key);
     return (
-      <Stack gap="xs" key={month}>
-        {!isFirst && <Divider label={month} labelPosition="center" pt={4} pb={2} />}
-        {items.map(renderItem)}
+      <Stack gap="xs" key={group.key}>
+        {!isFirst && <Divider label={label} labelPosition="center" pt={4} pb={2} />}
+        {group.deposits.map(renderItem)}
       </Stack>
     );
   }
