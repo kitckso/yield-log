@@ -1,19 +1,19 @@
 import { Card, SimpleGrid, Text } from "@mantine/core";
 import dayjs from "dayjs";
 import { formatCurrency } from "../hooks/useCalculations";
-import type { HeatmapCell } from "../lib/heatmap";
-import { CURRENT_COLOR, EMPTY_OPACITY, LEVEL_COLORS } from "./heatmapTheme";
+import type { MaturityBucket } from "../lib/maturityCalendar";
+import { BAND_COLORS, CURRENT_COLOR, EMPTY_OPACITY } from "./heatmapTheme";
 
 interface HeatmapMonthGridProps {
-  cells: HeatmapCell[];
+  buckets: MaturityBucket[];
   onSelect: (date: string) => void;
 }
 
 /** A card per month showing totals, interest and deposit count. */
-export default function HeatmapMonthGrid({ cells, onSelect }: HeatmapMonthGridProps) {
+export default function HeatmapMonthGrid({ buckets, onSelect }: HeatmapMonthGridProps) {
   return (
     <SimpleGrid cols={{ base: 2, xs: 3, sm: 4 }} spacing="xs">
-      {cells.map((cell) => {
+      {buckets.map((cell) => {
         const date = dayjs(cell.periodStart);
         const hasData = cell.amount > 0;
         return (
@@ -38,7 +38,7 @@ export default function HeatmapMonthGrid({ cells, onSelect }: HeatmapMonthGridPr
             }
             style={{
               cursor: hasData ? "pointer" : "default",
-              background: LEVEL_COLORS[cell.level],
+              background: BAND_COLORS[cell.band],
               opacity: hasData || cell.isCurrent ? 1 : EMPTY_OPACITY,
               borderColor: cell.isCurrent ? CURRENT_COLOR : undefined,
               borderWidth: cell.isCurrent ? 2 : 1,

@@ -1,17 +1,10 @@
 import dayjs from "dayjs";
 import { formatCurrency } from "../hooks/useCalculations";
-import type { HeatmapMode } from "../lib/heatmap";
-import { WEEKDAYS, type DayCell } from "./heatmapTheme";
+import type { DayBucket } from "../lib/maturityCalendar";
+import { WEEKDAYS } from "./heatmapTheme";
 
-/** Tooltip text for a cell, phrased according to the active heatmap mode. */
-export function cellTooltip(cell: DayCell, mode: HeatmapMode): string {
-  if (mode === "day") {
-    return `${dayjs(cell.date).format("YYYY年M月D日")} (${WEEKDAYS[dayjs(cell.date).day()]})\n${formatCurrency(cell.amount)}  ·  ${cell.count} 筆`;
-  }
-  if (mode === "week") {
-    const sunday = dayjs(cell.date).subtract(dayjs(cell.date).day(), "day");
-    const saturday = sunday.add(6, "day");
-    return `${sunday.format("M月D日")} - ${saturday.format("M月D日")}\n${formatCurrency(cell.amount)}  ·  ${cell.count} 筆`;
-  }
-  return `${dayjs(cell.date).format("YYYY年M月")}\n${formatCurrency(cell.amount)}  ·  ${cell.count} 筆`;
+/** Tooltip text for a day bucket. */
+export function cellTooltip(bucket: DayBucket): string {
+  const date = dayjs(bucket.periodStart, "YYYY-MM-DD", true);
+  return `${date.format("YYYY年M月D日")} (${WEEKDAYS[date.day()]})\n${formatCurrency(bucket.amount)}  ·  ${bucket.count} 筆`;
 }

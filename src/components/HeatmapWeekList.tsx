@@ -1,11 +1,11 @@
 import { Group, Stack, Text, Tooltip } from "@mantine/core";
 import dayjs from "dayjs";
 import { formatCurrency } from "../hooks/useCalculations";
-import type { HeatmapCell } from "../lib/heatmap";
-import { CURRENT_BORDER, EMPTY_OPACITY, LEVEL_COLORS, WEEK_LABEL_COL } from "./heatmapTheme";
+import type { MaturityBucket } from "../lib/maturityCalendar";
+import { BAND_COLORS, CURRENT_BORDER, EMPTY_OPACITY, WEEK_LABEL_COL } from "./heatmapTheme";
 
 interface HeatmapWeekListProps {
-  monthGroups: [string, HeatmapCell[]][];
+  monthGroups: { label: string; buckets: MaturityBucket[] }[];
   onSelect: (date: string) => void;
 }
 
@@ -13,13 +13,13 @@ interface HeatmapWeekListProps {
 export default function HeatmapWeekList({ monthGroups, onSelect }: HeatmapWeekListProps) {
   return (
     <Stack gap={5}>
-      {monthGroups.map(([monthLabel, cells]) => (
-        <Group key={monthLabel} gap="xs" wrap="nowrap" align="center">
+      {monthGroups.map((group) => (
+        <Group key={group.label} gap="xs" wrap="nowrap" align="center">
           <Text size="xs" w={WEEK_LABEL_COL} c="dimmed" ta="right">
-            {monthLabel}
+            {group.label}
           </Text>
           <div style={{ display: "flex", gap: 4, flex: 1 }}>
-            {cells.map((cell) => {
+            {group.buckets.map((cell) => {
               const hasData = cell.amount > 0;
               const start = dayjs(cell.periodStart);
               const end = dayjs(cell.periodEnd);
@@ -43,7 +43,7 @@ export default function HeatmapWeekList({ monthGroups, onSelect }: HeatmapWeekLi
                       flex: 1,
                       height: 22,
                       borderRadius: 3,
-                      background: LEVEL_COLORS[cell.level],
+                      background: BAND_COLORS[cell.band],
                       cursor: hasData ? "pointer" : "default",
                       opacity: hasData || cell.isCurrent ? 1 : EMPTY_OPACITY,
                       boxSizing: "border-box",
