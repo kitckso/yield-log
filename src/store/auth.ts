@@ -14,10 +14,11 @@ interface AuthState {
 }
 
 /**
- * Cached rows belong to whoever was signed in when they were fetched. Every
- * route to a signed-out state has to drop them: a session can lapse without
- * anyone pressing 登出, and a fresh login would otherwise serve the previous
- * account's rows straight out of the cache.
+ * Cached rows belong to whoever was signed in when they were fetched, so every
+ * point where a different account becomes the signed-in one has to drop them:
+ * signing in as somebody else, signing up as a new account, or a session that
+ * lapsed and left nobody. Otherwise the next page to ask reads the previous
+ * account's rows straight out of a cache that is still inside its fresh window.
  */
 function forgetCachedAccount() {
   useDepositsStore.getState().clear();
@@ -37,6 +38,10 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     if (data.user && data.session) {
       const newUser = data.user;
+      // Register is a public route, so this can be reached while another account
+      // is still signed in with its rows cached. The new account is about to
+      // become the signed-in one, which is a boundary like any other.
+      forgetCachedAccount();
       set({
         user: { id: newUser.id, email: newUser.email ?? "" },
       });

@@ -113,6 +113,27 @@ describe("signUp", () => {
     );
     expect(useAuthStore.getState().user).toBeNull();
   });
+
+  it("drops the previous account's cache", async () => {
+    vi.stubEnv("VITE_ENABLE_REGISTRATION", "true");
+    // /register is public, so a signed-in account can reach it and create
+    // another one without ever passing through a signed-out state.
+    useAuthStore.setState({ user: { id: "u1", email: "old@b.com" } });
+    useDepositsStore.setState({ deposits: [oldDeposit], lastFetched: Date.now() });
+    useBanksStore.setState({ banks: [oldBank], lastFetched: Date.now() });
+    mock.state.signUpResult = {
+      data: { user: { id: "new-user", email: "new@b.com" }, session: { user: { id: "new-user" } } },
+      error: null,
+    };
+
+    await useAuthStore.getState().signUp("new@b.com", "pw");
+
+    // A warm cache would otherwise be served to the new account without a query.
+    expect(useDepositsStore.getState().deposits).toEqual([]);
+    expect(useBanksStore.getState().banks).toEqual([]);
+    expect(useDepositsStore.getState().lastFetched).toBe(0);
+    expect(useBanksStore.getState().lastFetched).toBe(0);
+  });
 });
 
 describe("signIn", () => {
