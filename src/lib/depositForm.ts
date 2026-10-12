@@ -255,3 +255,55 @@ export function parseRenewParams(searchParams: URLSearchParams): RenewParams {
     interestRate: num(searchParams.get("interestRate")),
   };
 }
+
+/**
+ * The fields a form opens with. An empty string means "not filled in yet", so
+ * a seed has the same shape the controlled inputs hold.
+ */
+export interface DepositFormSeed {
+  bankId: string | null;
+  amount: number | string;
+  periodValue: number | string;
+  periodUnit: string | null;
+  interestRate: number | string;
+  startDate: Date | null;
+}
+
+/** An existing Deposit, reopened for editing. */
+export function seedFromDeposit(deposit: DepositWithBank): DepositFormSeed {
+  return {
+    bankId: deposit.bank_id,
+    amount: deposit.amount,
+    periodValue: deposit.period_value,
+    periodUnit: deposit.period_unit,
+    interestRate: deposit.interest_rate,
+    startDate: new Date(deposit.start_date),
+  };
+}
+
+/**
+ * A renewal carries the previous Deposit's terms in the query string, so the
+ * form opens ready to confirm them. Anything the link leaves out starts empty.
+ */
+export function seedFromRenew(params: RenewParams, today: Date = new Date()): DepositFormSeed {
+  return {
+    bankId: params.bankId || null,
+    amount: params.amount ?? "",
+    periodValue: params.periodValue ?? "",
+    periodUnit: params.periodUnit || null,
+    interestRate: params.interestRate ?? "",
+    startDate: today,
+  };
+}
+
+/** A brand new Deposit, starting today. */
+export function seedForNewDeposit(today: Date = new Date()): DepositFormSeed {
+  return {
+    bankId: null,
+    amount: "",
+    periodValue: "",
+    periodUnit: null,
+    interestRate: "",
+    startDate: today,
+  };
+}

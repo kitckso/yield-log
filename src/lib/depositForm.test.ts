@@ -17,9 +17,13 @@ import {
   recentRates,
   resolveEndDate,
   resolveInterest,
+  seedForNewDeposit,
+  seedFromDeposit,
+  seedFromRenew,
   shouldOfferFloorAlternative,
   topByFrequency,
   validateRegistration,
+  type DepositFormSeed,
 } from "./depositForm";
 import type { DepositWithBank } from "../types";
 
@@ -435,5 +439,82 @@ describe("renew url contract", () => {
     const url = buildRenewUrl(dep({ bank_id: "a b&c=d" }));
     const params = new URL(url, "https://example.test").searchParams;
     expect(parseRenewParams(params).bankId).toBe("a b&c=d");
+  });
+});
+
+describe("seedFromDeposit", () => {
+  it("opens every field from the stored deposit", () => {
+    const deposit = dep({
+      bank_id: "b9",
+      amount: 50000,
+      period_value: 6,
+      period_unit: "months",
+      interest_rate: 2.5,
+      start_date: "2024-06-01",
+    });
+    const seed = seedFromDeposit(deposit);
+    expect(seed.bankId).toBe("b9");
+    expect(seed.amount).toBe(50000);
+    expect(seed.periodValue).toBe(6);
+    expect(seed.periodUnit).toBe("months");
+    expect(seed.interestRate).toBe(2.5);
+    expect(seed.startDate?.toISOString().slice(0, 10)).toBe("2024-06-01");
+  });
+
+  it("never leaves a field blank, so an edit form submits as the deposit read", () => {
+    const seed = seedFromDeposit(dep({ amount: 0, interest_rate: 0 }));
+    expect(seed.amount).toBe(0);
+    expect(seed.interestRate).toBe(0);
+    expect(seed.bankId).not.toBeNull();
+    expect(seed.periodUnit).not.toBeNull();
+  });
+});
+
+describe("seedFromRenew", () => {
+  const today = new Date("2026-06-15T09:00:00");
+
+  it("carries the previous terms over from the link", () => {
+    const url = buildRenewUrl(dep({ bank_id: "b7", amount: 80000, period_value: 12 }));
+    const params = new URL(url, "https://example.test").searchParams;
+    const seed = seedFromRenew(parseRenewParams(params), today);
+    expect(seed.bankId).toBe("b7");
+    expect(seed.amount).toBe(80000);
+    expect(seed.periodValue).toBe(12);
+    expect(seed.startDate).toBe(today);
+  });
+
+  it("starts a renewal today, not on the old deposit's start date", () => {
+    const seed = seedFromRenew({}, today);
+    expect(seed.startDate).toBe(today);
+  });
+
+  it("leaves anything the link omits blank rather than zero", () => {
+    const seed = seedFromRenew({}, today);
+    expect(seed.bankId).toBeNull();
+    expect(seed.periodUnit).toBeNull();
+    expect(seed.amount).toBe("");
+    expect(seed.periodValue).toBe("");
+    expect(seed.interestRate).toBe("");
+  });
+});
+
+describe("seedForNewDeposit", () => {
+  const today = new Date("2026-06-15T09:00:00");
+
+  it("opens empty and starting today", () => {
+    expect(seedForNewDeposit(today)).toEqual({
+      bankId: null,
+      amount: "",
+      periodValue: "",
+      periodUnit: null,
+      interestRate: "",
+      startDate: today,
+    });
+  });
+
+  it("is the same shape a renewal or an edit produces", () => {
+    const shape = (seed: DepositFormSeed) => Object.keys(seed).sort();
+    expect(shape(seedForNewDeposit(today))).toEqual(shape(seedFromDeposit(dep())));
+    expect(shape(seedForNewDeposit(today))).toEqual(shape(seedFromRenew({}, today)));
   });
 });

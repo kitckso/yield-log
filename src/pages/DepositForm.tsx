@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { Container, Stack, Button, Group, Title, Loader, Center } from "@mantine/core";
+import { Container, Stack, Button, Group, Title, Loader, Center, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { useAuthStore } from "../store/auth";
@@ -16,7 +16,11 @@ import {
   recentRates,
   resolveEndDate,
   resolveInterest,
+  seedForNewDeposit,
+  seedFromDeposit,
+  seedFromRenew,
   shouldOfferFloorAlternative,
+  type DepositFormSeed,
 } from "../lib/depositForm";
 
 export default function DepositForm() {
@@ -28,10 +32,10 @@ export default function DepositForm() {
 
   const { user } = useAuthStore();
   const { banks, fetchBanks } = useBanksStore();
-  const { deposits, addDeposit, updateDeposit } = useDepositsStore();
+  const { deposits, fetchDeposits, addDeposit, updateDeposit } = useDepositsStore();
 
   const [loading, setLoading] = useState(false);
-  const [formLoading, setFormLoading] = useState(true);
+  const [searched, setSearched] = useState(false);
 
   const [bankId, setBankId] = useState<string | null>(null);
   const [amount, setAmount] = useState<number | string>("");
@@ -50,34 +54,41 @@ export default function DepositForm() {
 
   useEffect(() => {
     void fetchBanks();
-  }, [fetchBanks]);
+    // This page needs the deposit list either way: an edit reads the row it is
+    // editing out of the store, and the suggestion chips read every deposit.
+    void fetchDeposits().finally(() => setSearched(true));
+  }, [fetchBanks, fetchDeposits]);
+
+  const applySeed = (seed: DepositFormSeed) => {
+    setBankId(seed.bankId);
+    setAmount(seed.amount);
+    setPeriodValue(seed.periodValue);
+    setPeriodUnit(seed.periodUnit);
+    setInterestRate(seed.interestRate);
+    setStartDate(seed.startDate);
+  };
+
+  // Seed the form once per route. Re-running this would replace whatever the
+  // user has typed, so an edit waits for its row to arrive instead of re-reading
+  // the store every time the deposits change.
+  const seededRoute = useRef<string | null>(null);
+  const routeKey = isEditing ? `edit:${id}` : isRenew ? `renew:${searchParams.toString()}` : "new";
 
   useEffect(() => {
+    if (seededRoute.current === routeKey) return;
+
     if (isEditing && id) {
       const deposit = deposits.find((d) => d.id === id);
-      if (deposit) {
-        setBankId(deposit.bank_id);
-        setAmount(deposit.amount);
-        setPeriodValue(deposit.period_value);
-        setPeriodUnit(deposit.period_unit);
-        setInterestRate(deposit.interest_rate);
-        setStartDate(new Date(deposit.start_date));
-      }
-      setFormLoading(false);
+      if (!deposit) return;
+      applySeed(seedFromDeposit(deposit));
     } else if (isRenew) {
-      const renew = parseRenewParams(searchParams);
-      if (renew.bankId) setBankId(renew.bankId);
-      if (renew.amount !== undefined) setAmount(renew.amount);
-      if (renew.periodValue !== undefined) setPeriodValue(renew.periodValue);
-      if (renew.periodUnit) setPeriodUnit(renew.periodUnit);
-      if (renew.interestRate !== undefined) setInterestRate(renew.interestRate);
-      setStartDate(new Date());
-      setFormLoading(false);
+      applySeed(seedFromRenew(parseRenewParams(searchParams)));
     } else {
-      setFormLoading(false);
-      setStartDate(new Date());
+      applySeed(seedForNewDeposit());
     }
-  }, [id, deposits, isEditing, isRenew, searchParams]);
+
+    seededRoute.current = routeKey;
+  }, [deposits, id, isEditing, isRenew, routeKey, searchParams]);
 
   // The end date follows from the start date and term unless the user set it.
   const endDate = resolveEndDate(
@@ -171,11 +182,35 @@ export default function DepositForm() {
     }
   };
 
-  if (formLoading) {
+  // An edit form has nothing to show until its deposit is in the store. A blank
+  // form here would let 儲存存款 overwrite the row with whatever got typed in.
+  if (isEditing && !searched) {
     return (
       <Center style={{ minHeight: "100dvh" }}>
         <Loader />
       </Center>
+    );
+  }
+
+  if (isEditing && !deposits.some((d) => d.id === id)) {
+    return (
+      <Container size="sm" pt="md" pb={{ base: 80, sm: 16 }}>
+        <Stack gap="md">
+          <Group>
+            <Button
+              variant="subtle"
+              leftSection={<IconArrowLeft size={20} />}
+              onClick={() => navigate("/deposits")}
+            >
+              返回
+            </Button>
+            <Title order={2}>找不到存款記錄</Title>
+          </Group>
+          <Text size="sm" c="dimmed">
+            這筆存款可能已被刪除，或連結有誤。
+          </Text>
+        </Stack>
+      </Container>
     );
   }
 
